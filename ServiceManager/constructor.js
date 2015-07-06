@@ -71,8 +71,8 @@ Constructor.prototype.monitorChildProcess = function(cb) {
 	var self = this;
 	try {
 		var iList = [];
-		for (var idx in self.services) {
-			var services = self.services[idx];
+		for (var idx in self.cfg.services) {
+			var services = self.cfg.services[idx];
 			if (!services.name) continue;
 			for (var i=0; i<services.machines.length; i++) {
 				var process = {};
@@ -109,7 +109,7 @@ Constructor.prototype.monitorChildProcess = function(cb) {
                 });
             }
             self.sendServiceAuxLog(iList);
-		}, self.services.monitorInterval);
+		}, self.cfg.services.monitorInterval);
 
 	}catch (ex) {
 		cb(ex);		
@@ -135,7 +135,7 @@ Constructor.prototype.sendServiceAuxLog = function(iList) {
             })
         });
         if (iLog.length > 0) {
-        	global.info(JSON.stringify(iLog));
+        	//global.info(JSON.stringify(iLog));
         }
     } catch (ex) {
         global.warn('Constructor.sendServiceAuxLog. error:%s', ex.message);
