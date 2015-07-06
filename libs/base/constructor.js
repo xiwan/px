@@ -4,6 +4,7 @@
 
 var ini = require('ini');
 var async = require('async');
+var log4js = require('log4js');
 var util = require('util');
 var fs = require('fs');
 
@@ -32,7 +33,6 @@ var Constructor = function (name, local) {
     this.versions = [];
     this.gids = null;
     this.cfg = null;
-    this.services = null;
 
     this.waitForTerminate = 1;
 
@@ -42,7 +42,7 @@ Constructor.prototype.terminate = function(signal) {
     var self = this;
     self.onTerminated();
     setTimeout(function() {
-        global.debug('%s.%s %s...', self.name, self.idx, signal);
+        global.warn('%s.%s %s...', self.name, self.idx, signal);
         process.exit(0);
     }, self.waitForTerminate);
 };
@@ -66,17 +66,15 @@ Constructor.prototype.init = function(cb) {
         self.ipAddr = global.utils.getIPAddress();
         global.argv.cfg || (global.argv.cfg = '');
 
-	    if (fs.existsSync(global.argv.cfg)) {
+	    if (fs.existsSync(global.argv.cfg)) { // for sm process
 	        var config = ini.parse(fs.readFileSync(global.argv.cfg, 'utf-8'));
-	        self.cfg = config.mysql.property;
+	        self.cfg = config;
 	        process.env.cfg = JSON.stringify(self.cfg);
-
-	        self.services = config.services;
-
-	    } else {
+	    } else { // for other processes
 	        self.cfg = JSON.parse(process.env.cfg);
 	    }
-	    // global.debug(self.cfg);
+	    self.initLogger(self.cfg.logs);
+
 	    process.on('SIGINT', function () { self.terminate('SIGINT'); });
 		process.on('SIGTERM', function () { self.terminate('SIGTERM'); });
 		process.on('uncaughtException', function(err){
@@ -96,6 +94,30 @@ Constructor.prototype.init = function(cb) {
         cb(ex);		
 	}
 
+};
+
+
+Constructor.prototype.initLogger = function(cfg) {
+    var self = this;
+    try {
+        cfg.baseLogDir || (cfg.baseLogDir = '/tmp');
+        log4js.loadAppender('file');
+        var name = util.format('%s.%s', self.name, self.idx);
+        var iLog = util.format('%s/%s.log', cfg.baseLogDir, name);
+
+        log4js.addAppender(log4js.appenders.file(iLog,  log4js.layouts.basicLayout, 1024*1024*100, 5), name);
+
+        self.logger = log4js.getLogger(name);
+        self.logger.setLevel('TRACE');
+
+        global.test = function() { self.logger.trace.apply(self.logger, arguments); };
+        global.info = function() { self.logger.info.apply(self.logger, arguments); };
+        global.debug = function() { self.logger.debug.apply(self.logger, arguments); };
+        global.warn = function() { self.logger.warn.apply(self.logger, arguments); };
+        global.error = function() { self.logger.error.apply(self.logger, arguments); };
+    } catch (ex) {
+        throw ex;
+    }
 };
 
 

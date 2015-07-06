@@ -4,9 +4,11 @@
     var async = require('async');
     var base = require('./base/constructor');
     var usage = require('./base/usage.js');
+    var proxyServer = require('./base/proxyServer.js');
 
     module.exports.Constructor = base.Constructor;
     module.exports.Usage = usage.Usage;
+    module.exports.ProxyServer = proxyServer.ProxyServer;
 
     module.exports.app = function(name, main){
 		var appMain = new main.Constructor(name);
