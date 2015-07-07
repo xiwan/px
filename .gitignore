@@ -1,8 +1,12 @@
 node_modules/
 test/
 *~$*
+*.DS_St
 *.tgz
 *.log
 *.out
 *.bk
-*.DS_St
+*.pid
+*.rdb
+stdout
+
