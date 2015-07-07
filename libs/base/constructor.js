@@ -38,6 +38,7 @@ var Constructor = function (name, local) {
 
     this.waitForTerminate = 1;
 
+    global.const = require('./const').Const;
 }
 
 Constructor.prototype.terminate = function(signal) {
@@ -79,7 +80,6 @@ Constructor.prototype.init = function(cb) {
 	    async.waterfall([
 	    	function(callback) {self.initLogger(self.cfg.logs, callback)},
 	    	function(callback) {self.initRedis(self.cfg.redis, callback)},
-
 	    ], function(err){
 	    	try {
 	    		if (err) throw err;
@@ -147,7 +147,6 @@ Constructor.prototype.initRedis = function(cfg, cb) {
 
 		self.redis = {};
 		async.each(Object.keys(cfg), function(key, callback) {
-			console.log(cfg[key],key)
 			self.redis[key] = redisHash.createObject(cfg[key], key);
 			self.redis[key].init(callback);
 		}, cb);

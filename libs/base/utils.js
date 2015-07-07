@@ -25,6 +25,30 @@ module.exports = {
         return t.getFullYear()+'-'+ self.pad2(t.getMonth()+1)+'-'+ self.pad2(t.getDate() + ' 00:00:00');
     },
 
+
+    toDateFmt : function(format, date) {
+        var self = this;
+        typeof(date) === 'string' && (date = new Date(date));
+        var vDay = self.pad2(date.getDate());
+        var vMonth = self.pad2(date.getMonth()+1);
+        var vYearLong = self.pad2(date.getFullYear());
+        var vYearShort = self.pad2(date.getFullYear().toString().substring(2,4));
+        var vYear = (format.indexOf('YYYY') > -1 ? vYearLong : vYearShort);
+        var vHour  = self.pad2(date.getHours());
+        var vMinute = self.pad2(date.getMinutes());
+        var vSecond = self.pad2(date.getSeconds());
+        //var vMillisecond = padWithZeros(date.getMilliseconds(), 3);
+        //var vTimeZone = offset(date);
+        return format
+            .replace(/DD/g, vDay)
+            .replace(/MM/g, vMonth)
+            .replace(/Y{1,4}/g, vYear)
+            .replace(/HH/g, vHour)
+            .replace(/MI/g, vMinute)
+            .replace(/SS/g, vSecond);
+        //.replace(/SSS/g, vMillisecond)
+    }, 
+
     toObject : function(target) {
         if (!target) {
             return {};
@@ -157,7 +181,7 @@ module.exports = {
     },
 
     /**
-     * 암호화...
+     * @mehtod encrypt
      * @param text
      * @param key
      * @returns {*}
@@ -172,7 +196,7 @@ module.exports = {
 
 
     /**
-     * 복호화...
+     * @method decrypt
      * @param text
      * @param key
      * @returns {*}
@@ -184,29 +208,6 @@ module.exports = {
 
         return decipheredPlaintext;
     },    
-
-    toDateFmt : function(format, date) {
-        var self = this;
-        typeof(date) === 'string' && (date = new Date(date));
-        var vDay = self.pad2(date.getDate());
-        var vMonth = self.pad2(date.getMonth()+1);
-        var vYearLong = self.pad2(date.getFullYear());
-        var vYearShort = self.pad2(date.getFullYear().toString().substring(2,4));
-        var vYear = (format.indexOf('YYYY') > -1 ? vYearLong : vYearShort);
-        var vHour  = self.pad2(date.getHours());
-        var vMinute = self.pad2(date.getMinutes());
-        var vSecond = self.pad2(date.getSeconds());
-        //var vMillisecond = padWithZeros(date.getMilliseconds(), 3);
-        //var vTimeZone = offset(date);
-        return format
-            .replace(/DD/g, vDay)
-            .replace(/MM/g, vMonth)
-            .replace(/Y{1,4}/g, vYear)
-            .replace(/HH/g, vHour)
-            .replace(/MI/g, vMinute)
-            .replace(/SS/g, vSecond);
-        //.replace(/SSS/g, vMillisecond)
-    }, 
     
     /**
      * addMethod - By John Resig (MIT Licensed)
@@ -289,7 +290,7 @@ module.exports = {
         return result
     },
 
-    
+
 
 };
 
