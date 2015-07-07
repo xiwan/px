@@ -8,6 +8,8 @@ var log4js = require('log4js');
 var util = require('util');
 var fs = require('fs');
 
+var redisHash = require('./redisHashRing');
+
 /**
 * @mehtod Constructor
 * @param {String} name: Process name
@@ -73,22 +75,35 @@ Constructor.prototype.init = function(cb) {
 	    } else { // for other processes
 	        self.cfg = JSON.parse(process.env.cfg);
 	    }
-	    self.initLogger(self.cfg.logs);
 
-	    process.on('SIGINT', function () { self.terminate('SIGINT'); });
-		process.on('SIGTERM', function () { self.terminate('SIGTERM'); });
-		process.on('uncaughtException', function(err){
-			if (global.base && global.base.action) {
+	    async.waterfall([
+	    	function(callback) {self.initLogger(self.cfg.logs, callback)},
+	    	function(callback) {self.initRedis(self.cfg.redis, callback)},
 
-			}else {
-                global.error('-----------uncaughtException-BEGIN--------------');
-                global.error(err.stack);
-                global.error('-----------uncaughtException-END--------------');
-            }
-            self.terminate('SIG_ERR');
-		});
+	    ], function(err){
+	    	try {
+	    		if (err) throw err;
 
-	    cb(null);
+			    process.on('SIGINT', function () { self.terminate('SIGINT'); });
+				process.on('SIGTERM', function () { self.terminate('SIGTERM'); });
+				process.on('uncaughtException', function(err){
+					if (global.base && global.base.action) {
+
+					}else {
+		                global.error('-----------uncaughtException-BEGIN--------------');
+		                global.error(err.stack);
+		                global.error('-----------uncaughtException-END--------------');
+		            }
+		            self.terminate('SIG_ERR');
+				});
+
+			    cb(null);
+	    	}catch (ex) {
+	    		cb(ex)
+	    	}
+	    });
+
+
 	}catch(ex) {
         global.warn(ex.stack);
         cb(ex);		
@@ -97,7 +112,7 @@ Constructor.prototype.init = function(cb) {
 };
 
 
-Constructor.prototype.initLogger = function(cfg) {
+Constructor.prototype.initLogger = function(cfg, cb) {
     var self = this;
     try {
         cfg.baseLogDir || (cfg.baseLogDir = '/tmp');
@@ -108,17 +123,39 @@ Constructor.prototype.initLogger = function(cfg) {
         log4js.addAppender(log4js.appenders.file(iLog,  log4js.layouts.basicLayout, 1024*1024*100, 5), name);
 
         self.logger = log4js.getLogger(name);
-        self.logger.setLevel('TRACE');
+        self.logger.setLevel(cfg.level||'TRACE');
 
         global.test = function() { self.logger.trace.apply(self.logger, arguments); };
         global.info = function() { self.logger.info.apply(self.logger, arguments); };
         global.debug = function() { self.logger.debug.apply(self.logger, arguments); };
         global.warn = function() { self.logger.warn.apply(self.logger, arguments); };
         global.error = function() { self.logger.error.apply(self.logger, arguments); };
+
+        cb(null);
     } catch (ex) {
-        throw ex;
+        cb(ex);
     }
 };
+
+Constructor.prototype.initRedis = function(cfg, cb) {
+	var self = this;
+	try {
+		if (!cfg) {
+			cb(null);
+			return;
+		}
+
+		self.redis = {};
+		async.each(Object.keys(cfg), function(key, callback) {
+			console.log(cfg[key],key)
+			self.redis[key] = redisHash.createObject(cfg[key], key);
+			self.redis[key].init(callback);
+		}, cb);
+		
+	} catch (ex) {
+		cb(ex)
+	}
+}
 
 
 module.exports.Constructor = Constructor;
