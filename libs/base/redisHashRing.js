@@ -48,6 +48,8 @@ RedisHashRing.prototype.add = function(node, cb) {
 		});
 
 		client.on('ready', function(){
+            var vnodes = {};
+            vnodes[node] = { vnodes : 50 };
 			self.ring.add(node);
 			global.debug('RedisHashRing.add. name:%s, node:%s', self.name, node);
 			cb && cb(null);
@@ -98,6 +100,7 @@ RedisHashRing.prototype.remove = function(node, error) {
 */
 RedisHashRing.prototype.get = function(key) {
 	var self = this;
+
 	var node = self.ring.get(key);
 	if (!node) throw new Error(util.format('__no_available_redis(%s)', key));
 	return self.getByNode(node);

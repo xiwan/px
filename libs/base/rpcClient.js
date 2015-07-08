@@ -22,12 +22,12 @@ ClientHashRing.prototype.check = function() {
         client.hget(self.name, function(err, vals, keys) {
             try {
                 if (err) throw err;
-
                 keys.forEach(function(key, pos) {
                     var server = {
                         key : key,
                         data : JSON.parse(vals[pos])
                     };
+
                     self.add(server);
                 });
             } catch (ex) {
@@ -104,6 +104,35 @@ ClientHashRing.prototype.remove = function(key, flag, error) {
     } catch (ex) {
         global.warn('ClientHashRing.remove. key:%s, flag:%s, ex:%s', key, flag, ex.message);
     }
+};
+
+ClientHashRing.prototype.get = function(hash) {
+    var self = this,
+        rpc, key;
+
+    key = self.ring.get(hash);
+    if (!key) throw new Error('__no_server');
+
+    rpc = self.server[key];
+    if (!rpc || !rpc.remote) {
+        self.remove(key, new Error('__no_server'));
+        throw new Error('__no_server');
+    }
+
+    return rpc;
+};
+
+ClientHashRing.prototype.getByKey = function(key) {
+    var self = this,
+        rpc;
+
+    rpc = self.server[key];
+    if (!rpc || !rpc.remote) {
+        self.remove(key, new Error('__no_server'));
+        return null;
+    }
+
+    return rpc;
 };
 
 exports.createObject = function(name, options) {

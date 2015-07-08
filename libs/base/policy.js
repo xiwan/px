@@ -22,6 +22,7 @@ util.inherits(Policy, events.EventEmitter);
 Policy.prototype.loadPolicy = function(owner, commands) {
     var self = this;
     var keys = Object.keys(commands);
+    self.owner = owner;
 
     keys.forEach(function(key){
         var iList = commands[key];
@@ -69,6 +70,26 @@ Policy.prototype.onMessage = function(client, message, cb) {
 	}
 };
 
+Policy.prototype.requestAction = function(action, protocol, cb){
+    var self = this;
+    try {
+        var owner = self.owner;
+        protocol.__action = action;
+        var begin = new Date();
+        if ('function' !== typeof(owner[action])) {
+            throw new Error('__unregistered_api');
+        }
+        owner[action].call(owner, protocol, function(err, iAck){
+            if (err) throw err;
+            cb(null, iAck);
+        });
+    }catch (ex) {
+        global.error('Constructor.requestAction. action:%s, ex:%s', action, ex.toString());
+        global.warn(ex.stack);
+        cb(ex);        
+    }
+};
+
 /** */
 Policy.prototype.onError = function(error, message, cb) {
     try {
@@ -85,8 +106,8 @@ Policy.prototype.onError = function(error, message, cb) {
 };
 
 
-// predefined policy: iAuth
-Policy.prototype.iAuth = function(iList) {
+// predefined policy: iNone
+Policy.prototype.iNone = function(iList) {
 	var self = this;
 
 	iList.forEach(function(cmd) {
@@ -95,11 +116,61 @@ Policy.prototype.iAuth = function(iList) {
 			async.waterfall([
 				function(callback) { callback(); },
 			], function(err){
-				cb(err, {msg: 'test'});
+				cb(err, {msg: 'iNone'});
 			});
 
 		};
 	});
+};
+
+// predefined policy: iAuth
+Policy.prototype.iAuth = function(iList) {
+    var self = this;
+
+    iList.forEach(function(cmd) {
+        self.parser[cmd] = function(client, protocol, cb) {
+
+            async.waterfall([
+                function(callback) { callback(); },
+            ], function(err){
+                cb(err, {msg: 'iAuth'});
+            });
+
+        };
+    });
+};
+
+// predefined policy: iPass
+Policy.prototype.iPass = function(iList) {
+    var self = this;
+
+    iList.forEach(function(cmd) {
+        self.parser[cmd] = function(client, protocol, cb) {
+
+            async.waterfall([
+                function(callback) {  global.base.getService('abc', true, 'UD', callback); },
+                function(service, callback) { service.requestAction(cmd, protocol, cb)},
+            ], cb);
+
+        };
+    });
+};
+
+// predefined policy: iUser
+Policy.prototype.iUser = function(iList) {
+    var self = this;
+
+    iList.forEach(function(cmd) {
+        self.parser[cmd] = function(client, protocol, cb) {
+
+            async.waterfall([
+                function(callback) { callback(); },
+            ], function(err){
+                cb(err, {msg: 'iUser'});
+            });
+
+        };
+    });
 };
 
 exports.createObject = function(external) {

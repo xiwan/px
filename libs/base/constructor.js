@@ -166,16 +166,29 @@ Constructor.prototype.initForRPC = function(property, emitter) {
     if (property.client) {
         self.rpc.client = {};
         property.client.forEach(function(key) {
-            self.rpc.client[key] = new rpcClient.createObject(key, options);
+            self.rpc.client[key] = rpcClient.createObject(key, options);
         });
     }
 
     if (property.server) {
         options.emitter = emitter;
         var portNum = parseInt(self.cfg.rpc.port) + self.idx;
-        self.rpc.server = new rpcServer.createObject(self.name, portNum, options);
+        self.rpc.server = rpcServer.createObject(self.name, portNum, options);
     }
 };
+
+Constructor.prototype.getService = function(key, mandatory, name, cb) {
+    var self = this;
+    try {
+        
+        var clients = self.rpc.client[name];
+        var service = clients.get(key);
+        cb(null, service.remote);
+    }catch (ex){
+        cb(ex);
+    }
+};
+
 
 
 module.exports.Constructor = Constructor;

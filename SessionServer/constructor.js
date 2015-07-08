@@ -24,8 +24,8 @@ Constructor.prototype.run = function(cb) {
 			self.policy.emit('message', client, message, cb); 
 		});
 
-		self.initForRPC(self.cfg.services.SS.rpc, self.policy);
-		
+		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
+
 	}catch (ex) {
 		cb(ex);		
 	}

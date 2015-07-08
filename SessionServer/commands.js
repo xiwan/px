@@ -1,4 +1,4 @@
 module.exports = {
-	'iUser': ['test1', 'testABC'],
+	'iPass': ['test1', 'testABC'],
 	'iAuth': ['testABCD'] 
 };
