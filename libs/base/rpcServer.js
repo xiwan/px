@@ -33,7 +33,7 @@ var Server = exports.Server = function(name, portNum, options) {
             requestMessage : function() { { self.requestMessage.apply(self, arguments); } }			
 		});
 
-		client.pipe(d).pipe(c);
+		client.pipe(d).pipe(client);
 
 	});
 
