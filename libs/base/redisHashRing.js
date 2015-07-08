@@ -100,8 +100,7 @@ RedisHashRing.prototype.get = function(key) {
 	var self = this;
 	var node = self.ring.get(key);
 	if (!node) throw new Error(util.format('__no_available_redis(%s)', key));
-
-	return self.getByNode[node];
+	return self.getByNode(node);
 }
 
 /**

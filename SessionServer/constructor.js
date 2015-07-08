@@ -17,6 +17,7 @@ Constructor.prototype.run = function(cb) {
 		var portNum = parseInt(self.cfg.http.port) + self.idx;
 		self.proxy = base.ProxyServer(portNum, { protocol:'http' });
 		self.proxy.loadPolicy(commands);
+		self.initForRPC(self.cfg.services.SS.rpc, self.proxy.policy);
 
 	}catch (ex) {
 		cb(ex);		

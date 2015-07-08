@@ -9,6 +9,8 @@ var util = require('util');
 var fs = require('fs');
 
 var redisHash = require('./redisHashRing');
+var rpcServer = require('./rpcServer');
+var rpcClient = require('./rpcClient');
 
 /**
 * @mehtod Constructor
@@ -154,7 +156,26 @@ Constructor.prototype.initRedis = function(cfg, cb) {
 	} catch (ex) {
 		cb(ex)
 	}
-}
+};
+
+Constructor.prototype.initForRPC = function(property, emitter) {
+	var self = this;
+	self.rpc = {};
+	var options = {redis: self.redis.system};
+	console.log(property)
+    if (property.client) {
+        self.rpc.client = {};
+        property.client.forEach(function(key) {
+            self.rpc.client[key] = new rpcClient.createObject(key, options);
+        });
+    }
+
+    if (property.server) {
+        options.emitter = emitter;
+        var portNum = parseInt(self.cfg.rpc.port) + self.idx;
+        self.rpc.server = new rpcServer.createObject(self.name, portNum, options);
+    }
+};
 
 
 module.exports.Constructor = Constructor;
