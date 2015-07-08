@@ -34,6 +34,79 @@
 配置在config.ini中，读写分离的主要目的是为了减轻数据库的压力。主从两库的同步主要通过mysql replica机制来达到。
 
 
+### 模块设计
+
+#### construtor模块
+Constructor是所有其他进程的父类。提供了供子类访问的各种对象和方法。
+
+init方法由Constructor本身管理。负责获取命令行启动参数，配置数据。然后初始化Logger， Redis，并最后兼听当前process状态.
+
+run方法由各个子process管理，不同角色的子process会有不同的运行方案。如果是frontend主要是建立proxyServer和rpc模块；如果是backend则主要是rpc模块和业务逻辑
+
+#### redis模块
+对于缓存部分，redis模块通过读取配置文件config.ini在constructor中初始化。
+
+redis server安装好以后，通过 
+
+		sh start.sh -redis
+启动redis client。根据配置来说，有可能我们会有多个redis server情况,比如：
+
+	1735293225 49869     1   0 Tue12PM ??         1:34.73 redis-server *:16101   
+	1735293225 49872     1   0 Tue12PM ??         1:33.97 redis-server *:16201   
+	1735293225 49875     1   0 Tue12PM ??         1:33.80 redis-server *:16202   
+	1735293225 49878     1   0 Tue12PM ??         1:33.88 redis-server *:16301   
+	1735293225 49881     1   0 Tue12PM ??         1:33.49 redis-server *:16401   
+	1735293225 49884     1   0 Tue12PM ??         1:34.00 redis-server *:16402 
+
+这个时候对于同一个session，需要将其请求转到同一个redis，否则缓存则会失效。
+redis模块采用了`constant hashing`算法(hashring模块)来达到上述目的。
+
+#### policy模块
+
+对于服务器来说，无论是何种请求，采用何种对应的策略(policy)处理该请求是关键。这里的策略(policy)可以理解为多个过滤器(Filter)。
+
+		// init policy instance & load commands
+		var policy = base.Policy.createObject();
+		var policy.loadPolicy(self, commands);
+		
+policy模块主要是通过预定义和自定义两种相结合的方案。
+
+预定义好的策略主要有
+
+* iNone: 不需要认证，也没有rpc请求。 比如非关键资源请求
+* iPass: 不需要认证，但有rpc请求。 比如非关键资源请求
+* iAuth: 需要认证，但没有rpc请求。 比如session的检查
+* iUser: 需要认证，并且会有rpc请求。比如请求成为游戏内的好友
+
+		module.exports = {
+			'iUser': ['reqAskForFriend', 'reqGetItem'],
+			'iAuth': ['reqCheckSession'],
+			'iNone': ['reqUserLogin'],
+			'iPass': ['reqPlatFormLogin']
+		};
+
+关于自定义策略，这个十分开放，开发者可以在每个子Constructor类中完成。
+
+policy类继承于`EventEmitter`, 监听下面几个事件
+
+* message: 主要是提供给http服务器使用
+* requestAction:
+* requestMessage:
+
+#### proxyServer模块
+
+proxyServer模块主要是提供了一个类似connector的解决方案。它既可以是一个http服务器也可以是一个websocket服务器。
+
+作为一个http服务器，proxyServer只能监听__message__事件。并且把处理的事务托管给policy模块来完成.
+
+		// this is proxyServer sample
+		var portNo = 123456;
+		var proxy = base.ProxyServer(portNo, { protocol:'http' });
+		var proxy.on('message', function(client, message, cb){ 
+			policy.emit('message', client, message, cb); 
+		});
+
+
 ### 常用的npm
 
 * async
