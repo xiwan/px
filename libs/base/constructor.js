@@ -162,7 +162,7 @@ Constructor.prototype.initForRPC = function(property, emitter) {
 	var self = this;
 	self.rpc = {};
 	var options = {redis: self.redis.system};
-	console.log(property)
+
     if (property.client) {
         self.rpc.client = {};
         property.client.forEach(function(key) {

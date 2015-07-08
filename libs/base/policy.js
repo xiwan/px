@@ -13,10 +13,27 @@ var Policy = function (external) {
 	self.session = iSession.createObject();
 
 	self.on('message', function() { self.onMessage.apply(self, arguments); });
+    self.on('requestAction', function() { self.requestAction.apply(self, arguments); });
+    self.on('requestMessage', function() { self.requestMessage.apply(self, arguments); });
 
 };
 util.inherits(Policy, events.EventEmitter);
 
+Policy.prototype.loadPolicy = function(owner, commands) {
+    var self = this;
+    var keys = Object.keys(commands);
+
+    keys.forEach(function(key){
+        var iList = commands[key];
+        if (owner[key]){
+            owner[key](iList);
+        }else if (self[key]) {
+            self[key](iList);
+        }else {
+            throw new Error('__policy_not_found');
+        }
+    }); 
+};
 
 Policy.prototype.onMessage = function(client, message, cb) {
 	var self = this;
@@ -67,6 +84,8 @@ Policy.prototype.onError = function(error, message, cb) {
     cb(error);
 };
 
+
+// predefined policy: iAuth
 Policy.prototype.iAuth = function(iList) {
 	var self = this;
 
@@ -76,7 +95,7 @@ Policy.prototype.iAuth = function(iList) {
 			async.waterfall([
 				function(callback) { callback(); },
 			], function(err){
-				cb(err, {msg: 'test2'});
+				cb(err, {msg: 'test'});
 			});
 
 		};

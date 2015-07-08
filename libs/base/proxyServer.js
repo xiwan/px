@@ -6,13 +6,10 @@ var events = require('events');
 var url = require('url');
 var zlib = require('zlib');
 
-var policy = require('./policy');
-
 var ProxyServer = function (portNum, options) {
 	events.EventEmitter.call(this);
 	
 	var self = this;
-	self.policy = policy.createObject();
 
 	self.server = self.createServer(options);
 	self.server.listen(portNum);
@@ -35,16 +32,6 @@ ProxyServer.prototype.createServer = function (options) {
         default :
             throw new Error('__unsupported_protocol');
     }
-};
-
-ProxyServer.prototype.loadPolicy = function(commands) {
-	var self = this;
-	var keys = Object.keys(commands);
-
-	keys.forEach(function(key){
-        var iList = commands[key];
-        self.policy[key] && self.policy[key](iList);
-	});	
 };
 
 /**
@@ -147,12 +134,7 @@ function decodeReq(body, cb) {
 }
 
 exports.ProxyServer = function (portNum, options) { 
-	var proxy = new ProxyServer(portNum, options);
-	proxy.on('message', function(client, message, cb){ 
-		proxy.policy.emit('message', client, message, cb); 
-	});
-
-	return proxy;
+	return new ProxyServer(portNum, options);
 }
 
 

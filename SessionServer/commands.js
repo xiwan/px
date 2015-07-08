@@ -1,3 +1,4 @@
 module.exports = {
-	'iAuth': ['testABCD', 'testABC'] 
+	'iUser': ['test1', 'testABC'],
+	'iAuth': ['testABCD'] 
 };
