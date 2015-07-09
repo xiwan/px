@@ -8,5 +8,6 @@ test/
 *.bk
 *.pid
 *.rdb
+*.zip
 stdout
 

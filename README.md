@@ -91,7 +91,7 @@ policy模块主要是通过预定义和自定义两种相结合的方案。
 
 policy类继承于`EventEmitter`, 监听下面几个事件
 
-* message: 主要是提供给http服务器使用
+* message: 主要是用于处理http或者websocket请求过来的事件
 * requestAction:
 * requestMessage:
 
@@ -107,7 +107,32 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 		var proxy.on('message', function(client, message, cb){ 
 			policy.emit('message', client, message, cb); 
 		});
+		
+在http服务器建立好的同时，websocket服务器也创建好了。它同样会把处理的事务托管给policy模块来完成.websocket服务器目前不接受binary格式数据，必须是可以json化的字符串。其body格式要求如下:
 
+		var message = {
+			name : action, // 请求对应handler
+			json : JSON.stringify(iMsg) // protocol部分
+		};
+		
+在Intel 4cpu 2.1Ghz, 4G Mem机器上, websocket benchmark部分结果(有rpc转发情况下):
+		
+		// client number: 100; concurrency: 10; message size: 10; roundtrip: 5
+		Min: 49ms
+		Mean: 68.42ms
+		Max: 284ms
+		// client number: 100; concurrency: 10; message size: 100; roundtrip: 5
+		Min: 41ms
+		Mean: 109.32ms
+		Max: 1237ms
+		// client number: 1000; concurrency: 10; message size: 10; roundtrip: 5
+		Min: 37ms
+		Mean: 85.252ms
+		Max: 1409ms
+		// client number: 1000; concurrency: 100; message size: 10; roundtrip: 5
+		Min: 97ms
+		Mean: 1307.026ms
+		Max: 5459ms
 
 ### 常用的npm
 
@@ -122,3 +147,5 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 * express
 * crypto
 * ini
+* [websocket-benchmark](https://github.com/cargomedia/websocket-benchmark) 
+* [ws](https://github.com/websockets/ws)

@@ -97,7 +97,7 @@ ProxyServer.prototype.socketRequest = function(socket) {
 	try {
 		var req = socket.upgradeReq;
 		socket.remoteAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-		global.debug('xxxxxx', socket.protocol, req.headers.origin);
+		global.debug(socket.protocol, req.headers.origin);
 		
         // if (socket.protocol !== 'user-event-socket' || req.headers.origin !== 'EvFun-DH') {
         //     global.warn('socket.error. peer:%s, protocol:%s, origin:%s, error:__invalid_request', socket.remoteAddress, connection.protocol, req.headers.origin);
@@ -159,8 +159,6 @@ ProxyServer.prototype.socketHandler = function (socket, message, flag) {
 		decodeReq(message, function(err, iMsg){
 			try {
 				if (err) throw err;
-				socket.send(iMsg);
-				return;
 
                 if (!iMsg || !iMsg.name || !iMsg.json)
                     throw new Error('__protocol_format');
@@ -245,8 +243,6 @@ ProxyServer.prototype.sendWebSocket = function(socket, action, iMsg) {
 
 function encodeRes(body, cb) {
 	try {
-		console.log('====2', body)
-		return cb(null, body)
 		var json = JSON.stringify(body);
 		zlib.gzip(json, function(err, data){
 			cb(err, data.toString('base64'));
@@ -260,8 +256,6 @@ function encodeRes(body, cb) {
 
 function decodeReq(body, cb) {
 	try {
-		console.log('====', body)
-		return cb(null, body)
 		var buff = new Buffer(body, 'base64');
 		zlib.gunzip(buff, function(err, data){
 			cb(err, JSON.parse(data));
