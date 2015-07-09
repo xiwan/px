@@ -27,7 +27,7 @@ Constructor.prototype.run = function(cb) {
 Constructor.prototype.testABC = function(protocol, cb) {
 	var msg = 'hey, i am in process UD:)';
 	global.debug(msg);
-	cb(null, {meg: msg})
+	cb(null, {msg: msg})
 }
 
 module.exports.Constructor = Constructor;

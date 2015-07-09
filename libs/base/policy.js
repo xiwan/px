@@ -48,7 +48,7 @@ Policy.prototype.onMessage = function(client, message, cb) {
         var timeId = setTimeout(function(){
         	self.onError(new Error('__api_expired'), message, cb);
         	cb = null;
-        }, 1000 * 30);
+        }, 1000 * 10);
 
         iAction.call(self, client, message, function(err, iAck){
         	clearTimeout(timeId);
@@ -130,16 +130,19 @@ Policy.prototype.iAuth = function(iList) {
 
     iList.forEach(function(cmd) {
         self.parser[cmd] = function(client, protocol, cb) {
-
             async.waterfall([
                 function(callback) { 
                     self.session.get(protocol.appSessionKey, cb); 
                 },
                 function(session, callback) { 
-                    protocol.__session = session; 
+                    if (!session.uid) {
+                        return callback(new Error('__invalid_session'));
+                    }
                     if (!self.owner[cmd]){
                         return callback(new Error('__api_unregistered'));
                     }
+                    protocol.__session = session;
+                    protocol.__action = cmd; 
                     self.owner[cmd].call(self, protocol, callback);
                 },
             ], function(err, iAck){

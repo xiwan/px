@@ -11,8 +11,16 @@ var ProxyServer = function (portNum, options) {
 	
 	var self = this;
 
+	self.users = {};
+
 	self.server = self.createServer(options);
 	self.server.listen(portNum);
+
+	var WebSocketServer = require('ws').Server;
+	self.socket = new WebSocketServer({ server : self.server });
+	self.socket.on('connection', function(socket) { self.socketRequest(socket) }) ;
+	self.socket.on('error', function(error) {}) ;
+
 	global.debug('ProxyServer.listen. %s.portNum:%s', options.protocol, portNum);
 	
 };
@@ -84,6 +92,109 @@ ProxyServer.prototype.webHandler = function (req, res) {
 	}
 };
 
+ProxyServer.prototype.socketRequest = function(socket) {
+	var self = this;
+	try {
+		var req = socket.upgradeReq;
+		socket.remoteAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+		global.debug('xxxxxx', socket.protocol, req.headers.origin);
+		
+        // if (socket.protocol !== 'user-event-socket' || req.headers.origin !== 'EvFun-DH') {
+        //     global.warn('socket.error. peer:%s, protocol:%s, origin:%s, error:__invalid_request', socket.remoteAddress, connection.protocol, req.headers.origin);
+        //     socket.close();
+        //     return;
+        // }
+
+		socket.__id = global.base.genGid();
+		self.users[socket.__id] = socket;
+
+		// socket.__timeId = setTimeout(function(){
+		// 	if (socket) {
+  //               global.warn('socket.error. peer:%s, error:__expired_login_time', socket.remoteAddress);
+  //               socket.close();
+		// 	}
+		// }, 5000);
+
+		socket.on('message', function(message, flag){
+			self.socketHandler(socket, message, flag);
+		});
+		// customized event: redirect
+		socket.on('redirect', function(action, message) { 
+			self.sendWebSocket(socket, action, message); 
+		});
+
+		socket.on('close', function(code){
+			try {
+				if (!socket) return;
+				global.warn('socket.onClose code:%s', code);
+				// handle channels
+				//global.base.socketCloseEvent(socket);
+				socket.removeAllListeners();
+                delete self.users[socket.__id];
+                socket = null;
+			}catch(ex) {
+				global.warn('socket.socketRequest.close ex:%s', ex.message);
+			}
+		});
+
+        socket.on('error', function(err) {
+            if (err && err.message) {
+                global.warn('socket.error. id:%s, peer:%s, error:%s', socket.__id, socket.remoteAddress, err.message);
+                err.message != 'read ECONNRESET' && global.warn(err.stack);
+            }
+        });
+
+	}catch(ex) {
+		global.warn('socket.socketRequest. ex:%s', ex.message);
+	}
+};
+
+ProxyServer.prototype.socketHandler = function (socket, message, flag) {
+	var self = this;
+	try {
+        if (flag.binary){
+        	throw new Error('__web_data_type');
+        } // dont hanlde binary here
+		
+		decodeReq(message, function(err, iMsg){
+			try {
+				if (err) throw err;
+				socket.send(iMsg);
+				return;
+
+                if (!iMsg || !iMsg.name || !iMsg.json)
+                    throw new Error('__protocol_format');
+
+                var protocol = JSON.parse(iMsg.json);
+                protocol.__action = iMsg.name;
+                socket.__appSessionKey && (protocol.appSessionKey = socket.__appSessionKey);
+                var timeId = setTimeout(function() {
+                    socket.emit('error', new Error('__api_expired'));
+                    timeId = 0;
+                }, 1000 * 10);
+
+                self.emit('message', socket, protocol, function(err, iAck){
+                	if (timeId == 0) return;
+                	clearTimeout(timeId);
+                	if (err) {
+                		socket.emit('error', err);
+                		self.sendWebSocket(socket, iMsg.name, { result : err.message });
+                	}else {
+                		iAck && self.sendWebSocket(socket, iMsg.name, iAck);
+                	}
+                });
+			}catch(ex) {
+                global.warn('ProxyServer.socketHandler.gunzip. ex:%s', ex.message);
+                socket.emit('error', ex);
+			}
+		});      
+
+	}catch(ex) {
+        global.warn('ProxyServer.socketHandler.message. ex:%s', ex.message);
+        socket.emit('error', ex);		
+	}
+};
+
 ProxyServer.prototype.sendHttpResponse = function(res, body) {
 	try{
 		res.writeHead(200, {'Content-Type': 'text/plain'});
@@ -108,8 +219,34 @@ ProxyServer.prototype.sendHttpError = function(res, err) {
 	}
 };
 
+/** send web socket by zip */
+ProxyServer.prototype.sendWebSocket = function(socket, action, iMsg) {
+	try {
+		var message = {
+			name : action,
+			json : JSON.stringify(iMsg)
+		};
+
+		encodeRes(message, function(err, data){
+			try {
+                if (err) throw err;
+                socket.send('1' + data);
+			}catch (ex) {
+				global.warn('ProxyServer.sendWebSocket. name:%s, error:%s', iMsg.name, ex.message);
+			}
+			message = null;
+			data = null;
+		});
+
+	}catch(ex){
+		global.warn('ProxyServer.sendWebSocket. name:%s, error:%s', iMsg.name, ex.message);
+	}
+};
+
 function encodeRes(body, cb) {
 	try {
+		console.log('====2', body)
+		return cb(null, body)
 		var json = JSON.stringify(body);
 		zlib.gzip(json, function(err, data){
 			cb(err, data.toString('base64'));
@@ -123,6 +260,8 @@ function encodeRes(body, cb) {
 
 function decodeReq(body, cb) {
 	try {
+		console.log('====', body)
+		return cb(null, body)
 		var buff = new Buffer(body, 'base64');
 		zlib.gunzip(buff, function(err, data){
 			cb(err, JSON.parse(data));
