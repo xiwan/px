@@ -107,26 +107,15 @@ ClientHashRing.prototype.remove = function(key, flag, error) {
 };
 
 ClientHashRing.prototype.get = function(hash) {
-    var self = this,
-        rpc, key;
-
-    key = self.ring.get(hash);
+    var self = this;
+    var key = self.ring.get(hash);
     if (!key) throw new Error('__no_server');
-
-    rpc = self.server[key];
-    if (!rpc || !rpc.remote) {
-        self.remove(key, new Error('__no_server'));
-        throw new Error('__no_server');
-    }
-
-    return rpc;
+    return self.getByKey(key);
 };
 
 ClientHashRing.prototype.getByKey = function(key) {
-    var self = this,
-        rpc;
-
-    rpc = self.server[key];
+    var self = this;
+    var rpc = self.server[key];
     if (!rpc || !rpc.remote) {
         self.remove(key, new Error('__no_server'));
         return null;
