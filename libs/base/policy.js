@@ -4,6 +4,7 @@ var async = require('async');
 var iSession = require('./session');
 var util = require('util');
 var events = require('events');
+var __ = require('underscore');
 
 var Policy = function (external) {
 	events.EventEmitter.call(this);
@@ -131,9 +132,19 @@ Policy.prototype.iAuth = function(iList) {
         self.parser[cmd] = function(client, protocol, cb) {
 
             async.waterfall([
-                function(callback) { callback(); },
-            ], function(err){
-                cb(err, {msg: 'iAuth'});
+                function(callback) { 
+                    self.session.get(protocol.appSessionKey, cb); 
+                },
+                function(session, callback) { 
+                    protocol.__session = session; 
+                    if (!self.owner[cmd]){
+                        return callback(new Error('__api_unregistered'));
+                    }
+                    self.owner[cmd].call(self, protocol, callback);
+                },
+            ], function(err, iAck){
+                err && global.base.sendErrorHistory(err, protocol, cmd);
+                cb(err, iAck);
             });
 
         };
@@ -143,13 +154,12 @@ Policy.prototype.iAuth = function(iList) {
 // predefined policy: iPass
 Policy.prototype.iPass = function(iList) {
     var self = this;
-
     iList.forEach(function(cmd) {
         self.parser[cmd] = function(client, protocol, cb) {
-
-            async.waterfall([
-                function(callback) {  global.base.getService('abc', true, 'UD', callback); },
-                function(service, callback) { service.requestAction(cmd, protocol, cb)},
+            var idx = __.random(0, 100).toString(); // because no session availble, random policy is ok
+            async.waterfall([ 
+                function(callback) {  global.base.getService(idx, true, 'UD', callback); },
+                function(service, callback) { service.requestAction(cmd, protocol, cb); },
             ], cb);
 
         };

@@ -7,6 +7,7 @@ var async = require('async');
 var log4js = require('log4js');
 var util = require('util');
 var fs = require('fs');
+var stackTrace = require('stack-trace');
 
 var redisHash = require('./redisHashRing');
 var rpcServer = require('./rpcServer');
@@ -85,6 +86,7 @@ Constructor.prototype.init = function(cb) {
 	    ], function(err){
 	    	try {
 	    		if (err) throw err;
+                self.gids = global.utils.getGenKey(self.idx);
 
 			    process.on('SIGINT', function () { self.terminate('SIGINT'); });
 				process.on('SIGTERM', function () { self.terminate('SIGTERM'); });
@@ -180,13 +182,50 @@ Constructor.prototype.initForRPC = function(property, emitter) {
 Constructor.prototype.getService = function(key, mandatory, name, cb) {
     var self = this;
     try {
-        
         var clients = self.rpc.client[name];
+        if (!clients)
+            throw new Error('__no_rpc_client');
         var service = clients.get(key);
         cb(null, service.remote);
     }catch (ex){
         cb(ex);
     }
+};
+
+Constructor.prototype.sendErrorHistory = function(err, argv, action) {
+    try {
+        var stacks = stackTrace.parse(err);
+        argv = global.utils.toObject(argv);
+        var first = stacks[0];
+        if (!first) {
+            first = { functionName : action }
+        }
+        action && (first.functionName = action);
+
+        var row = {
+            date : global.utils.toDateTime(new Date()),
+            logGid : global.base.genGid(),
+            server : global.base.idx,
+            functionName : first.functionName || (first.functionName = ''),
+            fileName : first.fileName || (first.fileName = ''),
+            lineNumber : first.lineNumber || (first.lineNumber = -1),
+            columnNumber : first.columnNumber || (first.columnNumber = -1),
+            message : err.message,
+            argv : JSON.stringify(argv),
+            stacks : JSON.stringify(stacks)
+        };
+
+        console.log(row);
+
+    }catch(ex) {
+        global.warn('ActionLogUtils.sendErrorHistory. error:%s', err.message);
+        global.warn(ex.stack);        
+    }
+};
+
+Constructor.prototype.genGid = function() {
+    var self = this;
+    return self.gids.get();
 };
 
 
