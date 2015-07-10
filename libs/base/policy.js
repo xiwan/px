@@ -6,7 +6,7 @@ var util = require('util');
 var events = require('events');
 var __ = require('underscore');
 
-var Policy = function (external) {
+var Policy = function () {
 	events.EventEmitter.call(this);
 
 	var self = this;
@@ -14,6 +14,9 @@ var Policy = function (external) {
 	self.session = iSession.createObject();
 
 	self.on('message', function() { self.onMessage.apply(self, arguments); });
+    self.on('subscribe', function() { self.onSubscribe.apply(self, arguments); });
+    self.on('rpc', function() { self.onRpc.apply(self, arguments); });
+
     self.on('requestAction', function() { self.requestAction.apply(self, arguments); });
     self.on('requestMessage', function() { self.requestMessage.apply(self, arguments); });
 
@@ -69,6 +72,35 @@ Policy.prototype.onMessage = function(client, message, cb) {
 	}catch (ex) {
 		self.onError(ex, message, cb);
 	}
+};
+
+Policy.prototype.onSubscribe = function(key, message) {
+    var self = this;
+    try {
+        var protocol = JSON.parse(message);
+        var iAction = self.parser[protocol.name];
+        if (typeof(iAction) !== 'function') 
+            throw new Error('__api_unregistered');
+
+        iAction.call(self, key, protocol.body);
+    } catch (ex) {
+        global.warn('Policy.onSubscribe. ex:%s, message:%s', ex.message, message);
+    }
+};
+
+Policy.prototype.onRpc = function(uid, action, message, cb) {
+    var self = this;
+    try {
+        var iAction = self.parser[action];
+        if (typeof(iAction) !== 'function') 
+            throw new Error('__api_unregistered');
+
+        iAction.call(self, uid, action, message, cb);
+    } catch (ex) {
+        global.warn('Policy.onRpc. uid:%s, action:%s, error:%s', uid, action, ex.message);
+        global.warn(ex.stack);
+        cb(ex);
+    }
 };
 
 Policy.prototype.requestAction = function(action, protocol, cb){
