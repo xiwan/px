@@ -229,17 +229,17 @@ Constructor.prototype.genGid = function() {
     return self.gids.get();
 };
 
-Constructor.prototype.socketCloseEvent = function(socket) {
+Constructor.prototype.socketCloseEvent = function(client) {
     var self = this;
-    (socket.__uid && (delete self.users[socket.__uid]));
+    (client.__uid && (delete self.users[client.__uid]));
 
-    if (!socket.__channel) return;
-    Object.keys(socket.__channel).forEach(function(idx) {
-        var key = socket.__channel[idx];
+    if (!client.__channel) return;
+    Object.keys(client.__channel).forEach(function(idx) {
+        var key = client.__channel[idx];
         var usage = self.channel.channels[key];
         if (!usage) return;
 
-        delete usage.joins(socket.__id); // joins
+        delete usage.joins(client.__id); // joins
     });
 };
 

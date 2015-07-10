@@ -24,7 +24,7 @@ Constructor.prototype.run = function(cb) {
 			self.policy.emit('message', client, message, cb); 
 		});
 
-		self.channel = base.Channel.createObject();
+		self.channel = base.Channel.createObject(self.policy);
 		self.channel.prepare();
 
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
