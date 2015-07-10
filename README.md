@@ -59,7 +59,7 @@ redis server安装好以后，通过
 	1735293225 49884     1   0 Tue12PM ??         1:34.00 redis-server *:16402 
 
 这个时候对于同一个session，需要将其请求转到同一个redis，否则缓存则会失效。
-redis模块采用了`constant hashing`算法(hashring模块)来达到上述目的。其基本思路就是保证传入的hash一致性，整个ring不会因为增加或者减少某些nodes导致返回node的变化。这里减少node指非关键node,如果原始node被删除，会导致上次结果被hash到另外的节点中。
+redis模块采用了`constant hashing`算法(hashring模块)来达到上述目的。其基本思路就是每次node的增加和删除在平均情况下只会导致K/n个hash结果重新映射(K是hash的key值，n是node数目)；而不是大量的重新映射导致缓存的失败。
 
 这样开发者要做的其实就很简单了：保证传入hash值的稳定性。常见的做法就是通过session提取出uid。这样就可以保证玩家每次的请求都在固定的node上被响应。
 
