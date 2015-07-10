@@ -155,7 +155,7 @@ Constructor.prototype.startProcess = function(item) {
         child.process = new (forever.Monitor)(service, {
             max : 1,
             slient : true,
-            options : ["--idx=" + item.idx]        	
+            args : ["--idx=" + item.idx]        	
         });	
 
        child.process.on('exit', function() {
