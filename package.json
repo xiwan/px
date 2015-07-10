@@ -1,0 +1,17 @@
+{
+	"author": "xi.wan <5155280@qq.com>",  
+
+  	"name": "projectX",
+  	"version": "1.0.0",
+  	"license": "MIT",
+	"repository": {
+	    "type": "git",
+	    "url": "git://github.com/xiwan/projectX"
+	},
+	"dependencies": {
+	    "ws" : "^0.7.2",
+	    "forever-monitor" : "~1.5.2",
+	    "async" : "1.x",
+	    "underscore" : "^1.8.3"
+	}
+}
