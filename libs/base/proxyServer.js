@@ -11,7 +11,7 @@ var ProxyServer = function (portNum, options) {
 	
 	var self = this;
 
-	self.users = {};
+	global.base.users = {};
 
 	self.server = self.createServer(options);
 	self.server.listen(portNum);
@@ -106,7 +106,8 @@ ProxyServer.prototype.socketRequest = function(socket) {
         // }
 
 		socket.__id = global.base.genGid();
-		self.users[socket.__id] = socket;
+		global.base.users[socket.__id] = socket;
+
 
 		// socket.__timeId = setTimeout(function(){
 		// 	if (socket) {
@@ -128,9 +129,9 @@ ProxyServer.prototype.socketRequest = function(socket) {
 				if (!socket) return;
 				global.warn('socket.onClose code:%s', code);
 				// handle channels
-				//global.base.socketCloseEvent(socket);
+				global.base.socketCloseEvent(socket);
 				socket.removeAllListeners();
-                delete self.users[socket.__id];
+                delete global.base.users[socket.__id];
                 socket = null;
 			}catch(ex) {
 				global.warn('socket.socketRequest.close ex:%s', ex.message);
@@ -240,6 +241,18 @@ ProxyServer.prototype.sendWebSocket = function(socket, action, iMsg) {
 		global.warn('ProxyServer.sendWebSocket. name:%s, error:%s', iMsg.name, ex.message);
 	}
 };
+
+
+// ProxyServer.prototype.socketCloseEvent = function(socket) {
+//     var self = this;
+//     (socket.__uid && (delete global.base.users[socket.__uid]));
+
+//     if (!socket.__channel) return;
+//     Object.keys(socket.__channel).forEach(function(idx) {
+//     	var key = socket.__channel[idx];
+//     });
+// };
+
 
 function encodeRes(body, cb) {
 	try {

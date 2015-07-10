@@ -4,6 +4,7 @@
     var async = require('async');
     var base = require('./base/constructor');
     var usage = require('./base/usage.js');
+    var channel = require('./base/channel.js');
     var policy = require('./base/policy.js');
     var server = require('./base/proxyServer.js');
 
@@ -11,6 +12,7 @@
     module.exports.Usage = usage.Usage;
     module.exports.ProxyServer = server.ProxyServer;
     module.exports.Policy = policy
+    module.exports.Channel = channel
 
     module.exports.app = function(name, main){
 		var appMain = new main.Constructor(name);

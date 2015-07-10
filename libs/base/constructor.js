@@ -38,6 +38,7 @@ var Constructor = function (name, local) {
     this.versions = [];
     this.gids = null;
     this.cfg = null;
+    this.users = null;      // socket cache
 
     this.waitForTerminate = 1;
 
@@ -228,6 +229,19 @@ Constructor.prototype.genGid = function() {
     return self.gids.get();
 };
 
+Constructor.prototype.socketCloseEvent = function(socket) {
+    var self = this;
+    (socket.__uid && (delete self.users[socket.__uid]));
+
+    if (!socket.__channel) return;
+    Object.keys(socket.__channel).forEach(function(idx) {
+        var key = socket.__channel[idx];
+        var usage = self.channel.channels[key];
+        if (!usage) return;
+
+        delete usage.joins(socket.__id); // joins
+    });
+};
 
 
 module.exports.Constructor = Constructor;
