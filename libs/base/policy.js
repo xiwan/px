@@ -20,7 +20,7 @@ var Policy = function (external) {
 };
 util.inherits(Policy, events.EventEmitter);
 
-Policy.prototype.loadPolicy = function(owner, commands) {
+Policy.prototype.load = function(owner, commands) {
     var self = this;
     var keys = Object.keys(commands);
     self.owner = owner;

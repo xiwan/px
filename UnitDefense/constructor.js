@@ -15,7 +15,7 @@ Constructor.prototype.run = function(cb) {
 	var self = this;
 	try {
 		self.policy = base.Policy.createObject();
-		self.policy.loadPolicy(self, commands);
+		self.policy.load(self, commands);
 
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 	}catch (ex) {
