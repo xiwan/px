@@ -52,7 +52,7 @@ Policy.prototype.onMessage = function(client, message, cb) {
         	self.onError(new Error('__api_expired'), message, cb);
         	cb = null;
         }, 1000 * 10);
-
+        console.log(message)
         iAction.call(self, client, message, function(err, iAck){
         	clearTimeout(timeId);
         	try {
@@ -144,14 +144,16 @@ Policy.prototype.iNone = function(iList) {
 	var self = this;
 
 	iList.forEach(function(cmd) {
-		self.parser[cmd] = function(client, protocol, cb) {
-
-			async.waterfall([
-				function(callback) { callback(); },
-			], function(err){
-				cb(err, {msg: 'iNone'});
-			});
-
+		self.parser[cmd] = function(client, protocol, cb) { 
+            try {
+                if (!self.owner[cmd]) throw new Error('__api_unregistered');
+                self.owner[cmd](protocol, function(err, iAck){
+                    err && global.base.sendErrorHistory(err, protocol, cmd);
+                    cb(err, iAck);
+                });
+            }catch (ex) {
+                cb(ex);
+            }
 		};
 	});
 };

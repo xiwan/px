@@ -216,7 +216,7 @@ Constructor.prototype.sendErrorHistory = function(err, argv, action) {
             stacks : JSON.stringify(stacks)
         };
 
-        console.log(row);
+        //console.log(row);
 
     }catch(ex) {
         global.warn('ActionLogUtils.sendErrorHistory. error:%s', err.message);

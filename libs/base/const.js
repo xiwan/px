@@ -9,4 +9,10 @@ module.exports.Const = {
     CHANNEL_CLAN_IDX : 2,
 
     MAX_CHANNEL_JOIN_NUM : 300,
+
+    pMarket : {
+        1 : 'google',
+        2 : 'apple'
+    },
+    
 };

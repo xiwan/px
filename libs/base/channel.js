@@ -126,7 +126,7 @@ ChannelAgent.prototype.joinChannel = function(channelType, idx) {
 	try {
 		if (__.indexOf([global.const.CHANNEL_PUB_IDX, global.const.CHANNEL_CLAN_IDX], channelType) < 0) 
 			 throw new Error('__invalid_param');
-        if (idx != parseInt(idx) )
+        if (idx != parseInt(idx))
             throw new Error('__invalid_param');
         var name = (channelType === global.const.CHANNEL_PUB_IDX) ? global.const.CHANNEL_PUB : global.const.CHANNEL_CLAN;
         var key = util.format('channel.%s.%s', name, idx);
@@ -206,7 +206,7 @@ ChannelAgent.prototype.recvChannelMsg = function(key, iMsg) {
             if (!socket.__channel)
                 return;
             socket.emit('redirect', 'EFRecvChannelMsg', iMsg); // client side need to define 'EFRecvChannelMsg' function
-        };
+        });
 
 	}catch (ex) {
 		global.warn('ChannelAgent.recvChannelMsg. error:%s', ex.message);

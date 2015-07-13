@@ -53,4 +53,31 @@ Constructor.prototype.iUser = function(iList) {
 	});
 };
 
+
+Constructor.prototype.EFClientLogin = function(protocol, cb) {
+	var self = this;
+	try {
+		var market = global.const.pMarket[protocol.market];
+		protocol.clientVersion || (protocol.clientVersion = 100);
+	    if (typeof(market) !== 'string' ||
+	        typeof(protocol.deviceId) !== 'string' ||
+	        typeof(protocol.clientVersion) !== 'number')
+	        throw new Error('__invalid_param');
+
+	   	protocol.market = market;
+
+	   self.policy.session.createSession(protocol, function(err, key){
+            cb(err, {
+                result : 'success',
+                appSessionKey : key,
+                dataVersion : protocol.clientVersion
+            });
+	   });
+
+	}catch (ex) {
+		cb(ex)
+	}
+};
+
+
 module.exports.Constructor = Constructor;
