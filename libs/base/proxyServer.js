@@ -114,7 +114,7 @@ ProxyServer.prototype.socketRequest = function(socket) {
                 global.warn('socket.error. peer:%s, error:__expired_login_time', socket.remoteAddress);
                 socket.close();
 			}
-		}, 5000);
+		}, global.const.SOCKET_TTL);
 
 		socket.on('message', function(message, flag){
 			self.socketHandler(socket, message, flag);

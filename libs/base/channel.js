@@ -107,7 +107,7 @@ ChannelAgent.prototype.updateChannelUsage = function(dataList, keys, cb) {
 */
 ChannelAgent.prototype.getChannelIdx = function(){
 	var iLen = self.channelUsage.length;
-	var stdValue = parseInt(global.const.MAX_CHANNEL_JOIN_NUM * 0.7);
+	var stdValue = parseInt(global.const.CHANNEL_MAX_JOIN_NUM * 0.7);
 	var idx = 1;
 	for (i = 0; i<iLen; i++) {
 		var usage = self.channelUsage[i];
@@ -131,7 +131,7 @@ ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
         var name = (channelType === global.const.CHANNEL_PUB_IDX) ? global.const.CHANNEL_PUB : global.const.CHANNEL_CLAN;
         var key = util.format('channel.%s.%s', name, idx);
         var usage = self.channels[key];
-        if (usage && global.const.MAX_CHANNEL_JOIN_NUM <= usage.count)
+        if (usage && global.const.CHANNEL_MAX_JOIN_NUM <= usage.count)
             throw new Error('__channel_exceeded');
 
         if (channelType === global.const.CHANNEL_PUB_IDX) {

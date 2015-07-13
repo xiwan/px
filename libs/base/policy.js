@@ -146,8 +146,9 @@ Policy.prototype.iNone = function(iList) {
 	iList.forEach(function(cmd) {
 		self.parser[cmd] = function(client, protocol, cb) { 
             try {
-                if (!self.owner[cmd]) throw new Error('__api_unregistered');
-                self.owner[cmd](protocol, function(err, iAck){
+                var iFunction = self.owner[cmd] || self[cmd];
+                if (!iFunction) throw new Error('__api_unregistered');
+                iFunction.call(self.owner, protocol, function(err, iAck){
                     err && global.base.sendErrorHistory(err, protocol, cmd);
                     cb(err, iAck);
                 });
@@ -169,15 +170,16 @@ Policy.prototype.iAuth = function(iList) {
                     self.session.get(protocol.appSessionKey, callback); 
                 },
                 function(session, callback) { 
-                    // if (!session.uid) {
-                    //     return callback(new Error('__invalid_session'));
-                    // }
-                    if (!self.owner[cmd]){
+                    if (!session.uid) {
+                        return callback(new Error('__invalid_session'));
+                    }
+                    var iFunction = self.owner[cmd] || self[cmd];
+                    if (!iFunction){
                         return callback(new Error('__api_unregistered'));
                     }
                     protocol.__session = session;
                     protocol.__action = cmd; 
-                    self.owner[cmd](client, protocol, callback);
+                    iFunction.call(self.owner, client, protocol, callback);
                 },
             ], function(err, iAck){
                 err && global.base.sendErrorHistory(err, protocol, cmd);
@@ -228,8 +230,9 @@ Policy.prototype.iRPC = function(iList) {
             try {
                 var socket = global.base.users[uid];
                 if (uid > 0 && (!socket || !socket.__channel)) throw new Error('__socket_disconnected');
-                if (!self。owner[cmd]) throw new Error('__api_unregistered');
-                self.owner[cmd](socket, message, function(err, iAck) {
+                var iFunction = self.owner[cmd] || self[cmd];
+                if (!iFunction) throw new Error('__api_unregistered');
+                iFunction.call(self.owner, socket, message, function(err, iAck) {
                     err && global.base.sendErrorHistory(err, protocol, cmd);
                     cb(err, iAck);
                 });
@@ -239,7 +242,7 @@ Policy.prototype.iRPC = function(iList) {
             }
         }
     });
-}
+};
 
 exports.createObject = function(external) {
     return new Policy(external);
