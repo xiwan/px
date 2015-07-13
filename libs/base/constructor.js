@@ -234,6 +234,7 @@ Constructor.prototype.socketCloseEvent = function(client) {
     (client.__uid && (delete self.users[client.__uid]));
 
     if (!client.__channel) return;
+    
     Object.keys(client.__channel).forEach(function(idx) {
         var key = client.__channel[idx];
         var usage = self.channel.channels[key];

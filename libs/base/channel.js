@@ -122,7 +122,7 @@ ChannelAgent.prototype.getChannelIdx = function(){
 	return idx;
 }
 
-ChannelAgent.prototype.joinChannel = function(channelType, idx) {
+ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
 	try {
 		if (__.indexOf([global.const.CHANNEL_PUB_IDX, global.const.CHANNEL_CLAN_IDX], channelType) < 0) 
 			 throw new Error('__invalid_param');
@@ -134,7 +134,21 @@ ChannelAgent.prototype.joinChannel = function(channelType, idx) {
         if (usage && global.const.MAX_CHANNEL_JOIN_NUM <= usage.count)
             throw new Error('__channel_exceeded');
 
-        //  more to do here
+        if (channelType === global.const.CHANNEL_PUB_IDX) {
+
+        }
+
+        var iAck = {
+            result : 'success',
+            channelType : channelType,
+            idx : idx
+        };
+
+        if (socket.__detail) {
+            socket.__channel[protocol.channelType] = protocol.key;
+            self.subscribe(socket, protocol.key);
+            cb(null, iAck );
+        }
 
 	}catch (ex) {
 

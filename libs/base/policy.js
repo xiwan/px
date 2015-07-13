@@ -220,6 +220,27 @@ Policy.prototype.iUser = function(iList) {
     });
 };
 
+
+Policy.prototype.iRPC = function(iList) {
+    var self = this;
+    iList.forEach(function(cmd){
+        self.parser[cmd] = function(uid, action, message,cb) {
+            try {
+                var socket = global.base.users[uid];
+                if (uid > 0 && (!socket || !socket.__channel)) throw new Error('__socket_disconnected');
+                if (!self。owner[cmd]) throw new Error('__api_unregistered');
+                self.owner[cmd](socket, message, function(err, iAck) {
+                    err && global.base.sendErrorHistory(err, protocol, cmd);
+                    cb(err, iAck);
+                });
+
+            }catch (ex){
+                cb(ex);
+            }
+        }
+    });
+}
+
 exports.createObject = function(external) {
     return new Policy(external);
 };
