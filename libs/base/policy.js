@@ -166,18 +166,18 @@ Policy.prototype.iAuth = function(iList) {
         self.parser[cmd] = function(client, protocol, cb) {
             async.waterfall([
                 function(callback) { 
-                    self.session.get(protocol.appSessionKey, cb); 
+                    self.session.get(protocol.appSessionKey, callback); 
                 },
                 function(session, callback) { 
-                    if (!session.uid) {
-                        return callback(new Error('__invalid_session'));
-                    }
+                    // if (!session.uid) {
+                    //     return callback(new Error('__invalid_session'));
+                    // }
                     if (!self.owner[cmd]){
                         return callback(new Error('__api_unregistered'));
                     }
                     protocol.__session = session;
                     protocol.__action = cmd; 
-                    self.owner[cmd].call(self, protocol, callback);
+                    self.owner[cmd](client, protocol, callback);
                 },
             ], function(err, iAck){
                 err && global.base.sendErrorHistory(err, protocol, cmd);

@@ -109,12 +109,12 @@ ProxyServer.prototype.socketRequest = function(socket) {
 		global.base.users[socket.__id] = socket;
 
 
-		// socket.__timeId = setTimeout(function(){
-		// 	if (socket) {
-  //               global.warn('socket.error. peer:%s, error:__expired_login_time', socket.remoteAddress);
-  //               socket.close();
-		// 	}
-		// }, 5000);
+		socket.__timeId = setTimeout(function(){
+			if (socket) {
+                global.warn('socket.error. peer:%s, error:__expired_login_time', socket.remoteAddress);
+                socket.close();
+			}
+		}, 5000);
 
 		socket.on('message', function(message, flag){
 			self.socketHandler(socket, message, flag);

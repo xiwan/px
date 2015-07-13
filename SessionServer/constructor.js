@@ -34,26 +34,6 @@ Constructor.prototype.run = function(cb) {
 	}
 };
 
-
-
-// overwrite policy 
-Constructor.prototype.iUser = function(iList) {
-	var self = this;
-
-	iList.forEach(function(cmd) {
-		self.policy.parser[cmd] = function(client, protocol, cb) {
-
-			async.waterfall([
-				function(callback) { callback(); },
-			], function(err){
-				cb(err, {msg: 'test33'});
-			});
-
-		};
-	});
-};
-
-
 Constructor.prototype.EFClientLogin = function(protocol, cb) {
 	var self = this;
 	try {
@@ -66,13 +46,33 @@ Constructor.prototype.EFClientLogin = function(protocol, cb) {
 
 	   	protocol.market = market;
 
-	   self.policy.session.createSession(protocol, function(err, key){
+	    self.policy.session.createSession(protocol, function(err, key){
             cb(err, {
                 result : 'success',
                 appSessionKey : key,
                 dataVersion : protocol.clientVersion
             });
-	   });
+	    });
+
+	}catch (ex) {
+		cb(ex)
+	}
+};
+
+Constructor.prototype.EFUserSocketLogin = function(client, protocol, cb) {
+	var self = this;
+	try {
+		var session = protocol.__session;
+        if (session.deviceId !== protocol.deviceId)
+            throw new Error('__invalid_param');
+
+        clearTimeout(client.__timeId);
+        delete client.__timeId;
+        client.__appSessionKey = protocol.appSessionKey;
+        client.__channel = {};
+        client.__uid = session.uid;
+        global.base.users[session.uid] = client;
+        cb(null, { result : 'success' });
 
 	}catch (ex) {
 		cb(ex)
