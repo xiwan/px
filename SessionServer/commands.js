@@ -1,5 +1,5 @@
 module.exports = {
 	'iNone': ['EFClientLogin'],
-	'iAuth': ['EFUserSocketLogin'],
+	'iAuth' : ['EFUserSocketLogin', 'EFHeartBeat'],
 	'iPass': ['test1', 'testABC'],
 };
