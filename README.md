@@ -80,6 +80,8 @@ policy模块主要是通过预定义和自定义两种相结合的方案。
 * iAuth: 需要认证，但没有rpc请求。 比如session的检查
 * iUser: 需要认证，并且会有rpc请求。比如请求成为游戏内的好友
 
+下面是一个例子：
+
 		module.exports = {
 			'iUser': ['reqAskForFriend', 'reqGetItem'],
 			'iAuth': ['reqCheckSession'],
@@ -133,6 +135,18 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 		Min: 97ms
 		Mean: 1307.026ms
 		Max: 5459ms
+
+### 功能设计
+
+#### 登陆功能
+任何一款游戏都有登陆部分，projectX同样如此。下面是一个登陆游戏服务器基本的一些请求（补充中）
+
+	1. EFClientLogin 		//客户端登陆游戏服务器，检查客户端版本及其他设置，生成session
+	2. EFCheckTableCrc		//crc校验客户端master data
+	3. EFUserLogin			//注册游戏内账号或者登陆游戏内已由账号
+	4. EFGetUserData		//获取游戏账号用户数据
+	5. EFUpdateNick			//更新玩家昵称
+	6. EFUserSocketLogin	//websocket请求登陆
 
 ### 常用的npm
 
