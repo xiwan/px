@@ -1,4 +1,6 @@
 module.exports.Const = {
+    appId : 460434087334456,
+    
     SESSION_TTL : 60 * 10,
     OBJECT_TTL : 60 * 20,
     SOCKET_TTL : 1000 * 10,

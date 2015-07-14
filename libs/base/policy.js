@@ -52,17 +52,17 @@ Policy.prototype.onMessage = function(client, message, cb) {
         	self.onError(new Error('__api_expired'), message, cb);
         	cb = null;
         }, 1000 * 10);
-        console.log(message)
+
         iAction.call(self, client, message, function(err, iAck){
         	clearTimeout(timeId);
         	try {
         		if (err) throw err;
         		cb(null, iAck);
-
+                var end = new Date();
                 if (message.__session && message.__session.uid) {
-                    global.test('ApiParser.onMessage. uid:%s, action:%s', message.__session.uid, message.__action);
+                    global.test('Policy.onMessage. uid:%s, action:%s, spent:%sms', message.__session.uid, message.__action, end-begin);
                 } else {
-                    global.test('ApiParser.onMessage. action:%s', message.__action);
+                    global.test('Policy.onMessage. action:%s, spent:%sms', message.__action, end-begin);
                 }                   
         	} catch (ex) {
         		self.onError(ex, message, cb);

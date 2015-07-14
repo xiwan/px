@@ -9,6 +9,7 @@ var ConnectionMgr = function(cfg, domain) {
 	var self = this;
 
 	self.poolCluster = null;
+	self.pool = null;
 	if (cfg.database && cfg.master && cfg.slave) {
 		var poolCluster = mysql.createPoolCluster();
 		var masterConfig = {
@@ -44,7 +45,7 @@ var ConnectionMgr = function(cfg, domain) {
 
 ConnectionMgr.prototype.use = function(pattern) {
 	var self = this;
-	return self.poolCluster.of(pattern.toUpperCase() + '*', 'RR');
+	self.pool = self.poolCluster.of(pattern.toUpperCase() + '*', 'RR');
 };
 
 ConnectionMgr.prototype.setConnection = function(poolCluster) {
@@ -63,6 +64,41 @@ ConnectionMgr.prototype.setConnection = function(poolCluster) {
     // self.poolCluster.on('enqueue', function () {
     //     global.debug('Waiting for available connection slot');
     // });
+};
+
+ConnectionMgr.prototype.execute = function(qry, cb) {
+	var self = this;
+	try {
+		var bArray = util.isArray(qry);
+		self.pool.getConnection(function(err, connection){
+			if (err) {
+				cb(err);
+				return;
+			}
+
+			var qryList = bArray ? qry : [qry];
+			qryList.splice(0, 0, 'SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;');
+            qryList.push('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ ;');
+
+            async.map(qryList, function(qry ,callback){
+            	if (typeof qry == 'string') {
+            		connection.query(qry, callback);
+            	}else {
+            		connection.query(qry.sql, qry.data, callback);
+            	}
+            }, function(err, results){
+            	connection.release();
+                results.splice(0, 1);
+                results.splice(results.length-1, 1);
+                cb(err, results[0]);
+                err && console.dir(qryList);
+            });
+
+		});
+
+	}catch (ex) {
+
+	}
 };
 
 exports.createObject = function (property, domain) {

@@ -81,7 +81,7 @@ Constructor.prototype.init = function(cb) {
 	    } else { // for other processes
 	        self.cfg = JSON.parse(process.env.cfg);
 	    }
-
+        
 	    async.waterfall([
 	    	function(callback) {self.initLogger(self.cfg.logs, callback)},
 	    	function(callback) {self.initRedis(self.cfg.redis, callback)},

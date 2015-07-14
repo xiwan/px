@@ -73,9 +73,10 @@ ProxyServer.prototype.webHandler = function (req, res) {
         		try {
         			message.__action = action;
         			message.__address = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        			global.test('ProxyServer.webHandler action:%s, message:%s', action, JSON.stringify(message));
         			self.emit('message', req, message, function(err, iAck){
                         if (err) {
-                            global.warn('WebService.onRequest.emit action:%s, message:%s, err:%s', action, JSON.stringify(message), err.message);
+                            global.warn('ProxyServer.webHandler action:%s, message:%s, err:%s', action, JSON.stringify(message), err.message);
                             global.warn(err.stack);
                             self.sendHttpError(res, err);
                         } else {
