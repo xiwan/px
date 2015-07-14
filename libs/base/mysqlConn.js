@@ -27,7 +27,7 @@ var ConnectionMgr = function(cfg, domain) {
 				port : cfg.slave.port,
 				user : cfg[cfg.database].user,
 				password : cfg[cfg.database].password,
-				database : domain || cfg.database	
+				database : cfg[domain].database || cfg.database	
 			}
 			var idx = i+1;
 			poolCluster.add('SLAVE' + idx, slaveConfig);

@@ -7,7 +7,7 @@ var util = require('util');
 
 var GameSystem = exports.GameSystem = function(property) {
     var self = this;
-    self.mConn = mConn.createObject(property, 'game_system');
+    self.mConn = mConn.createObject(property, 'systemDB');
 };
 
 GameSystem.prototype.test = function(cb){

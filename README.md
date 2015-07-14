@@ -33,8 +33,49 @@
 
 配置在config.ini中，读写分离的主要目的是为了减轻数据库的压力。主从两库的同步主要通过mysql replica机制来达到。
 
+下面是一个配置mysql部分的片段
 
+	[mysql]
+	database = systemDB					//指定默认链接的数据库
+
+	[mysql.master]						//master信息，master一般只有一个
+	host = localhost
+	port = 3306
+
+	[mysql.slave] 						//slave信息,可以支持多个
+	host = localhost
+	port = 3306
+	num = 2								//配置多少个slave
+
+	[mysql.systemDB] 					//某个DB的配置信息	user = gameAdmin					//用户名
+	password = admin00!!				//密码
+	database = game_system				//数据库真实名称
+			
+	[mysql.platformDB]					//第二个DB的配置信息
+	user = gameAdmin
+	password = admin00!!
+	database = platform_service
+
+如何连接一个数据库？首先需要在model层中引入mysqlConn类:
+
+	var mConn = require('./libs/base/mysqlConn');
+调用构造函数:
+	
+	// 如果未设置第二个参数(目标数据库)，则使用默认数据库连接
+	self.mConn = mConn.createObject(global.base.cfg.mysql, 'platformDB');
+
+使用master或者slave:
+	
+	self.mConn.use('slave');
+执行单条活着多条sql:
+
+	var qryList = [];
+    qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
+	self.mConn.execute(qryList, cb);
+	
 ### 模块设计
+
+#### model模块
 
 #### construtor模块
 Constructor是所有其他进程的父类。提供了供子类访问的各种对象和方法。
@@ -154,7 +195,7 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 * underscore
 * dnode
 * log4js
-* mysql
+* [mysql 2.7.0](https://github.com/felixge/node-mysq)
 * redis
 * optimist
 * mocha
