@@ -9,6 +9,7 @@ var util = require('util');
 var fs = require('fs');
 var stackTrace = require('stack-trace');
 
+var mysqlConn = require('./mysqlConn');
 var redisHash = require('./redisHashRing');
 var rpcServer = require('./rpcServer');
 var rpcClient = require('./rpcClient');
@@ -81,6 +82,7 @@ Constructor.prototype.init = function(cb) {
 	        self.cfg = JSON.parse(process.env.cfg);
 	    }
 
+        self.appConn = mysqlConn.createObject(self.cfg.mysql, 'test');
 	    async.waterfall([
 	    	function(callback) {self.initLogger(self.cfg.logs, callback)},
 	    	function(callback) {self.initRedis(self.cfg.redis, callback)},

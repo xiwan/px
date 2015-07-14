@@ -12,6 +12,7 @@
 	    "ws" : "^0.7.2",
 	    "forever-monitor" : "~1.5.2",
 	    "async" : "1.x",
-	    "underscore" : "^1.8.3"
+	    "underscore" : "^1.8.3",
+	    "mysql" : "~2.7.0"
 	}
 }
