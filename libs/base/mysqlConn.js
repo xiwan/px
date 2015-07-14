@@ -21,17 +21,16 @@ var ConnectionMgr = function(cfg, domain) {
 		}// always have one master
 		poolCluster.add('MASTER', masterConfig);
 
-		for (var i=0; i<cfg.slave.num; i++) {
+		cfg.slave.conn.forEach(function(conn, idx){
 			var slaveConfig = {
-				host : cfg.slave.host,
-				port : cfg.slave.port,
+				host : conn.split(':')[0],
+				port : conn.split(':')[1],
 				user : cfg[cfg.database].user,
 				password : cfg[cfg.database].password,
 				database : cfg[domain].database || cfg.database	
 			}
-			var idx = i+1;
-			poolCluster.add('SLAVE' + idx, slaveConfig);
-		}
+			poolCluster.add('SLAVE' + (idx+1), slaveConfig);
+		});
 
 		self.setConnection(poolCluster);
 	}

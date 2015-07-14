@@ -43,11 +43,11 @@
 	port = 3306
 
 	[mysql.slave] 						//slave信息,可以支持多个
-	host = localhost
-	port = 3306
-	num = 2								//配置多少个slave
+	conn[] = localhost:3307
+	conn[] = localhost:3308
 
-	[mysql.systemDB] 					//某个DB的配置信息	user = gameAdmin					//用户名
+	[mysql.systemDB] 					//某个DB的配置信息
+	user = gameAdmin					//用户名
 	password = admin00!!				//密码
 	database = game_system				//数据库真实名称
 			
