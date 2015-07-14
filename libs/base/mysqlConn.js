@@ -68,14 +68,12 @@ ConnectionMgr.prototype.setConnection = function(poolCluster) {
 ConnectionMgr.prototype.execute = function(qry, cb) {
 	var self = this;
 	try {
-		var bArray = util.isArray(qry);
+		var qryList = util.isArray(qry) ? qry : [qry];
 		self.pool.getConnection(function(err, connection){
 			if (err) {
 				cb(err);
 				return;
 			}
-
-			var qryList = bArray ? qry : [qry];
 			qryList.splice(0, 0, 'SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;');
             qryList.push('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ ;');
 
@@ -96,7 +94,61 @@ ConnectionMgr.prototype.execute = function(qry, cb) {
 		});
 
 	}catch (ex) {
+		cb(ex);
+	}
+};
 
+ConnectionMgr.prototype.executeTrans = function(qry, cb) {
+	var self = this;
+	try {
+		var qryList = util.isArray(qry) ? qry : [qry];
+		var begin = new Date();
+		self.pool.getConnection(function(err, connection) {
+			try {
+				if (err) throw err;
+				connection.beginTransaction(function(err){
+					try {
+						async.eachSeries(qryList, function(_qry, callback){
+							connection.query(_qry, function(err) {
+                                err && console.dir(_qry);
+                                callback(err);
+							});
+						}, function(err){
+							self.releaseTrans(connection, begin, ex, cb);
+						});
+					}catch (ex) {
+						self.releaseTrans(connection, begin, ex, cb);
+					}
+				});
+			}catch (ex) {
+				cb(ex);
+			}
+		});
+	}catch (ex) {
+		cb(ex);
+	}
+};
+
+ConnectionMgr.prototype.releaseTrans = function(connection, begin, err, cb) {
+	var self = this;
+	try {
+		if (err) throw err;
+		connection.commit(function(err) {
+			if (err){
+		        connection.rollback(function() {
+		            connection.release();
+		            cb(ex);
+		        });
+			}else {
+                connection.release();
+                cb(null);
+			}
+		});
+	}catch (ex) {
+        connection.rollback(function() {
+            connection.release();
+            cb(ex);
+        });
 	}
 };
 
