@@ -82,7 +82,6 @@ Constructor.prototype.init = function(cb) {
 	        self.cfg = JSON.parse(process.env.cfg);
 	    }
 
-        self.appConn = mysqlConn.createObject(self.cfg.mysql, 'test');
 	    async.waterfall([
 	    	function(callback) {self.initLogger(self.cfg.logs, callback)},
 	    	function(callback) {self.initRedis(self.cfg.redis, callback)},

@@ -83,8 +83,8 @@ Constructor.prototype.EFUserSocketLogin = function(client, protocol, cb) {
 Constructor.prototype.EFHeartBeat = function(client, protocol, cb) {
 	var now = new Date();
 	var session = protocol.__session;
-    // client redirection..
-    cb(null, { result : 'success', serverTime : now });
+        // client redirection..
+        cb(null, { result : 'success', serverTime : now });
 };
 
 

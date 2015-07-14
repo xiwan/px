@@ -8,55 +8,62 @@ var __         = require('underscore');
 var ConnectionMgr = function(cfg, domain) {
 	var self = this;
 
-	if (cfg) {
+	self.poolCluster = null;
+	if (cfg.database && cfg.master && cfg.slave) {
 		var poolCluster = mysql.createPoolCluster();
-		var masterArr = cfg.master[0].split(":");
 		var masterConfig = {
-			host : masterArr[0],
-			port : masterArr[1],
-			user : masterArr[2],
-			password : masterArr[3]
-		}; // always have one master
+			host : cfg.master.host,
+			port : cfg.master.port,
+			user : cfg[cfg.database].user,
+			password : cfg[cfg.database].password,
+			database : domain || cfg.database		
+		}// always have one master
 		poolCluster.add('MASTER', masterConfig);
 
-		cfg.slave.forEach(function(item, idx){
-			var slaveArr = item.split(":");
+		for (var i=0; i<cfg.slave.num; i++) {
 			var slaveConfig = {
-				host : slaveArr[0],
-				port : slaveArr[1],
-				user : slaveArr[2],
-				password : slaveArr[3]				
-			};
+				host : cfg.slave.host,
+				port : cfg.slave.port,
+				user : cfg[cfg.database].user,
+				password : cfg[cfg.database].password,
+				database : domain || cfg.database	
+			}
+			var idx = i+1;
 			poolCluster.add('SLAVE' + idx, slaveConfig);
-		})
+		}
+
 		self.setConnection(poolCluster);
-        self.tables = null;
-        self.names = null;
-        self.key = '';
-        self.domain = domain ? domain : '*';
 	}
+
+    self.tables = null;
+    self.names = null;
+    self.key = '';
+    self.domain = domain ? domain : '*';
 
 };
 
+ConnectionMgr.prototype.use = function(pattern) {
+	var self = this;
+	return self.poolCluster.of(pattern.toUpperCase() + '*', 'RR');
+};
 
-ConnectionMgr.prototype.setConnection = function(pool) {
+ConnectionMgr.prototype.setConnection = function(poolCluster) {
     var self = this;
-    self.pool = pool;
+    self.poolCluster = poolCluster;
 
-    self.pool.on('remove', function(nodeId){
+    self.poolCluster.on('remove', function(nodeId){
     	global.debug('removed node : %d', nodeId);
     });
 
-    self.pool.on('connection', function(client) {
-        client.query('SET SESSION auto_increment_increment=1');
-        global.debug('query.on.connection');
-    });
+    // self.poolCluster.on('connection', function(client) {
+    //     client.query('SET SESSION auto_increment_increment=1');
+    //     global.debug('query.on.connection');
+    // });
 
-    self.pool.on('enqueue', function () {
-        global.debug('Waiting for available connection slot');
-    });
+    // self.poolCluster.on('enqueue', function () {
+    //     global.debug('Waiting for available connection slot');
+    // });
 };
-
 
 exports.createObject = function (property, domain) {
     return new ConnectionMgr(property, domain);
