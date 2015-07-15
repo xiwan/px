@@ -66,7 +66,10 @@ function initSchema(schema, callback) {
                     connection.end();
                     return;
                 }
-                callback(err);
+                saveDomain(schema, tables, function(err) {
+                    callback(err);
+                    connection.end();
+                });
             });
         });
 
@@ -74,6 +77,57 @@ function initSchema(schema, callback) {
         console.warn('initSchema. error:%s', ex.message);
         cb(null);		
 	}
+}
+
+function saveDomain(schema, data, cb) {
+    var iDomain = data.Domain;
+    var domains = {};
+
+    iDomain.forEach(function(item) {
+        var domain = domains[item.Domain] || (domains[item.Domain] = []);
+        var row = {table : util.format("'%s'", item.TableName), name : util.format("'%s'", item.Name), key : '', cols : []};
+        var table = data[item.TableName];
+        table.forEach(function(col) {
+            var name = util.format("'%s'", col.Name);
+            if (col.Name)
+                row.cols.push(name);
+            col.IsKey || (col.IsKey = '');
+            var isKey = util.format('%s', col.IsKey);
+            if (isKey.toLowerCase() == 'true')
+                row.key = name;
+        });
+
+        row.parent = item.Hierarchy ? util.format("'%s'", item.Hierarchy) : 'null';
+        domain.push(row);
+    });
+
+    var baseDir = global.argv.baseDir;
+    for(var key in domains) {
+        var name = key;
+        var iCtx = [];
+        iCtx.push('{');
+        iCtx.push(util.format('  var %s = exports.%s = function() {', name, name));
+        iCtx.push('    this.tables = [];');
+        var domain = domains[name];
+        domain.forEach(function(item) {
+            iCtx.push(util.format('    this.tables.push({ table : %s, name : %s, key : %s, parent : %s, cols : [%s] });', item.table, item.name, item.key, item.parent, item.cols.join(', ')));
+        });
+        iCtx.push('  };');
+        iCtx.push('');
+        iCtx.push(util.format('  %s.prototype.get = function() { return this.tables; }', name));
+        iCtx.push('}');
+        iCtx.push('');
+        iCtx.push(util.format('exports.getDictionary = function () { return (new %s()).get(); };', name));
+
+        var iName = schema.Name.split('_');
+        var iDir = baseDir + '/' + iName[iName.length-1];
+        try { fs.mkdirSync(iDir); } catch (ex) {}
+        var iFile = iDir + '/' + name + '.js';
+        fs.writeFileSync(iFile, iCtx.join('\n'), 'utf8');
+        console.log('It\'s saved! %s', iFile);
+    }
+
+    cb(null);
 }
 
 
