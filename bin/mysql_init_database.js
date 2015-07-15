@@ -15,6 +15,7 @@ iFile.SheetNames.forEach(function(name) {
 
 async.eachSeries(schemas.Database, createDatabase, function(err){
 	err && console.warn(err.message);
+	process.exit(0);
 });
 
 

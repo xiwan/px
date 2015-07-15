@@ -102,6 +102,7 @@ case "$1" in
 	-init )
 		cd $binPath
 		node mysql_init_database.js
+		node mysql_init_schema.js
 		cd $basePath
 		;;
 esac
