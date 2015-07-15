@@ -73,6 +73,15 @@
     qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
 	self.mConn.execute(qryList, cb);
 	
+
+### 基于xlsx的数据库设计
+
+![database xlsx](https://cloud.githubusercontent.com/assets/931632/8695649/f653982a-2b18-11e5-869e-f6a15b0d6337.png)
+
+如上图所示，对于新的项目，开发者无须手写sql,只需要通过xlsx的配置就可以达到相同效果。具体存放xls的目录地址为__cfg/schema/systems.xlsx__。当配置完毕后，执行
+
+	sh start -init // 初始化数据库命令
+	
 ### 模块设计
 
 #### model模块

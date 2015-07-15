@@ -1,6 +1,7 @@
 #!bin/bash
 
 basePath="/Users/xi.a.wan/Documents/dev/projectX"
+binPath="$basePath/bin"
 config="$basePath/cfg"
 dbhost="localhost"
 apphost="localhost"
@@ -97,6 +98,11 @@ case "$1" in
 		;;
 	-redis )
 		initRedis
+		;;
+	-init )
+		cd $binPath
+		node mysql_init_database.js
+		cd $basePath
 		;;
 esac
 shift
