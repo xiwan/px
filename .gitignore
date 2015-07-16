@@ -1,5 +1,6 @@
 node_modules/
 test/
+libs/schema/
 *~$*
 *.DS_St
 *.tgz
