@@ -76,11 +76,51 @@
 
 ### 基于xlsx的数据库设计
 
-![database xlsx](https://cloud.githubusercontent.com/assets/931632/8695649/f653982a-2b18-11e5-869e-f6a15b0d6337.png)
+#### 数据库连接设置表
 
-如上图所示，对于新的项目，开发者无须手写sql,只需要通过xlsx的配置就可以达到相同效果。具体存放xls的目录地址为__cfg/schema/systems.xlsx__。当配置完毕后，执行
+如下图所示，对于新的项目，开发者无须手写sql,只需要通过xlsx的配置就可以达到相同效果。具体存放xls的目录地址为__cfg/schema/systems.xlsx__。
+
+![system xlsx](https://cloud.githubusercontent.com/assets/931632/8695649/f653982a-2b18-11e5-869e-f6a15b0d6337.png)
+
+重要的几个配置字段
+
+* Name: 数据库名称
+* Host: 数据库地址
+* User: 数据库用户
+* Password: 数据库密码
+
+
+#### 数据库关系配置表
+
+接下来可以在同目录下建立另外一个xlxs,由于mysql是关系型数据库，除了配置数据库内的tables，各个table之间关系也很重要.对于游戏来说更是如此。游戏具有很强的用户中心特性，所以设计用户表格时候都可以以用户uid为主键的设计。那么会有一些列这样的表格。如何管理这些表格呢？可以通过xlsx的配置来达到。
+
+![relation xlsx](https://cloud.githubusercontent.com/assets/931632/8744333/f83c3778-2ca8-11e5-9685-29d1e38bb674.png)
+
+重要的几个配置字段
+
+* Domain: 一组具有强关系的表集合会共享相同的Domain
+* Name: 该表格在层级中的alias
+* TableName: 表格在数据库内真实的名字
+* Hierachy: 表明层级关系. 如果是空是最底层，base表示某个子Domain的中心节点
+* PartitionKey: 表分区采用的键,默认是hash分区
+* PartitionNum: hash分区个数
+* PartitionBy: 分区类型LIST | RANGE | HASH
+
+在这里的Hierachy是比较重要的，同一个Domain下面的表格是可以被base类全部找出(比如Account)。同理，characters作为base可以查出所有Hierachy为它的表格数据。通过这种层级关系,只要知道uid,就可以迅速查找出某个玩家的所有或者某个方面的数据.
+
+#### 数据库表格设计
+
+下图是account_character表格的设计，由于它在hierachy中是account层级下面的一个base，那么除了uid以外还需要charGid来做联合主键.同理其他的base类也都需要一个联合主键。对于character下面的表格，则需要第三个键来做联合主键(uid, charGid, xxxx)。
+
+![schema xlsx](https://cloud.githubusercontent.com/assets/931632/8744850/1af9c948-2cad-11e5-8b1e-9fedd91cce25.png)
+
+#### 执行
+
+当以上配置完毕后，基本一个很清晰的数据库关系模型就建立起来了。在主键的基础上，各个字段都是为业务服务而已。接下来只需要执行:
 
 	sh start -init // 初始化数据库命令
+	
+执行以上命令后会自动在目标服务器内建立配置数据库。当数据库建立完毕后，会查询同目录下Name对应的数据库schema设计。比如game_system_test.xlsx。
 	
 ### 模块设计
 
