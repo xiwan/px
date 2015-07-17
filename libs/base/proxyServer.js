@@ -11,7 +11,8 @@ var ProxyServer = function (portNum, options) {
 	
 	var self = this;
 
-	global.base.users = {};
+	global.base.users = {}; // global sockets pool
+	self.users = {}; // local sockets pool
 
 	self.server = self.createServer(options);
 	self.server.listen(portNum);
@@ -107,7 +108,7 @@ ProxyServer.prototype.socketRequest = function(socket) {
         // }
 
 		socket.__id = global.base.genGid();
-		global.base.users[socket.__id] = socket;
+		self.users[socket.__id] = socket;
 
 
 		socket.__timeId = setTimeout(function(){
@@ -132,7 +133,7 @@ ProxyServer.prototype.socketRequest = function(socket) {
 				// handle channels
 				global.base.socketCloseEvent(socket);
 				socket.removeAllListeners();
-                delete global.base.users[socket.__id];
+                delete self.users[socket.__id];
                 socket = null;
 			}catch(ex) {
 				global.warn('socket.socketRequest.close ex:%s', ex.message);
@@ -242,17 +243,6 @@ ProxyServer.prototype.sendWebSocket = function(socket, action, iMsg) {
 		global.warn('ProxyServer.sendWebSocket. name:%s, error:%s', iMsg.name, ex.message);
 	}
 };
-
-
-// ProxyServer.prototype.socketCloseEvent = function(socket) {
-//     var self = this;
-//     (socket.__uid && (delete global.base.users[socket.__uid]));
-
-//     if (!socket.__channel) return;
-//     Object.keys(socket.__channel).forEach(function(idx) {
-//     	var key = socket.__channel[idx];
-//     });
-// };
 
 
 function encodeRes(body, cb) {

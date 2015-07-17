@@ -227,6 +227,18 @@ ChannelAgent.prototype.recvChannelMsg = function(key, iMsg) {
 	}
 };
 
+/**
+* @method: send message to multi clients
+*/
+ChannelAgent.prototype.sendToMultiClient = function(message, cb){
+	message.uidList.forEach(function(uid){
+        var socket = global.base.users[uid];
+        if (!socket) return;
+        socket.emit('redirect', message.name, message.body);
+	});
+	cb(null, {result : 'success'});
+};
+
 exports.createObject = function(users) {
     return new ChannelAgent(users);
 };

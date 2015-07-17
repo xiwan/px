@@ -34,6 +34,7 @@ Constructor.prototype.run = function(cb) {
 	}
 };
 
+// client login: generate raw session
 Constructor.prototype.EFClientLogin = function(protocol, cb) {
 	var self = this;
 	try {
@@ -59,19 +60,29 @@ Constructor.prototype.EFClientLogin = function(protocol, cb) {
 	}
 };
 
-Constructor.prototype.EFUserSocketLogin = function(client, protocol, cb) {
+// user login: generate uid, add more info to session
+Constructor.prototype.EFUserLogin = function(protocol, cb) {
+
+};
+
+// check crc: verify clients master data
+Constructor.prototype.EFCheckTableCrc = function(protocol, cb) {
+
+};
+
+Constructor.prototype.EFUserSocketLogin = function(socket, protocol, cb) {
 	var self = this;
 	try {
 		var session = protocol.__session;
         if (session.deviceId !== protocol.deviceId)
             throw new Error('__invalid_param');
 
-        clearTimeout(client.__timeId);
-        delete client.__timeId;
-        client.__appSessionKey = protocol.appSessionKey;
-        client.__channel = {};
-        client.__uid = session.uid;
-        global.base.users[session.uid] = client;
+        clearTimeout(socket.__timeId);
+        delete socket.__timeId;
+        socket.__appSessionKey = protocol.appSessionKey;
+        socket.__channel = {};
+        socket.__uid = session.uid;
+        global.base.users[session.uid] = socket;
         cb(null, { result : 'success' });
 
 	}catch (ex) {
@@ -80,10 +91,10 @@ Constructor.prototype.EFUserSocketLogin = function(client, protocol, cb) {
 };
 
 
-Constructor.prototype.EFHeartBeat = function(client, protocol, cb) {
+Constructor.prototype.EFHeartBeat = function(socket, protocol, cb) {
 	var now = new Date();
 	var session = protocol.__session;
-        // client redirection..
+        // socket redirection..
         cb(null, { result : 'success', serverTime : now });
 };
 
