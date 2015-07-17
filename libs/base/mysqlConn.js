@@ -65,6 +65,161 @@ ConnectionMgr.prototype.setConnection = function(poolCluster) {
     // });
 };
 
+ConnectionMgr.prototype.init = function(dictionary){
+	var self = this;
+	try {
+		self.tables = dictionary;
+		if (self.tables.length > 0) {
+			self.key = self.tables[0].key;
+			self.names = [];
+			self.tables.forEach(function(item){
+				self.names.push(item.table);
+			})
+		}
+	}catch (ex) {
+		global.error('ConnectionMgr.init error: %s', ex.message);
+	}
+};
+
+// find all related data in one domain by key, and then cache the results
+ConnectionMgr.prototype.get = function(key, cb) {
+	var self = this;
+	try {
+		var iKey = key;
+		if (typeof(iKey) === 'string') iKey = util.format('"%s"', iKey);
+
+        var qryList = [];
+        self.tables.forEach(function(item) {
+            qryList.push(util.format('select * from %s where %s = %s', item.table, self.key, iKey));
+        });
+
+        self.execute(qryList, function(err, results){
+        	if (err) {
+        		cb(err);
+        		return;
+        	}
+        	// cache the results
+        	self.onAddCacheMem(key, results, cb);
+        });
+	}catch (ex) {
+		cb(ex)
+	}
+};
+
+ConnectionMgr.prototype.onAddCacheMem = function(key, results, cb) {
+	var self = this;
+	try {
+		var obj = {};
+		cb(null, obj)
+	}catch (ex) {
+		global.warn(ex.stack);
+		cb(ex);
+	}
+};
+
+// find all related data in one domain by key, but no cache
+ConnectionMgr.prototype.getTables = function(key, cb) {
+    var self = this;
+    try {
+        var iKey = key;
+        if (typeof(iKey) === 'string') iKey = util.format('"%s"', iKey);
+
+        var qryList = [];
+        self.tables.forEach(function(item) {
+            qryList.push(util.format('select * from %s where %s = %s', item.table, self.key, iKey));
+        });
+
+        self.execute(qryList, function(err, results) {
+            var iData = {};
+            if (!err) {
+                results.forEach(function(rows, idx) {
+                    var name = self.tables[idx].table;
+                    iData[name] = rows;
+                })
+            }
+            cb(err, iData);
+        });
+    } catch (ex) {
+        cb(ex);
+    }
+};
+
+/**
+* @mehtod: find
+* @params: where, tables, [cols], cb
+* @where:  name [in | nin | neq | is not null | op]=> value
+*/
+ConnectionMgr.prototype.finds = function() {
+	var self = this;
+    if (arguments.length < 3)
+        throw new Error('invalid_arguments');
+    var where = arguments[0];
+    var tables = arguments[1];
+    var cb = null, cols = null;
+    // max 4 params supported
+    if (arguments.length == 3) cb = arguments[2];
+    else {
+        cols = arguments[2];
+        cb = arguments[3];
+    }
+
+    try {
+    	var qryList = [];
+    	// set up talbe target: one or many
+    	var target = null;
+    	if (tables && tables.length>0) target = tables;
+    	else target = self.names;
+
+    	var searchQry = '';
+    	if (where) {
+    		var iWhere = [];
+    		where.forEach(function(item){
+    			item.op || (item.op = '=');
+    			var _where = '';
+    			switch(item.op){
+    				case 'in' : _where = util.format('`%s` in (%s)', item.name, item.value.join(', ')); break;
+    				case 'nin' : _where = util.format('`%s` not in (%s)', item.name, item.value.join(', ')); break;
+    				case 'neq' : _where = util.format('`%s` <> %s', item.name, item.value); break;
+    				case 'is not null' : _where = util.format('`%s` is not null', item.name); break;
+    				default : util.format('`%s` %s "%s"', item.name, item.op, item.value); break;
+    			}
+    			iWhere.push(_where);
+    		});
+    		searchQry = util.format('where %s',  iWhere.join('  AND '));
+    	}
+
+        var columnQry = '*';
+        if(cols){
+            if(cols.length > 0){
+                var iCols = [];
+                cols.forEach(function(col){
+                    if(cols === '') return;
+                    iCols.push(col);
+                });
+                columnQry = iCols.join(', ');
+            }
+        }
+
+        target.forEach(function(name) {
+            qryList.push(util.format('select %s from %s %s', columnQry, name, searchQry));
+        });
+
+        self.execute(qryList, function(err, results) {
+            if (!err) {
+                results.splice(0, 1);
+                results.splice(results.length-1, 1);
+            }
+            return cb(err, results);
+        });
+
+    }catch (ex) {
+    	cb(ex);
+    }
+
+};
+
+
+// execute formatted query
 ConnectionMgr.prototype.execute = function(qry, cb) {
 	var self = this;
 	try {
