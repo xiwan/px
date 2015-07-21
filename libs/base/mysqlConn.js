@@ -5,6 +5,8 @@ var mysql      = require('mysql');
 var util       = require('util');
 var __         = require('underscore');
 
+var Table      = require('./mysqlTable');
+
 var ConnectionMgr = function(cfg, domain) {
 	var self = this;
 
@@ -109,8 +111,9 @@ ConnectionMgr.prototype.get = function(key, cb) {
 ConnectionMgr.prototype.onAddCacheMem = function(key, results, cb) {
 	var self = this;
 	try {
-		var obj = {};
-		cb(null, obj)
+		var obj = new Table(self);
+		obj.init(key, self.tables, results);
+		cb(null, obj);
 	}catch (ex) {
 		global.warn(ex.stack);
 		cb(ex);
