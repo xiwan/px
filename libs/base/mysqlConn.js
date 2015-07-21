@@ -184,7 +184,7 @@ ConnectionMgr.prototype.finds = function() {
     				case 'nin' : _where = util.format('`%s` not in (%s)', item.name, item.value.join(', ')); break;
     				case 'neq' : _where = util.format('`%s` <> %s', item.name, item.value); break;
     				case 'is not null' : _where = util.format('`%s` is not null', item.name); break;
-    				default : util.format('`%s` %s "%s"', item.name, item.op, item.value); break;
+    				default : _where = util.format('`%s` %s "%s"', item.name, item.op, item.value); break;
     			}
     			iWhere.push(_where);
     		});
@@ -208,10 +208,11 @@ ConnectionMgr.prototype.finds = function() {
         });
 
         self.execute(qryList, function(err, results) {
-            if (!err) {
-                results.splice(0, 1);
-                results.splice(results.length-1, 1);
-            }
+        	console.log(results);
+            // if (!err) {
+            //     results.splice(0, 1);
+            //     results.splice(results.length-1, 1);
+            // }
             return cb(err, results);
         });
 

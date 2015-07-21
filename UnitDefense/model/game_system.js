@@ -1,24 +1,35 @@
 'use strict'
 
-var mConn = require('../../libs/base/mysqlConn');
 var mysql = require('mysql');
 var async = require('async');
 var util = require('util');
 
+var mConn = require('../../libs/base/mysqlConn');
+var iApp = require('../../libs/schema/test2/App.js');
+
 var GameSystem = exports.GameSystem = function(property) {
     var self = this;
-    self.mConn = mConn.createObject(property, 'systemDB');
+    self.app = mConn.createObject(property, 'systemDB');
+    self.app.init(iApp.getDictionary());
 };
 
 GameSystem.prototype.test = function(cb){
 	var self = this;
 	try {
-		self.mConn.use('slave');
+		self.app.use('slave');
 
         var qryList = [];
-        qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
-
-		self.mConn.execute(qryList, cb);
+       // qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
+        // qryList.push(util.format('SELECT * FROM T_APP_BASE where appId = "%s"', global.const.appId));
+        // self.app.execute(qryList, cb);
+        
+        var where = {name: 'appId', value: global.const.appId};
+        self.app.finds([where], ['T_APP_BASE'], function(err, results){
+            if (err)
+                return cb(err);
+            cb(null, results);     	
+        });
+		
 
 	}catch (ex) {
 		cb(ex);
