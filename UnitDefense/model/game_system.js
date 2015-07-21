@@ -13,16 +13,11 @@ var GameSystem = exports.GameSystem = function(property) {
     self.app.init(iApp.getDictionary());
 };
 
-GameSystem.prototype.test = function(cb){
+GameSystem.prototype.testABC = function(cb){
 	var self = this;
 	try {
-		self.app.use('slave');
+		self.app.use('master');
 
-        var qryList = [];
-       // qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
-        // qryList.push(util.format('SELECT * FROM T_APP_BASE where appId = "%s"', global.const.appId));
-        // self.app.execute(qryList, cb);
-        
         var where = {name: 'appId', value: global.const.appId};
         self.app.finds([where], ['T_APP_BASE'], function(err, results){
             if (err)
@@ -31,6 +26,21 @@ GameSystem.prototype.test = function(cb){
         });
 		
 
+	}catch (ex) {
+		cb(ex);
+	}
+};
+
+GameSystem.prototype.test1 = function(cb){
+	var self = this;
+	try {
+		self.app.use('slave');
+
+        var qryList = [];
+       	qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
+        qryList.push(util.format('SELECT * FROM T_APP_BASE where appId = "%s"', global.const.appId));
+        self.app.execute(qryList, cb);
+       
 	}catch (ex) {
 		cb(ex);
 	}

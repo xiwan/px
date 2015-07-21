@@ -19,7 +19,7 @@ var ConnectionMgr = function(cfg, domain) {
 			port : cfg.master.port,
 			user : cfg[cfg.database].user,
 			password : cfg[cfg.database].password,
-			database : domain || cfg.database		
+			database : cfg[domain].database || cfg.database		
 		}// always have one master
 		poolCluster.add('MASTER', masterConfig);
 
@@ -206,9 +206,8 @@ ConnectionMgr.prototype.finds = function() {
         target.forEach(function(name) {
             qryList.push(util.format('select %s from %s %s', columnQry, name, searchQry));
         });
-
+        
         self.execute(qryList, function(err, results) {
-        	console.log(results);
             // if (!err) {
             //     results.splice(0, 1);
             //     results.splice(results.length-1, 1);

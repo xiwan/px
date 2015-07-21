@@ -29,10 +29,17 @@ Constructor.prototype.run = function(cb) {
 
 Constructor.prototype.testABC = function(protocol, cb) {
 	var self = this;
-	self.gameSystem.test(function(err, results){
+	self.gameSystem.testABC(function(err, results){
 		cb(err, {msg: results})		
 	});
 
+};
+
+Constructor.prototype.test1 = function(protocol, cb) {
+	var self = this;
+	self.gameSystem.test1(function(err, results){
+		cb(err, {msg: results})		
+	});	
 }
 
 module.exports.Constructor = Constructor;
