@@ -5,4 +5,5 @@
 var base = require('../libs/app_base');
 var main = require('./constructor');
 
-base.app('SS', main);
+var appMain = new main.Constructor('SS');
+base.app(appMain);

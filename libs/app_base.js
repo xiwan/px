@@ -14,8 +14,8 @@
     module.exports.Policy = policy
     module.exports.Channel = channel
 
-    module.exports.app = function(name, main){
-		var appMain = new main.Constructor(name);
+    module.exports.app = function(appMain){
+		//var appMain = new main.Constructor(name);
 
 		async.waterfall([
 			function(callback) {appMain.init(callback);},
