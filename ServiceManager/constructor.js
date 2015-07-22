@@ -1,10 +1,12 @@
 'use strict';
 
-var base = require('../libs/app_base');
 var util = require('util');
 var __ = require('underscore');
 var async = require('async');
 var forever = require('forever-monitor');
+
+var base = require('../libs/app_base');
+var server = require('./cmdServer');
 
 var Constructor = function(name) {
 	base.Constructor.apply(this, arguments);
@@ -27,6 +29,9 @@ Constructor.prototype.run = function(cb) {
 
     self.hostname = require('os').hostname();
     self.ipAddr = global.utils.getIPAddress();
+
+    self.cmds = new server.CmdServer(self.name + '.' + self.idx, self.cfg.tcp.port, '0.0.0.0');
+    self.cmds.run({});
 
 	self.monitorChildProcess(cb);
 };
@@ -86,7 +91,7 @@ Constructor.prototype.monitorChildProcess = function(cb) {
 
 		iList.forEach(function(item){
 			self.addProcessData(item.service, item.idx, 0, new Date(), 1);
-			self.startProcess(item);
+			//self.startProcess(item);
 		});
 
 		setInterval(function() {
