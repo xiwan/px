@@ -29,6 +29,97 @@
 
 ![Server Type](https://camo.githubusercontent.com/5935f0403ef84c20197af32d6ca0d86069c742b3/687474703a2f2f706f6d656c6f2e6e6574656173652e636f6d2f7265736f757263652f646f63756d656e74496d6167652f7365727665722d747970652e706e67)
 
+### 服务器管理工具
+
+projectX服务器提供了一系列强大的后台管理工具，主要有监测所有进程状态；进程的启动，关闭；进程模块代码生成等等。
+
+首先启动整个项目的命令为：
+
+	// 启动进程管理容器(tcp服务器)，备份上次日志，并按照daemon模式运行在后台
+	sh start.sh -on
+
+![start sm](https://cloud.githubusercontent.com/assets/931632/8846865/adbf571c-315c-11e5-8e7c-b9c1ca2cbb2e.png)
+
+可以看到默认tcp服务器是启动在 6001端口的。
+
+	// 然后可以登录上该服务器进行必要操作.
+	telnet localhost 6001
+	
+#### 启动／关闭进程命令
+* start process all
+* start process wa
+* start process wa 961
+
+后面两个是启动某一类进程或者某个进程命令，start可以替换为stop
+
+	SM.901 0.0.0.0:6001 $ start process all
+	NAME IDX  RESULT                   
+	SS   201  success                  
+	SS   202  success                  
+	UD   501  success                  
+	UD   502  success                  
+	WA   961  success 
+	
+#### 查看进程状态命令
+* get process-status
+
+ 获取当前正在运行进程状态，默认60秒刷新一次
+ 
+	SM.901 0.0.0.0:6001 $ get process-status
+	PID       NAME IDX  TIME                       CPU       MEMORY       
+	28743     SS   201  Thu Jul 23 2015 17:07:23   0.7 %     0.3%(27MB)   
+	28744     SS   202  Thu Jul 23 2015 17:07:23   0.7 %     0.3%(27MB)   
+	28745     UD   501  Thu Jul 23 2015 17:07:23   0.8 %     0.4%(30MB)   
+	28746     UD   502  Thu Jul 23 2015 17:07:23   0.9 %     0.4%(31MB)   
+	28739     SM   901  Thu Jul 23 2015 17:07:13   0 %       0.4%(29MB)   
+	28747     WA   961  Thu Jul 23 2015 17:07:23   0.7 %     0.3%(26MB)  
+
+#### 建立进程模块
+每一个进程模块代表相同业务逻辑单元的聚合。比如说游戏中我们会有专门处理连接请求的模块(SS)，用户逻辑的模块(UD),管理后台的模块(WA)等等。至于如何聚合这些业务逻辑可以取决于开发者的思维。你可以按照前面的约定这样分类，也可以把所有的业务放在一个进程模块中。这些模块会以独立进程的形式运行在配置的服务器上面，十分容易扩展和管理。
+
+进程模块的配置信息在config.ini中
+
+	; services configuration block
+	[services]
+	monitorInterval = 6000 			//监控间隔
+
+	[services.SS]
+	name = SessionServer			//模块全称
+	service = SS					//模块缩写
+	machines[] = localhost:201 		//模块启动位置+idx
+	machines[] = localhost:202
+
+	[services.SS.rpc]				
+	server							//rpc服务器标志，默认true
+	client[] = UD					//rpc客户端
+
+如果后面我们配置了新的模块，如下：
+
+	[services.WA]
+	name = WebAgent
+	service = WA
+	machines[] = localhost:961
+
+	[services.WA.rpc]
+	server
+	client[] = UD
+
+执行 **build** 命令，已经存在的进程模块是不会重新build的：
+
+	SM.901 0.0.0.0:6001 $ build all
+	EEXIST, file already exists './SessionServer'
+	EEXIST, file already exists './UnitDefense'
+	It's saved! WebAgent
+
+这样我们可以可以看到工程中就会有一个新文件夹 **WebAgent**, 并且初始化好了所需要的三个文件app.js, commands.js, constructor.js.
+
+![webagent module](https://cloud.githubusercontent.com/assets/931632/8847276/f1aff5aa-315f-11e5-89af-37a85339a9d2.png)
+
+基本上所有的进程模块都包含了这三个文件。
+* app.js 模块运行部分
+* commands.js 模块handler部分
+* constructor.js 模块初始化和主要业务逻辑部分。
+
 ### read/write 分离
 
 配置在config.ini中，读写分离的主要目的是为了减轻数据库的压力。主从两库的同步主要通过mysql replica机制来达到。
