@@ -75,19 +75,23 @@ Constructor.prototype.addProcessData = function(name, idx, pid, startTime, bChil
 Constructor.prototype.getChildProcess = function(){
     var self = this;
     var iList = [];
-    for (var idx in self.cfg.services) {
-        var services = self.cfg.services[idx];
-        var oldIdx = services.idx;
+    for (var key in self.cfg.services) {
+        var services = self.cfg.services[key];
         if (!services.name) continue;
         for (var i=0; i<services.machines.length; i++) {
+            var machine = services.machines[i].split(':');
+            var host = machine[0] || 'localhost';
+            var idx = machine[1] || 0;
+            if (host != 'localhost' && host != self.hostname) continue;
+            if (!idx) continue;
+            
             var process = {};
             process.name = services.name;
             process.service = services.service;
-            process.idx = services.idx++;
-            process.machine = services.machines[0]
+            process.idx = idx;
+            process.machine = host
             iList.push(process)
         }
-        services.idx = oldIdx;
     } 
     return iList;
 }

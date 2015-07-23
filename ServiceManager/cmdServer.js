@@ -129,6 +129,9 @@ CmdServer.prototype.writePromptTitle = function(client) {
     ));
 };
 
+/**
+* @method: register service
+*/
 CmdServer.prototype.register = function(client, argv, cb) {
     var self = this;
     var ack = {
@@ -157,6 +160,9 @@ CmdServer.prototype.register = function(client, argv, cb) {
     }
 };
 
+/**
+* @method: broadcast message to all services
+*/
 CmdServer.prototype.broadcast = function(client, argv, cb) {
     var self = this;
     var cmd = '';
@@ -376,6 +382,100 @@ CmdServer.prototype.start = function(client, argv, cb) {
     };
 };
 
+/**
+* @method: start process
+ * ex) stop process all 
+ *     stop process WP
+*/
+CmdServer.prototype.stop = function(argv, cb) {
+    var self = this;
+    if (argv.subs.length < 2) {
+        cb(null, 'invalid parameter. start action process-name');
+        return ;
+    }
+    switch(argv.subs[0]) {
+        case 'process':
+            stopProcess(argv, cb);
+            break;
+        default:
+            cb(null, 'invalid parameter:'+argv.subs[0]);
+    }
+
+    function stopProcess(argv, cb) {
+        var service = argv.subs[1].toUpperCase();
+        var idx = argv.subs[2] ? parseInt(argv.subs[2]) : 0;
+
+        var output = [];
+        for(var i in global.base.process) {
+            var child = global.base.process[i];
+            if (!child.bChild) {
+                continue;
+            }
+            if ( !(service === 'ALL' || service === child.name) || !(idx === 0 || idx === parseInt(child.idx)) ) {
+                continue
+            }
+            var msg = '';
+            if (child.pid > 0 && child.process) {
+                child.state = 1;
+                process.kill(child.pid, 'SIGTERM');
+                //child.process.kill();
+                msg = 'success';
+            } else {
+                msg = 'already stopped process';
+            }
+            if (msg !== '') {
+                output.push({
+                    name : child.name,
+                    idx : child.idx,
+                    result : msg
+                });
+            }
+        }
+
+        if (argv.out === 'json') {
+            var iAck = {
+                cmd : 'stop',
+                body : output
+            };
+            cb(null, JSON.stringify(iAck));
+        } else {
+            var iMsg = util.format('%s%s%s\n',
+                global.utils.fillStr('NAME', 5),
+                global.utils.fillStr('IDX', 5),
+                global.utils.fillStr('RESULT', 25)
+            );
+            for(var o= 0, oLen=output.length; o<oLen;o++) {
+                var out = output[o];
+                iMsg += util.format('%s%s%s\n',
+                    global.utils.fillStr(out.name, 5),
+                    global.utils.fillStr(out.idx, 5),
+                    global.utils.fillStr(out.result, 25)
+                );
+            }
+            cb(null, iMsg);
+        }
+
+    };
+};
+
+/**
+* @method: restart process
+ * ex) restart process all 
+ *     restart process WP
+*/
+CmdServer.prototype.restart = function(client, argv, cb) {
+    var self = this;
+    self.stop(argv, function(err) {
+        if (err) {
+            cb(err);
+            return;
+        }
+
+        setTimeout(function() {
+            self.start(client, argv, cb);
+        }, 5000)
+    })
+};
 
 module.exports.CmdServer = CmdServer;
 	
