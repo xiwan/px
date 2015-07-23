@@ -2,25 +2,41 @@
 
 var net = require('net');
 var util = require('util');
+var fs = require('fs');
+var spawn = require('child_process').spawn;
+var exec = require('child_process').exec;
+var async = require('async');
 
 var CmdServer = function(name, portNo, ipAddr) {
 	ipAddr || (ipAddr = '127.0.0.1');
+	var self = this;
 
-	this.portNo = portNo;
-	this.ipAddr = ipAddr;
+	self.portNo = portNo;
+	self.ipAddr = ipAddr;
 
-	this.server = null;
-	this.clients = {};
-	this.services = {};
-	this.prompt = util.format("%s %s:%d", name, ipAddr, portNo);
+	self.server = null;
+	self.clients = {};
+	self.services = {};
+	self.prompt = util.format("%s %s:%d $ ", name, ipAddr, portNo);
 
-	this.handler = {};
+	self.handler = {
+		register : function(client, argv, cb) { self.register(client, argv, cb); },
+		broadcast : function(client, argv, cb) { self.broadcast(client, argv, cb); },
+		transpass : function(client, argv, cb) { self.transpass(client, argv, cb); },
+		get : function(client, argv, cb) { self.get(argv, cb); },
+		start : function(client, argv, cb) { self.start(client, argv, cb); },
+		stop : function(client, argv, cb) { self.stop(argv, cb); },
+		restart : function(client, argv, cb) { self.restart(client, argv, cb); },
+		deploy : function(client, argv, cb) { self.deploy(argv, cb); },
+		apply : function(client, argv, cb) { self.apply(client, argv, cb); },
+		rdate : function(client, argv, cb) { self.rdate(client, argv, cb); },
+	};
 };
 
-CmdServer.prototype.run = function(handler) {
+CmdServer.prototype.run = function() {
 	var self = this;
 	global.debug('CmdServer.run. %s:%d', self.ipAddr, self.portNo);
-	self.handler = handler;
+	//self.handler = handler;
 
 	self.server = net.createServer(function(client){
 		client.id = global.base.genGid();
@@ -103,6 +119,263 @@ CmdServer.prototype.parseMsg = function(client, message){
 	}
 	return iMsg;
 };
+
+CmdServer.prototype.writePromptTitle = function(client) {
+    var self =this;
+    client.write(util.format('%s%s%s\n',
+        global.utils.fillStr('NAME', 5),
+        global.utils.fillStr('IDX', 5),
+        global.utils.fillStr('RESULT', 25)
+    ));
+};
+
+CmdServer.prototype.register = function(client, argv, cb) {
+    var self = this;
+    var ack = {
+        cmd : 'register',
+        result : 'success'
+    };
+    var name = argv.subs[0];
+    var idx = argv.subs[1] ? parseInt(argv.subs[1]) : null;
+    try {
+        if (typeof (name) !== 'string' || typeof(idx) !== 'number') {
+            throw new Error('invalid_parameter');
+        }
+        if ( typeof(self.services[name]) !== 'object' ) {
+            self.services[name] = {};
+        }
+        var service = self.services[name];
+        service[idx] = argv.id;
+        client.session = true;
+        client._tid && clearTimeout(client._tid);
+        console.log(self.services)
+        global.debug('CmdServer.register. service:%s.%d', name, idx);
+    } catch(ex) {
+        ack.result = ex.message;
+    } finally {
+        cb(null, JSON.stringify(ack));
+    }
+};
+
+CmdServer.prototype.broadcast = function(client, argv, cb) {
+    var self = this;
+    var cmd = '';
+    var iLen = argv.subs.length;
+    for(var i=0; i<iLen; i++) {
+        cmd += (argv.subs[i] + ' ');
+    }
+    var ack = {
+        result : 'success',
+        client : []
+    };
+    for(var name in self.services) {
+        var service = self.services[name];
+        for(var idx in service) {
+            var id = service[idx];
+            var client = self.clients[id];
+            if (client) {
+                client.write(cmd + '\n\r');
+                ack.client.push({
+                    name : name,
+                    idx : idx
+                })
+            }
+        }
+    }
+    cb(null, JSON.stringify(ack));
+};
+
+CmdServer.prototype.transpass = function(client, argv, cb) {
+};
+
+/**
+* @method: get process-status
+*/
+CmdServer.prototype.get = function(argv, cb) {
+	var self = this;
+	if (argv.subs.length === 0) {
+        cb(null, 'invalid parameter. get sub-action');
+        return ;
+	}
+
+	switch (argv.subs[0]) {
+		case 'process-status' :
+			getProcessStatus(argv, cb);
+			break;
+		default: 
+			cb(null, 'invalid parameter:'+argv.subs[0]);
+	}
+
+	function getProcessStatus(argv, cb) {
+		var output = [];
+		for (var idx in global.base.process) {
+			var item = global.base.process[idx];
+			if (argv.name && item.name.indexOf(argv.name) < 0) continue;
+			if (argv.idx && item.idx != argv.idx) continue;
+			if ('string' === typeof(argv.run)
+				&& (argv.run == 'true' && item.pid === 0) || (argv.run == 'false' && item.pid > 0)) 
+				continue;
+
+			output.push({
+				pid : item.pid,
+				name : item.name,
+				idx : item.idx,
+				time : item.time,
+				cpu : item.usage ? item.usage.cpu : 0,
+				memory : item.usage ? item.usage.memory : 0,
+				rss : item.usage ? item.usage.rss : 0,
+			});
+		}
+		if (argv.out === 'json') {
+			cb(null, JSON.stringify(output));
+		}else {
+            var iMsg = util.format('%s%s%s%s  %s%s\n',
+                global.utils.fillStr('PID', 10),
+                global.utils.fillStr('NAME', 5),
+                global.utils.fillStr('IDX', 5),
+                global.utils.fillStr('TIME', 25),
+                global.utils.fillStr('CPU', 10),
+                global.utils.fillStr('MEMORY', 13)
+            );
+	        for(var i= 0, iLen=output.length; i<iLen;i++) {
+                var out = output[i];
+                iMsg += util.format('%s%s%s%s  %s%s\n',
+                    global.utils.fillStr(out.pid, 10),
+                    global.utils.fillStr(out.name, 5),
+                    global.utils.fillStr(out.idx, 5),
+                    global.utils.fillStr(out.time, 25),
+                    global.utils.fillStr(out.cpu +' %', 10),
+                    global.utils.fillStr(out.memory + '%(' + parseInt(out.rss/1024) + 'MB)', 13)
+                );
+            }
+            cb(null, iMsg);
+		}
+	};
+};
+
+/**
+* @method: start process
+ * ex) start process all 
+ *     start process WP
+ *     start process WP 501
+*/
+CmdServer.prototype.start = function(client, argv, cb) {
+	var self = this;
+    if (argv.subs.length < 2) {
+        cb(null, 'invalid parameter. start action process-name');
+        return ;
+    }	
+    switch(argv.subs[0]) {
+        case 'process' :
+            startProcess(client, argv, cb);
+            break;
+        default:
+            cb(null, 'invalid parameter:' + argv.subs[0]);
+    }
+
+    function startProcess(client, argv, cb) {
+    	var command = argv.subs[1].toUpperCase();
+    	var processList = global.base.getChildProcess();
+    	var iList = [];
+    	processList.forEach(function(item) {
+    		for (var i=1; i<=item.count; i++) {
+    			if (item.service === 'SM') continue;
+    			global.base.addProcessData(item.service, item.idx, 0, new Date(), 1);
+                iList.push({
+                    idx : item.idx,
+                    name : item.name,
+                    service : item.service,
+                    process : item.process
+                });
+    		}
+    	});
+
+		var setTime = 0;
+		if (argv.subs[2]) {
+            if(isNaN(parseInt(argv.subs[2]))){
+                client.write('NaN Error');
+                return cb('NaN Error');
+            }
+            setTime  = parseInt(argv.subs[2]) * 1000;
+		}
+        if(setTime > 999999){
+            client.write('setTime Error');
+            return cb('setTime error');
+        }
+        self.writePromptTitle(client);
+
+    	if (command == 'ALL') {
+    		// start all processes
+            async.eachSeries(processList, function(process, callback){
+            	setTimeout(function(){
+            		try {
+            			var child = global.base.process[process.idx];
+            			var msg = '';
+                        if ('object' === typeof(child) && child.pid > 0) {
+                            msg = 'already started process';
+                        } else {
+                            msg = global.base.startProcess(process);
+                        }
+                        if (msg !== '') {
+                            client.write(util.format('%s%s%s\n',
+                                global.utils.fillStr(process.service, 5),
+                                global.utils.fillStr(process.idx, 5),
+                                global.utils.fillStr(msg, 25)
+                            ));
+                        }
+                        callback(null);
+            		} catch (ex) {
+            			callback(ex);
+            		}
+            	}, setTime);
+            }, function(err){
+            	cb(err, '');
+            });
+
+    	}else {
+            var argObj = argv.subs[1].split('.');
+            var serviceName = argObj[0].toUpperCase();
+            var idx = argObj[1] ? parseInt(argObj[1]) : 0;
+
+            var iProcess = [];
+            processList.forEach(function(procs){
+                if(serviceName === procs.service)
+                    iProcess.push(procs);
+            });
+
+            async.eachSeries(iProcess, function(process, callback){
+            	setTimeout(function(){
+            		try {
+                        if ( !(serviceName === process.service) || !(idx === 0 || idx === parseInt(process.idx))){
+                            return callback(null);
+                        }
+                        var child = global.base.process[process.idx];
+                        var msg = '';
+                        if ('object' === typeof(child) && child.pid > 0) {
+                            msg = 'already started process';
+                        } else {
+                            msg = global.base.startProcess(process);
+                        }
+                        if (msg !== '') {
+                            client.write(util.format('%s%s%s\n',
+                                global.utils.fillStr(process.service, 5),
+                                global.utils.fillStr(process.idx, 5),
+                                global.utils.fillStr(msg, 25)
+                            ));
+                        }
+                        callback(null);
+            		} catch (ex) {
+            			callback(ex);
+            		}
+            	}, setTime);
+            }, function(err){
+                cb(err, '');
+            });
+    	}
+
+    };
+};
+
 
 module.exports.CmdServer = CmdServer;
 	

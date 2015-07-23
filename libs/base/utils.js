@@ -6,6 +6,12 @@ var __ = require('underscore');
 
 module.exports = {
 
+
+    fillStr : function (val, num) {
+        var tmp = val + '                              ';
+        return tmp.substring(0, num);
+    },
+
     pad2 : function(number) {
         return (number < 10 ? '0' : '') + number;
     },

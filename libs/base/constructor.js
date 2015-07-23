@@ -29,7 +29,7 @@ var Constructor = function (name, local) {
     global.error = console.error;
 
     this.logger = null;
-    this.startDate = global.utils.toDateTime(new Date());
+    this.startDate = new Date();
     this.name = name;
     this.idx = 0;
 
