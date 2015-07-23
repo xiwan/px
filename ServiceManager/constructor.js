@@ -72,26 +72,33 @@ Constructor.prototype.addProcessData = function(name, idx, pid, startTime, bChil
     self.usage.addPid(pid);
 };
 
+Constructor.prototype.getChildProcess = function(){
+    var self = this;
+    var iList = [];
+    for (var idx in self.cfg.services) {
+        var services = self.cfg.services[idx];
+        var oldIdx = services.idx;
+        if (!services.name) continue;
+        for (var i=0; i<services.machines.length; i++) {
+            var process = {};
+            process.name = services.name;
+            process.service = services.service;
+            process.idx = services.idx++;
+            process.machine = services.machines[0]
+            iList.push(process)
+        }
+        services.idx = oldIdx;
+    } 
+    return iList;
+}
+
 Constructor.prototype.monitorChildProcess = function(cb) {
 	var self = this;
 	try {
-		var iList = [];
-		for (var idx in self.cfg.services) {
-			var services = self.cfg.services[idx];
-			if (!services.name) continue;
-			for (var i=0; i<services.machines.length; i++) {
-				var process = {};
-				process.name = services.name;
-				process.service = services.service;
-				process.idx = services.idx++;
-				process.machine = services.machines[0]
-				iList.push(process)
-			}
-		}
-
+		var iList = self.getChildProcess();
 		iList.forEach(function(item){
 			self.addProcessData(item.service, item.idx, 0, new Date(), 1);
-			//self.startProcess(item);
+			// self.startProcess(item);
 		});
 
 		setInterval(function() {
