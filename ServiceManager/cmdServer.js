@@ -512,7 +512,7 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		var iDir = baseDir + cfg.name;
 		var iApp = iDir + '/app.js';
 		var iConstructor = iDir + '/constructor.js';
-		var iCommands = iDir + '/iCommands.js';
+		var iCommands = iDir + '/commands.js';
 
 		var iAppCtx = [];
 		var iConstructorCtx = [];
@@ -522,7 +522,10 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		iAppCtx.push('* @class ' + cfg.name);
 		iAppCtx.push('*/');
 		iAppCtx.push('');
-		iAppCtx.push('var appMain = new main.Constructor(\'' + service + '\');');
+		iAppCtx.push('var base = require(\'../libs/app_base\');');
+		iAppCtx.push('var main = require(\'./constructor\');');
+		iAppCtx.push('');
+		iAppCtx.push('var appMain = new main.Constructor(\'' + cfg.service + '\');');
 		iAppCtx.push('base.app(appMain);');
 
 		iConstructorCtx.push('\'use strict\'');
@@ -554,6 +557,8 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		iConstructorCtx.push('\t\tcb(ex)');
 		iConstructorCtx.push('\t};');
 		iConstructorCtx.push('};');
+		iConstructorCtx.push('');
+		iConstructorCtx.push('module.exports.Constructor = Constructor;');
 
 		iCommandsCtx.push('module.exports = {');
 		iCommandsCtx.push('\t');
