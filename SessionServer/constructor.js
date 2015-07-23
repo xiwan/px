@@ -26,7 +26,7 @@ Constructor.prototype.run = function(cb) {
 
 		self.channel = base.Channel.createObject(self.policy);
 		self.channel.prepare();
-
+		// init rpc
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 
 	}catch (ex) {

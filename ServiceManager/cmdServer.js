@@ -23,6 +23,7 @@ var CmdServer = function(name, portNo, ipAddr) {
 		register : function(client, argv, cb) { self.register(client, argv, cb); },
 		broadcast : function(client, argv, cb) { self.broadcast(client, argv, cb); },
 		transpass : function(client, argv, cb) { self.transpass(client, argv, cb); },
+		build : function(client, argv, cb) {self.build(client, argv, cb); },
 		get : function(client, argv, cb) { self.get(argv, cb); },
 		start : function(client, argv, cb) { self.start(client, argv, cb); },
 		stop : function(client, argv, cb) { self.stop(argv, cb); },
@@ -95,7 +96,7 @@ CmdServer.prototype.onMsg = function(client, msg) {
                 }
                 !client.session && (client.write('\n\r' + self.prompt));
             } catch (ex) {
-                global.warn('AppCmdServer.onMsg. error:%s', ex.message);
+                global.warn('CmdServer.onMsg. error:%s', ex.message);
             }
     	});
     }
@@ -476,6 +477,106 @@ CmdServer.prototype.restart = function(client, argv, cb) {
         }, 5000)
     })
 };
+
+CmdServer.prototype.apply = function(client, argv, cb) {
+    var self = this;
+    argv.subs = ['process', 'all'];
+    argv.out = 'json';
+    self.restart(client, argv, cb);
+};
+
+/**
+* @method: build module
+ * ex) build all 
+ *     build wa
+*/
+CmdServer.prototype.build = function(client, argv, cb) {
+	var self = this;
+	var service = argv.subs[0].toUpperCase();
+	var baseDir = './';
+	var allMsg = [];
+
+	if (service === 'ALL') {
+		async.eachSeries(global.base.cfg.services, bulldStub, function(err){
+			cb(err, allMsg.join('\n'));
+		})
+	}else {
+		bulldStub(global.base.cfg.services[service], cb);
+	}
+
+	function bulldStub(cfg, cb) {
+		if (!cfg || !cfg.name) {
+			cb(null, 'invalid parameter. cant build service: ' + service);
+			return;
+		}
+		var iDir = baseDir + cfg.name;
+		var iApp = iDir + '/app.js';
+		var iConstructor = iDir + '/constructor.js';
+		var iCommands = iDir + '/iCommands.js';
+
+		var iAppCtx = [];
+		var iConstructorCtx = [];
+		var iCommandsCtx = [];
+
+		iAppCtx.push('/**');
+		iAppCtx.push('* @class ' + cfg.name);
+		iAppCtx.push('*/');
+		iAppCtx.push('');
+		iAppCtx.push('var appMain = new main.Constructor(\'' + service + '\');');
+		iAppCtx.push('base.app(appMain);');
+
+		iConstructorCtx.push('\'use strict\'');
+		iConstructorCtx.push('');
+		iConstructorCtx.push('var base = require(\'../libs/app_base\');');
+		iConstructorCtx.push('var commands = require(\'./commands\');');
+		iConstructorCtx.push('var util = require(\'util\');');
+		iConstructorCtx.push('var __ = require(\'underscore\');');
+		iConstructorCtx.push('var async = require(\'async\');');
+		iConstructorCtx.push('');
+		iConstructorCtx.push('var Constructor = function(name) {');
+		iConstructorCtx.push('\tbase.Constructor.apply(this, arguments);');
+		iConstructorCtx.push('};');
+		iConstructorCtx.push('util.inherits(Constructor, base.Constructor);');
+		iConstructorCtx.push('');
+
+		iConstructorCtx.push('Constructor.prototype.run = function(cb) {');
+		iConstructorCtx.push('\tvar self = this;');
+		iConstructorCtx.push('\ttry {');
+		iConstructorCtx.push('\t\t// init policy instance & load commands');
+		iConstructorCtx.push('\t\tself.policy = base.Policy.createObject();');
+		iConstructorCtx.push('\t\tself.policy.load(self, commands);');
+		iConstructorCtx.push('');
+		iConstructorCtx.push('\t\t//init rpc server or client');
+		iConstructorCtx.push('\t\tself.initForRPC(self.cfg.services[self.name].rpc, self.policy);');
+		iConstructorCtx.push('');
+		iConstructorCtx.push('\t');
+		iConstructorCtx.push('\t} catch (ex) {');
+		iConstructorCtx.push('\t\tcb(ex)');
+		iConstructorCtx.push('\t};');
+		iConstructorCtx.push('};');
+
+		iCommandsCtx.push('module.exports = {');
+		iCommandsCtx.push('\t');
+		iCommandsCtx.push('};');
+		iCommandsCtx.push('');
+
+		try { 
+			fs.mkdirSync(iDir); 
+
+			fs.writeFileSync(iApp, iAppCtx.join('\n'), 'utf8');
+			fs.writeFileSync(iConstructor, iConstructorCtx.join('\n'), 'utf8');
+			fs.writeFileSync(iCommands, iCommandsCtx.join('\n'), 'utf8');
+
+			var msg = util.format('It\'s saved! %s', cfg.name);
+			allMsg.push(msg);
+			cb(null, msg);
+		} catch (ex) {
+			allMsg.push(ex.message);
+			cb(null, ex.message)
+		}
+
+	}
+}
 
 module.exports.CmdServer = CmdServer;
 	

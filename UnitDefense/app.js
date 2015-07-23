@@ -1,5 +1,5 @@
 /**
- * @class ServiceManager
+ * @class UnitDefense
  */
 
 var base = require('../libs/app_base');
