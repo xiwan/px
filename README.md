@@ -61,9 +61,8 @@ projectX服务器提供了一系列强大的后台管理工具，主要有监测
 	WA   961  success 
 	
 #### 查看进程状态命令
-* get process-status
 
- 获取当前正在运行进程状态，默认60秒刷新一次
+**get process-status** 获取当前正在运行进程状态，默认60秒刷新一次 
  
 	SM.901 0.0.0.0:6001 $ get process-status
 	PID       NAME IDX  TIME                       CPU       MEMORY       
@@ -116,6 +115,7 @@ projectX服务器提供了一系列强大的后台管理工具，主要有监测
 ![webagent module](https://cloud.githubusercontent.com/assets/931632/8847276/f1aff5aa-315f-11e5-89af-37a85339a9d2.png)
 
 基本上所有的进程模块都包含了这三个文件。
+
 * app.js 模块运行部分
 * commands.js 模块handler部分
 * constructor.js 模块初始化和主要业务逻辑部分。
