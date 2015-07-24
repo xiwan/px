@@ -513,10 +513,12 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		var iApp = iDir + '/app.js';
 		var iConstructor = iDir + '/constructor.js';
 		var iCommands = iDir + '/commands.js';
+		var iApis = iDir + '/apis/main.js';
 
 		var iAppCtx = [];
 		var iConstructorCtx = [];
 		var iCommandsCtx = [];
+		var iApisCtx = [];
 
 		iAppCtx.push('/**');
 		iAppCtx.push('* @class ' + cfg.name);
@@ -530,24 +532,24 @@ CmdServer.prototype.build = function(client, argv, cb) {
 
 		iConstructorCtx.push('\'use strict\'');
 		iConstructorCtx.push('');
-		iConstructorCtx.push('var base = require(\'../libs/app_base\');');
-		iConstructorCtx.push('var commands = require(\'./commands\');');
 		iConstructorCtx.push('var util = require(\'util\');');
 		iConstructorCtx.push('var __ = require(\'underscore\');');
 		iConstructorCtx.push('var async = require(\'async\');');
+		iConstructorCtx.push('var base = require(\'../libs/app_base\');');
+		iConstructorCtx.push('var commands = require(\'./commands\');');
+		iConstructorCtx.push('var apis = require(\'./apis/main\');');
 		iConstructorCtx.push('');
 		iConstructorCtx.push('var Constructor = function(name) {');
 		iConstructorCtx.push('\tbase.Constructor.apply(this, arguments);');
 		iConstructorCtx.push('};');
 		iConstructorCtx.push('util.inherits(Constructor, base.Constructor);');
 		iConstructorCtx.push('');
-
 		iConstructorCtx.push('Constructor.prototype.run = function(cb) {');
 		iConstructorCtx.push('\tvar self = this;');
 		iConstructorCtx.push('\ttry {');
 		iConstructorCtx.push('\t\t// init policy instance & load commands');
 		iConstructorCtx.push('\t\tself.policy = base.Policy.createObject();');
-		iConstructorCtx.push('\t\tself.policy.load(self, commands);');
+		iConstructorCtx.push('\t\tself.overloading(apis, commands);');
 		iConstructorCtx.push('');
 		iConstructorCtx.push('\t\t//init rpc server or client');
 		iConstructorCtx.push('\t\tself.initForRPC(self.cfg.services[self.name].rpc, self.policy);');
@@ -565,12 +567,18 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		iCommandsCtx.push('};');
 		iCommandsCtx.push('');
 
+		iApisCtx.push('\'use strict\'');
+		iCommandsCtx.push('');
+		iApisCtx.push('var apis = exports.apis = {};');
+
 		try { 
 			fs.mkdirSync(iDir); 
+			fs.mkdirSync(iDir + '/apis'); 
 
 			fs.writeFileSync(iApp, iAppCtx.join('\n'), 'utf8');
 			fs.writeFileSync(iConstructor, iConstructorCtx.join('\n'), 'utf8');
 			fs.writeFileSync(iCommands, iCommandsCtx.join('\n'), 'utf8');
+			fs.writeFileSync(iApis, iApisCtx.join('\n'), 'utf8');
 
 			var msg = util.format('It\'s saved! %s', cfg.name);
 			allMsg.push(msg);

@@ -245,7 +245,7 @@ Constructor.prototype.socketCloseEvent = function(client) {
     });
 };
 
-Constructor.prototype.overloading = function(apis){
+Constructor.prototype.overloading = function(apis, commands){
     var self = this;
     var methods = Object.keys(apis);
 
@@ -256,6 +256,9 @@ Constructor.prototype.overloading = function(apis){
         }
         global.utils.addMethod(self, name, apis[name]);
     });
+
+    if (self.policy && self.policy.load)
+        self.policy.load(self, commands);
 };
 
 

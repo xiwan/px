@@ -19,9 +19,7 @@ Constructor.prototype.run = function(cb) {
 		
 		// init policy instance & load commands
 		self.policy = base.Policy.createObject();
-		self.policy.load(self, commands);
-
-		self.overloading(apis);
+		self.overloading(apis, commands);
 
 		// init http server & ws server as front
 		var portNo = parseInt(self.cfg.http.port) + self.idx;
