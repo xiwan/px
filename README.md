@@ -2,34 +2,53 @@
 
 ### 背景介绍
 
+这个项目主要综合了以前我所经历过的一些node的服务器经验，比如express, ngServer, pomelo等等。node的异步回调性质，决定了它不适合做高cpu的业务，不同于java之类采用的是单线程，多进程的模式来处理海量请求。每个进程其实和传统web服务器一样都是镜像一般处理相同业务（登录，聊天，战斗，交易等等），这样来做可以省去很多设计和编码上的麻烦。但经过许多次的项目告诉我，无差别的进程看似很简单，但埋下了很多隐患。
+
+* 这种吃大锅饭的设计，让机器资源无法最优化使用。
+* 一个进程有问题意味着所有的都有问题。
+* 无法为单独业务做设计，一旦这么做了，相当于打破了之前的原则。
+* 每次的更新迭代意味着全包更新。
+
 在游戏服务器端，往往需要处理大量的各种各样的任务，比如：管理客户端的连接，维护游戏世界端状态，执行游戏的逻辑等等。每一项任务所需的系统资源也可能不同，如：IO密集或CPU密集等。而这些复杂的任务只用一个单独的服务器进程是很难支撑和管理起来的。所以，游戏服务器往往是由多个类型的服务器进程组成的集群。每个服务器进程专注于一块具体的服务功能，如：连接服务，场景服务，聊天服务等。这些服务器进程相互协作，对外提供完整的游戏服务。
 
 一般来说网络游戏服务器需要实现以下功能（可能不完全）
 
 * 网络
   	* request/response
-	* broadcast/channel
 	* RPC
+	* broadcast/channel
 	* session	
 * 服务器管理
 	* 可配置扩展 (xls,json格式)
 	* console (进程创建，管理和监控)	
-* 其他
-	* master data管理
-	* 支持多服，合服，跨服
-	* 数据库连接
+	* 版本管理
+* 数据库
+	* schema设计
+	* model层
+	* master data
+	* 缓存
+* 支持
+	* 脚本, 工具
 	* 定时任务
-	* 游戏KPI数据(RR1,RR3)
+* 业务
+	* 聊天室
+	* 支持多服，合服，跨服
 	* 运营工具
 	
 
-### 服务器类型
+#### 服务器类型
 
-服务器一般分为frontend和backend。frontend负责承载客户端的连接，与客户端之间的所有请求和响应包都会经过frontend。同时，frontend也负责维护客户端session并把请求路由给后端的backend服务器。Backend则负责接收frontend分发过来的请求，实现具体的游戏逻辑，并把消息回推给frontend，再最终发送给客户端。
+projecX服务器一般把服务按照服务功能做了如下区分：
 
-![Server Type](https://camo.githubusercontent.com/5935f0403ef84c20197af32d6ca0d86069c742b3/687474703a2f2f706f6d656c6f2e6e6574656173652e636f6d2f7265736f757263652f646f63756d656e74496d6167652f7365727665722d747970652e706e67)
+* **service master** 总管理进程。这是所有其他进程运行的基础，负责其他进程的管理和监控。生产环境中需要每台机器上跑一个。
+* **sesssion server** 代理进程。顾名思义，用于管理用户session（连接）的进程，处理请求的转发等等.是后端服务器与客户端之间沟通的桥梁，可以认为是一个高级的前端服务器。
+* **unite defense** 用户进程。主要业务逻辑处理的后端服务器。其实这里还可以做更细化的业务区分：战斗(pvp, pve, raidBoss)，排行榜，商店，gacha, 聊天，邮件
+* **agent scheduler** 定时器进程。用来处理服务器的定时任务。
+* **game log** 日志进程。搜集服务器产生的所有日志。
+* **web agent** 运营工具。
 
-### 服务器管理工具
+
+### 服务器管理
 
 projectX服务器提供了一系列强大的后台管理工具，主要有监测所有进程状态；进程的启动，关闭；进程模块代码生成等等。
 
@@ -73,10 +92,10 @@ projectX服务器提供了一系列强大的后台管理工具，主要有监测
 	28739     SM   901  Thu Jul 23 2015 17:07:13   0 %       0.4%(29MB)   
 	28747     WA   961  Thu Jul 23 2015 17:07:23   0.7 %     0.3%(26MB)  
 
-#### 建立进程模块
-每一个进程模块代表相同业务逻辑单元的聚合。比如说游戏中我们会有专门处理连接请求的模块(SS)，用户逻辑的模块(UD),管理后台的模块(WA)等等。至于如何聚合这些业务逻辑可以取决于开发者的思维。你可以按照前面的约定这样分类，也可以把所有的业务放在一个进程模块中。这些模块会以独立进程的形式运行在配置的服务器上面，十分容易扩展和管理。
+#### 建立新的任务模块
+每一个任务模块代表相同业务逻辑单元的聚合。比如说游戏中我们会有专门处理连接请求的模块(SS)，用户逻辑的模块(UD),管理后台的模块(WA)等等。至于如何聚合这些业务逻辑可以取决于开发者的思考。你可以按照前面的约定这样分类，也可以把所有的业务放在一个任务模块中。这些模块会以独立进程的形式运行在配置的服务器上面，十分容易扩展和管理。
 
-进程模块的配置信息在config.ini中
+任务模块的配置信息在config.ini中
 
 	; services configuration block
 	[services]
@@ -114,106 +133,22 @@ projectX服务器提供了一系列强大的后台管理工具，主要有监测
 
 ![webagent module](https://cloud.githubusercontent.com/assets/931632/8847276/f1aff5aa-315f-11e5-89af-37a85339a9d2.png)
 
-基本上所有的进程模块都包含了这三个文件。
+基本上所有的任务模块都包含了这三个文件。
 
 * app.js 模块运行部分
 * commands.js 模块handler部分
 * constructor.js 模块初始化和主要业务逻辑部分。
 
-### read/write 分离
+### 底层设计
 
-配置在config.ini中，读写分离的主要目的是为了减轻数据库的压力。主从两库的同步主要通过mysql replica机制来达到。
+#### request & response
 
-下面是一个配置mysql部分的片段
+#### rpc
 
-	[mysql]
-	database = systemDB					//指定默认链接的数据库
+#### broadcast & channel
 
-	[mysql.master]						//master信息，master一般只有一个
-	host = localhost
-	port = 3306
+#### session
 
-	[mysql.slave] 						//slave信息,可以支持多个
-	conn[] = localhost:3307
-	conn[] = localhost:3308
-
-	[mysql.systemDB] 					//某个DB的配置信息
-	user = gameAdmin					//用户名
-	password = admin00!!				//密码
-	database = game_system				//数据库真实名称
-			
-	[mysql.platformDB]					//第二个DB的配置信息
-	user = gameAdmin
-	password = admin00!!
-	database = platform_service
-
-如何连接一个数据库？首先需要在model层中引入mysqlConn类:
-
-	var mConn = require('./libs/base/mysqlConn');
-调用构造函数:
-	
-	// 如果未设置第二个参数(目标数据库)，则使用默认数据库连接
-	self.mConn = mConn.createObject(global.base.cfg.mysql, 'platformDB');
-
-使用master或者slave:
-	
-	self.mConn.use('slave');
-执行单条活着多条sql:
-
-	var qryList = [];
-    qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
-	self.mConn.execute(qryList, cb);
-	
-
-### 基于xlsx的数据库设计
-
-#### 数据库连接设置表
-
-如下图所示，对于新的项目，开发者无须手写sql,只需要通过xlsx的配置就可以达到相同效果。具体存放xls的目录地址为__cfg/schema/systems.xlsx__。
-
-![system xlsx](https://cloud.githubusercontent.com/assets/931632/8695649/f653982a-2b18-11e5-869e-f6a15b0d6337.png)
-
-重要的几个配置字段
-
-* Name: 数据库名称
-* Host: 数据库地址
-* User: 数据库用户
-* Password: 数据库密码
-
-
-#### 数据库关系配置表
-
-接下来可以在同目录下建立另外一个xlxs,由于mysql是关系型数据库，除了配置数据库内的tables，各个table之间关系也很重要.对于游戏来说更是如此。游戏具有很强的用户中心特性，所以设计用户表格时候都可以以用户uid为主键的设计。那么会有一些列这样的表格。如何管理这些表格呢？可以通过xlsx的配置来达到。
-
-![relation xlsx](https://cloud.githubusercontent.com/assets/931632/8744333/f83c3778-2ca8-11e5-9685-29d1e38bb674.png)
-
-重要的几个配置字段
-
-* Domain: 一组具有强关系的表集合会共享相同的Domain
-* Name: 该表格在层级中的alias
-* TableName: 表格在数据库内真实的名字
-* Hierachy: 表明层级关系. 如果是空是最底层，base表示某个子Domain的中心节点
-* PartitionKey: 表分区采用的键,默认是hash分区
-* PartitionNum: hash分区个数
-* PartitionBy: 分区类型LIST | RANGE | HASH
-
-在这里的Hierachy是比较重要的，同一个Domain下面的表格是可以被base类全部找出(比如Account)。同理，characters作为base可以查出所有Hierachy为它的表格数据。通过这种层级关系,只要知道uid,就可以迅速查找出某个玩家的所有或者某个方面的数据.
-
-#### 数据库表格设计
-
-下图是account_character表格的设计，由于它在hierachy中是account层级下面的一个base，那么除了uid以外还需要charGid来做联合主键.同理其他的base类也都需要一个联合主键。对于character下面的表格，则需要第三个键来做联合主键(uid, charGid, xxxx)。
-
-![schema xlsx](https://cloud.githubusercontent.com/assets/931632/8744850/1af9c948-2cad-11e5-8b1e-9fedd91cce25.png)
-
-#### 执行
-
-当以上配置完毕后，基本一个很清晰的数据库关系模型就建立起来了。在主键的基础上，各个字段都是为业务服务而已。接下来只需要执行:
-
-	sh start -init // 初始化数据库命令
-	
-执行以上命令后会自动在目标服务器内建立配置数据库。当数据库建立完毕后，会查询同目录下Name对应的数据库schema设计。比如game_system_test.xlsx。
-	
-### 模块设计
 
 #### model模块
 
@@ -317,6 +252,100 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 		Mean: 1307.026ms
 		Max: 5459ms
 
+
+### 数据库部分
+
+#### read/write 分离
+
+配置在config.ini中，读写分离的主要目的是为了减轻数据库的压力。主从两库的同步主要通过mysql replica机制来达到。
+
+下面是一个配置mysql部分的片段
+
+	[mysql]
+	database = systemDB					//指定默认链接的数据库
+
+	[mysql.master]						//master信息，master一般只有一个
+	host = localhost
+	port = 3306
+
+	[mysql.slave] 						//slave信息,可以支持多个
+	conn[] = localhost:3307
+	conn[] = localhost:3308
+
+	[mysql.systemDB] 					//某个DB的配置信息
+	user = gameAdmin					//用户名
+	password = admin00!!				//密码
+	database = game_system				//数据库真实名称
+			
+	[mysql.platformDB]					//第二个DB的配置信息
+	user = gameAdmin
+	password = admin00!!
+	database = platform_service
+
+如何连接一个数据库？首先需要在model层中引入mysqlConn类:
+
+	var mConn = require('./libs/base/mysqlConn');
+调用构造函数:
+	
+	// 如果未设置第二个参数(目标数据库)，则使用默认数据库连接
+	self.mConn = mConn.createObject(global.base.cfg.mysql, 'platformDB');
+
+使用master或者slave:
+	
+	self.mConn.use('slave');
+执行单条活着多条sql:
+
+	var qryList = [];
+    qryList.push({ sql : 'SELECT * FROM T_APP_BASE where appId = ?', data : [global.const.appId] });
+	self.mConn.execute(qryList, cb);
+
+#### 数据库连接设置表
+
+如下图所示，对于新的项目，开发者无须手写sql,只需要通过xlsx的配置就可以达到相同效果。具体存放xls的目录地址为__cfg/schema/systems.xlsx__。
+
+![system xlsx](https://cloud.githubusercontent.com/assets/931632/8695649/f653982a-2b18-11e5-869e-f6a15b0d6337.png)
+
+重要的几个配置字段
+
+* Name: 数据库名称
+* Host: 数据库地址
+* User: 数据库用户
+* Password: 数据库密码
+
+
+#### 数据库关系配置表
+
+接下来可以在同目录下建立另外一个xlxs,由于mysql是关系型数据库，除了配置数据库内的tables，各个table之间关系也很重要.对于游戏来说更是如此。游戏具有很强的用户中心特性，所以设计用户表格时候都可以以用户uid为主键的设计。那么会有一些列这样的表格。如何管理这些表格呢？可以通过xlsx的配置来达到。
+
+![relation xlsx](https://cloud.githubusercontent.com/assets/931632/8744333/f83c3778-2ca8-11e5-9685-29d1e38bb674.png)
+
+重要的几个配置字段
+
+* Domain: 一组具有强关系的表集合会共享相同的Domain
+* Name: 该表格在层级中的alias
+* TableName: 表格在数据库内真实的名字
+* Hierachy: 表明层级关系. 如果是空是最底层，base表示某个子Domain的中心节点
+* PartitionKey: 表分区采用的键,默认是hash分区
+* PartitionNum: hash分区个数
+* PartitionBy: 分区类型LIST | RANGE | HASH
+
+在这里的Hierachy是比较重要的，同一个Domain下面的表格是可以被base类全部找出(比如Account)。同理，characters作为base可以查出所有Hierachy为它的表格数据。通过这种层级关系,只要知道uid,就可以迅速查找出某个玩家的所有或者某个方面的数据.
+
+#### 数据库表格设计
+
+下图是account_character表格的设计，由于它在hierachy中是account层级下面的一个base，那么除了uid以外还需要charGid来做联合主键.同理其他的base类也都需要一个联合主键。对于character下面的表格，则需要第三个键来做联合主键(uid, charGid, xxxx)。
+
+![schema xlsx](https://cloud.githubusercontent.com/assets/931632/8744850/1af9c948-2cad-11e5-8b1e-9fedd91cce25.png)
+
+#### 执行
+
+当以上配置完毕后，基本一个很清晰的数据库关系模型就建立起来了。在主键的基础上，各个字段都是为业务服务而已。接下来只需要执行:
+
+	sh start -init // 初始化数据库命令
+	
+执行以上命令后会自动在目标服务器内建立配置数据库。当数据库建立完毕后，会查询同目录下Name对应的数据库schema设计。比如game_system_test.xlsx。
+	
+
 ### 功能设计
 
 #### 登陆功能
@@ -328,6 +357,8 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 	4. EFGetUserData		//获取游戏账号用户数据
 	5. EFUpdateNick			//更新玩家昵称
 	6. EFUserSocketLogin	//websocket请求登陆
+
+#### 多人战斗pvp
 
 ### 常用的npm
 
