@@ -110,7 +110,6 @@ ProxyServer.prototype.socketRequest = function(socket) {
 		socket.__id = global.base.genGid();
 		self.users[socket.__id] = socket;
 
-
 		socket.__timeId = setTimeout(function(){
 			if (socket) {
                 global.warn('socket.error. peer:%s, error:__expired_login_time', socket.remoteAddress);
@@ -158,7 +157,7 @@ ProxyServer.prototype.socketHandler = function (socket, message, flag) {
         if (flag.binary){
         	throw new Error('__web_data_type');
         } // dont hanlde binary here
-		
+
 		decodeReq(message, function(err, iMsg){
 			try {
 				if (err) throw err;

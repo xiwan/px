@@ -123,6 +123,7 @@ ChannelAgent.prototype.getChannelIdx = function(){
 }
 
 ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
+	var self = this;
 	try {
 		if (__.indexOf([global.const.CHANNEL_PUB_IDX, global.const.CHANNEL_CLAN_IDX], channelType) < 0) 
 			 throw new Error('__invalid_param');
@@ -143,20 +144,19 @@ ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
             channelType : channelType,
             idx : idx
         };
-
-        if (socket.__detail) {
-            socket.__channel[protocol.channelType] = protocol.key;
-            self.subscribe(socket, protocol.key);
-            cb(null, iAck );
-        }
-
+        	console.log(key, socket.__channel)
+        //if (socket.__detail) {
+            socket.__channel[channelType] = key;
+            self.subscribe(socket, key);
+        //}
 	}catch (ex) {
-
+		console.log(ex.stack);
 	}
 };
 
 ChannelAgent.prototype.subscribe = function(socket, key){
-	var usage = self.channelUsage[key] || (self.channels[protocol.key] = { date : new Date(), count : 0, hosts : '', joins : {}});
+	var self = this;
+	var usage = self.channelUsage[key] || (self.channels[key] = { date : new Date(), count : 0, hosts : '', joins : {}});
 	var redis = global.base.redis.channel.get(key);
 
 	if (usage.hosts != redis.hosts) {
@@ -165,7 +165,7 @@ ChannelAgent.prototype.subscribe = function(socket, key){
 		if (!redis.__channel[key]) {
 			redis.__channel[key] = true;
 			redis.subscribe(key);
-			global.debug('ChannelAgent.subscribe. key:%s, hosts:%s', protocol.key, redis.hosts);
+			global.debug('ChannelAgent.subscribe. key:%s, hosts:%s', key, redis.hosts);
             redis.on('message', function(key, message) {
                 self.policy && self.policy.emit('subscribe', key, message);            	
             });

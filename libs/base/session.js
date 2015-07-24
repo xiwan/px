@@ -1,6 +1,7 @@
 'use strict';
 
 var uuid = require('node-uuid');
+var __ = require('underscore');
 
 var Session = exports.Session = function() {};
 
@@ -14,6 +15,7 @@ Session.prototype.createSession = function(message, cb) {
 		market : message.market,
 		os : message.os,
 		date : new Date(),
+        uid : __.random(1, 1000),
 	};
 	var encrypt = global.utils.encrypt(JSON.stringify(session), 'session');
 

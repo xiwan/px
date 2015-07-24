@@ -67,3 +67,14 @@ apis.EFHeartBeat = function(socket, protocol, cb) {
         cb(null, { result : 'success', serverTime : now });
 };
 
+apis.EFJoinChannel = function(socket, protocol, cb) {
+	var self = this;
+	try {
+		self.channel.joinChannel(socket, 1, 1);
+		var now = new Date();
+		cb(null, { result : 'success', serverTime : now });
+	}catch (ex) {
+		cb(ex)
+	}
+};
+
