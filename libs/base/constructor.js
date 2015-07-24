@@ -245,6 +245,19 @@ Constructor.prototype.socketCloseEvent = function(client) {
     });
 };
 
+Constructor.prototype.overloading = function(apis){
+    var self = this;
+    var methods = Object.keys(apis);
+
+    methods.forEach(function(name){
+        if ('function' !== typeof(apis[name])) {
+            global.warn('__unregister_method: %s', name);
+            return;
+        }
+        global.utils.addMethod(self, name, apis[name]);
+    });
+};
+
 
 module.exports.Constructor = Constructor;
 

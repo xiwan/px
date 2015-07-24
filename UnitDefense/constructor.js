@@ -1,11 +1,12 @@
 'use strict';
 
-var base = require('../libs/app_base');
-var commands = require('./commands');
-var gameSystem = require('./model/game_system');
 var util = require('util');
 var __ = require('underscore');
 var async = require('async');
+
+var base = require('../libs/app_base');
+var commands = require('./commands');
+var gameSystem = require('./model/game_system');
 
 var Constructor = function(name) {
 	base.Constructor.apply(this, arguments);
