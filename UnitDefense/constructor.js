@@ -6,6 +6,7 @@ var async = require('async');
 
 var base = require('../libs/app_base');
 var commands = require('./commands');
+var apis = require('./apis/main').apis;
 var gameSystem = require('./model/game_system');
 
 var Constructor = function(name) {
@@ -19,6 +20,8 @@ Constructor.prototype.run = function(cb) {
 		self.policy = base.Policy.createObject();
 		self.policy.load(self, commands);
 
+		self.overloading(apis);
+
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 
 		self.gameSystem = gameSystem.createObject(global.base.cfg.mysql);
@@ -28,19 +31,5 @@ Constructor.prototype.run = function(cb) {
 
 };
 
-Constructor.prototype.testABC = function(protocol, cb) {
-	var self = this;
-	self.gameSystem.testABC(function(err, results){
-		cb(err, {msg: results})		
-	});
-
-};
-
-Constructor.prototype.test1 = function(protocol, cb) {
-	var self = this;
-	self.gameSystem.test1(function(err, results){
-		cb(err, {msg: results})		
-	});	
-}
 
 module.exports.Constructor = Constructor;
