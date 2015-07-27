@@ -136,6 +136,7 @@ ProxyServer.prototype.socketRequest = function(socket) {
                 socket = null;
 			}catch(ex) {
 				global.warn('socket.socketRequest.close ex:%s', ex.message);
+				console.log(ex.stack);
 			}
 		});
 

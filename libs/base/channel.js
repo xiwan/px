@@ -95,7 +95,7 @@ ChannelAgent.prototype.updateChannelUsage = function(dataList, keys, cb) {
 			self.channelUsage.push(channels[key]); 
 		});
 		self.channelUsage.sort(function(x, y) { return y.count - x.count; });
-		// console.dir(self.channelUsage);
+		//console.dir(self.channelUsage);
 		cb(null);
 	}catch (ex) {
 		cb(ex);
@@ -144,7 +144,7 @@ ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
             channelType : channelType,
             idx : idx
         };
-        	console.log(key, socket.__channel)
+        // detail is account data
         //if (socket.__detail) {
             socket.__channel[channelType] = key;
             self.subscribe(socket, key);
@@ -156,7 +156,7 @@ ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
 
 ChannelAgent.prototype.subscribe = function(socket, key){
 	var self = this;
-	var usage = self.channelUsage[key] || (self.channels[key] = { date : new Date(), count : 0, hosts : '', joins : {}});
+	var usage = self.channels[key] || (self.channels[key] = { date : new Date(), count : 0, hosts : '', joins : {}});
 	var redis = global.base.redis.channel.get(key);
 
 	if (usage.hosts != redis.hosts) {
@@ -166,6 +166,7 @@ ChannelAgent.prototype.subscribe = function(socket, key){
 			redis.__channel[key] = true;
 			redis.subscribe(key);
 			global.debug('ChannelAgent.subscribe. key:%s, hosts:%s', key, redis.hosts);
+
             redis.on('message', function(key, message) {
                 self.policy && self.policy.emit('subscribe', key, message);            	
             });
@@ -176,31 +177,32 @@ ChannelAgent.prototype.subscribe = function(socket, key){
     usage.joins[socket.__id] = socket;
 };
 
-ChannelAgent.prototype.sendChannelMsg = function(socket, channelType, msg, cb){
+ChannelAgent.prototype.sendChannelMsg = function(socket, appSessionKey, channelType, msg){
 	var self = this;
 	try {
 		var key = socket.__channel[channelType];
-		if (!socket.__detail) throw new Error('__session_state');
+		//if (!socket.__detail) throw new Error('__session_state');
 		if (!key) throw new Error('__channel_not_joined');
 
 		var usage = self.channels[key];
 		if (!usage) throw new Error('__system_error');
 
 		var message = {
-			name : 'recvChannelMsg',
+			name : 'EFRecvChannelMsg',
 			body : {
+				appSessionKey : appSessionKey, 
 				channelType : channelType,
 				msg : msg,
 				sendTime : new Date(),
 			}
 		};
 
-		redis = global.base.redis.channel.getByNode(usage.hosts);
+		var redis = global.base.redis.channel.getByNode(usage.hosts)._client;
 		redis.publish(key, JSON.stringify(message));
-		cb(null);
 	}catch (ex) {
 		global.warn('ChannelAgent.sendChannelMsg. error:%s', ex.message);
-		cb(ex)
+		console.log(ex.stack);
+
 	}
 };
 
@@ -210,7 +212,7 @@ ChannelAgent.prototype.recvChannelMsg = function(key, iMsg) {
 		var usage = self.channels[key];
 		var info = key.split('.');
 		var now = new Date();
-
+		console.log(info)
 		if (!usage) throw new Error('__system_error');
         iMsg.result = 'success';
         iMsg.channelId = info[2];
@@ -219,11 +221,12 @@ ChannelAgent.prototype.recvChannelMsg = function(key, iMsg) {
         	var socket = usage.joins[key];
             if (!socket.__channel)
                 return;
-            socket.emit('redirect', 'EFRecvChannelMsg', iMsg); // client side need to define 'EFRecvChannelMsg' function
+            socket.emit('redirect', 'EERecvChannelMsg', iMsg); // client side need to define 'EFRecvChannelMsg' function
         });
 
 	}catch (ex) {
 		global.warn('ChannelAgent.recvChannelMsg. error:%s', ex.message);
+		console.log(ex.stack);
 	}
 };
 

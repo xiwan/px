@@ -33,7 +33,10 @@ RedisHashRing.prototype.add = function(node, cb) {
 	var self = this;
 	try {
 		var addr = node.split(':');
-		var client = self.server[node] = new redis.createClient(parseInt(addr[1]), addr[0]);
+		var client = redis.createClient(parseInt(addr[1]), addr[0]);
+        var _client = redis.createClient(parseInt(addr[1]), addr[0]);
+        self.server[node] = client;
+        client._client = _client;
 		client.hosts = node;
 		self.overloading(client);
 
@@ -54,6 +57,11 @@ RedisHashRing.prototype.add = function(node, cb) {
 			global.debug('RedisHashRing.add. name:%s, node:%s', self.name, node);
 			cb && cb(null);
 		});
+
+        // client.on('subscribe', function(channel, count) {
+        //     console.log('xxxxx', channel, count)
+        //     _client.publish(channel, count);
+        // });
 
 	}catch(ex) {
 		global.warn('RedisHashRing.add. name:%s, ex:%s', self.name, ex.message);

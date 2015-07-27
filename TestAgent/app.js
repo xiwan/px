@@ -35,7 +35,13 @@ async.waterfall([
 	},
 	function (callback) {
 		apis.wsRequest('EFJoinChannel', bot, function(err, iAck){
-			console.log(iAck);
+			callback();
+		});
+	},
+	function (callback) {
+		bot.channelType = 1;
+		bot.msg = ' bot msg ' + __.random(1, 100);
+		apis.wsRequest('EFSendChattingMsg', bot, function(err, iAck){
 			callback();
 		});
 	}

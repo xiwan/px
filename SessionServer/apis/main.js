@@ -78,3 +78,20 @@ apis.EFJoinChannel = function(socket, protocol, cb) {
 	}
 };
 
+apis.EFSendChattingMsg = function(socket, protocol, cb) {
+	var self = this;
+	try {
+		self.channel.sendChannelMsg(socket, protocol.appSessionKey, protocol.channelType, protocol.msg);
+		var now = new Date();
+		cb(null, { result : 'success', serverTime : now });
+	}catch (ex) {
+		cb(ex)
+	}
+};
+
+apis.EFRecvChannelMsg = function(key, message, cb) {
+	var self = this;
+	self.channel.recvChannelMsg(key, 'hello remote client');
+	cb(null);
+};
+

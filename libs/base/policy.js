@@ -79,12 +79,11 @@ Policy.prototype.onSubscribe = function(key, message) {
     try {
         var protocol = JSON.parse(message);
         var iAction = self.parser[protocol.name];
-        if (typeof(iAction) !== 'function') 
-            throw new Error('__api_unregistered');
-
+        if (typeof(iAction) !== 'function') throw new Error('__api_unregistered');
         iAction.call(self, key, protocol.body);
     } catch (ex) {
         global.warn('Policy.onSubscribe. ex:%s, message:%s', ex.message, message);
+        console.log(ex.stack);
     }
 };
 
@@ -183,7 +182,7 @@ Policy.prototype.iAuth = function(iList) {
                 },
             ], function(err, iAck){
                 err && global.base.sendErrorHistory(err, protocol, cmd);
-                cb(err, iAck);
+                cb && cb(err, iAck);
             });
 
         };

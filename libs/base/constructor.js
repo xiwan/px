@@ -241,7 +241,7 @@ Constructor.prototype.socketCloseEvent = function(client) {
         var usage = self.channel.channels[key];
         if (!usage) return;
 
-        delete usage.joins(client.__id); // joins
+        delete usage.joins[client.__id]; // joins
     });
 };
 
