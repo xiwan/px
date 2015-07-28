@@ -33,10 +33,8 @@ RedisHashRing.prototype.add = function(node, cb) {
 	var self = this;
 	try {
 		var addr = node.split(':');
-		var client = redis.createClient(parseInt(addr[1]), addr[0]);
-        var _client = redis.createClient(parseInt(addr[1]), addr[0]);
-        self.server[node] = client;
-        client._client = _client;
+		var client = new redis.createClient(parseInt(addr[1]), addr[0]);
+        self.server[node] = client;    
 		client.hosts = node;
 		self.overloading(client);
 
@@ -58,10 +56,10 @@ RedisHashRing.prototype.add = function(node, cb) {
 			cb && cb(null);
 		});
 
-        // client.on('subscribe', function(channel, count) {
-        //     console.log('xxxxx', channel, count)
-        //     _client.publish(channel, count);
-        // });
+        client.on('subscribe', function(channel, count) {
+            var _client = new redis.createClient(parseInt(addr[1]), addr[0]);
+            client._client = _client;
+        });
 
 	}catch(ex) {
 		global.warn('RedisHashRing.add. name:%s, ex:%s', self.name, ex.message);
@@ -123,8 +121,8 @@ RedisHashRing.prototype.getByNode = function(node) {
 	var client = self.server[node];
     if (!client) {
         self.remove(node);
-        global.warn('RedisHashRing.get. name:%s, key:%s, node:%s, ex:not_match_client', self.name, key, node);
-        throw new Error(util.format('__no_available_redis(%s)', key));
+        global.warn('RedisHashRing.get. name:%s, node:%s, ex:not_match_client', self.name, node);
+        throw new Error(util.format('__no_available_redis(%s)', node));
     }
     return client;
 }

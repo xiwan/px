@@ -12,6 +12,8 @@ var ChannelAgent = function(policy) {
 	self.channels = {};
 	self.channelUsage = [];
 
+	self.channelTypes = [global.const.CHANNEL_PUB_IDX, global.const.CHANNEL_CLAN_IDX, global.const.CHANNEL_TEAM_IDX];
+	self.channelNames = [global.const.CHANNEL_PUB, global.const.CHANNEL_CLAN, global.const.CHANNEL_TEAM];
 };
 
 ChannelAgent.prototype.prepare = function(){
@@ -29,7 +31,7 @@ ChannelAgent.prototype.checkChannelUsage = function(){
 		var channels = {};
 		var key = global.const.CHANNEL_USAGE;
 		var keys = Object.keys(global.base.users);
-		var redis = global.base.redis.channel.get(key);
+		var redis = global.base.redis.system.get(key);
 
 		keys.forEach(function(key){
 			var socket = global.base.users[key];
@@ -42,7 +44,7 @@ ChannelAgent.prototype.checkChannelUsage = function(){
                     return;
                 var value = key[2];	
                 var usage = channels[value] || (channels[value] = {key : value, count : 0, date : new Date()});
-                usage.count++;			
+                usage.count++;		
 			});
 
 		});
@@ -125,12 +127,13 @@ ChannelAgent.prototype.getChannelIdx = function(){
 ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
 	var self = this;
 	try {
-		if (__.indexOf([global.const.CHANNEL_PUB_IDX, global.const.CHANNEL_CLAN_IDX], channelType) < 0) 
-			 throw new Error('__invalid_param');
-        if (idx != parseInt(idx))
-            throw new Error('__invalid_param');
-        var name = (channelType === global.const.CHANNEL_PUB_IDX) ? global.const.CHANNEL_PUB : global.const.CHANNEL_CLAN;
+		var pos = __.indexOf(self.channelTypes, channelType);
+		if ( pos < 0 )  throw new Error('__invalid_param');
+        if ( idx != parseInt(idx) ) throw new Error('__invalid_param');
+
+        var name = self.channelNames[pos]; //(channelType === global.const.CHANNEL_PUB_IDX) ? global.const.CHANNEL_PUB : global.const.CHANNEL_CLAN;
         var key = util.format('channel.%s.%s', name, idx);
+
         var usage = self.channels[key];
         if (usage && global.const.CHANNEL_MAX_JOIN_NUM <= usage.count)
             throw new Error('__channel_exceeded');
@@ -145,10 +148,10 @@ ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
             idx : idx
         };
         // detail is account data
-        //if (socket.__detail) {
+        if (true || socket.__detail) {
             socket.__channel[channelType] = key;
             self.subscribe(socket, key);
-        //}
+        }
 	}catch (ex) {
 		console.log(ex.stack);
 	}
@@ -166,10 +169,11 @@ ChannelAgent.prototype.subscribe = function(socket, key){
 			redis.__channel[key] = true;
 			redis.subscribe(key);
 			global.debug('ChannelAgent.subscribe. key:%s, hosts:%s', key, redis.hosts);
-
-            redis.on('message', function(key, message) {
-                self.policy && self.policy.emit('subscribe', key, message);            	
-            });
+			if (!redis.listeners('message').length) {
+	            redis.on('message', function(key, message) {
+	                self.policy && self.policy.emit('subscribe', key, message);            	
+	            });				
+			}
 		}
 	}
 
@@ -181,7 +185,7 @@ ChannelAgent.prototype.sendChannelMsg = function(socket, appSessionKey, channelT
 	var self = this;
 	try {
 		var key = socket.__channel[channelType];
-		//if (!socket.__detail) throw new Error('__session_state');
+		if (false && !socket.__detail) throw new Error('__session_state');
 		if (!key) throw new Error('__channel_not_joined');
 
 		var usage = self.channels[key];
@@ -197,8 +201,9 @@ ChannelAgent.prototype.sendChannelMsg = function(socket, appSessionKey, channelT
 			}
 		};
 
-		var redis = global.base.redis.channel.getByNode(usage.hosts)._client;
-		redis.publish(key, JSON.stringify(message));
+		var redis = global.base.redis.channel.getByNode(usage.hosts);
+		// since the connection in subscription mode, we have to create a new connection
+		redis._client && redis._client.publish(key, JSON.stringify(message));
 	}catch (ex) {
 		global.warn('ChannelAgent.sendChannelMsg. error:%s', ex.message);
 		console.log(ex.stack);
@@ -212,11 +217,10 @@ ChannelAgent.prototype.recvChannelMsg = function(key, iMsg) {
 		var usage = self.channels[key];
 		var info = key.split('.');
 		var now = new Date();
-		console.log(info)
+
 		if (!usage) throw new Error('__system_error');
         iMsg.result = 'success';
         iMsg.channelId = info[2];
-
         Object.keys(usage.joins).forEach(function(key) {
         	var socket = usage.joins[key];
             if (!socket.__channel)

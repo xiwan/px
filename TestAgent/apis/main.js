@@ -5,7 +5,7 @@ var WebSocket = require('ws');
 
 var apis = exports.apis = {};
 
-var ws = new WebSocket('ws://localhost:1438/');
+var ws = new WebSocket('ws://localhost:1437/');
 
 ws.on('open', function open() {
 	console.log('connected');
@@ -46,7 +46,7 @@ apis.httpRequest = function(action, body, cb) {
 	var self = this;
     var options = {
         hostname : 'localhost',
-        port : 1437,
+        port : 1438,
         method : 'POST',
         path: '/' + action
     };

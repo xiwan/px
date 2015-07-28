@@ -34,12 +34,13 @@ async.waterfall([
 		});
 	},
 	function (callback) {
+		bot.channelType = 3;
+		bot.idx = 3;
 		apis.wsRequest('EFJoinChannel', bot, function(err, iAck){
 			callback();
 		});
 	},
 	function (callback) {
-		bot.channelType = 1;
 		bot.msg = ' bot msg ' + __.random(1, 100);
 		apis.wsRequest('EFSendChattingMsg', bot, function(err, iAck){
 			callback();
