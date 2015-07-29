@@ -3,6 +3,7 @@
 var crypto = require('crypto');
 var util = require('util');
 var __ = require('underscore');
+var zlib = require('zlib');
 
 module.exports = {
 
@@ -296,7 +297,30 @@ module.exports = {
         return result
     },
 
+    encodeRes : function (body, cb) {
+        try {
+            var json = JSON.stringify(body);
+            zlib.gzip(json, function(err, data){
+                cb(err, data.toString('base64'));
+            });
+        }catch (ex) {
+            global.warn('encodeRes. error:%s', ex.message);
+            cb(ex);
+        }
 
+    },
+
+    decodeReq: function (body, cb) {
+        try {
+            var buff = new Buffer(body, 'base64');
+            zlib.gunzip(buff, function(err, data){
+                cb(err, JSON.parse(data));
+            });
+        }catch (ex) {
+            global.warn('decodeReq. error:%s', ex.message);
+            cb(ex);
+        }
+    }
 
 };
 

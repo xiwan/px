@@ -35,7 +35,7 @@ async.waterfall([
 	},
 	function (callback) {
 		bot.channelType = 1;
-		bot.idx = 2;
+		bot.idx = 1;
 		apis.wsRequest('JoinChannel', bot, function(err, iAck){
 			callback();
 		});

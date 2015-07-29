@@ -66,7 +66,7 @@ ProxyServer.prototype.webHandler = function (req, res) {
         req.on('data', function(data) { body += data; });
         req.on('error', function(err) { self.sendHttpError(res, err); });
         req.on('end', function(){
-        	decodeReq(body, function(err, message){
+        	global.utils.decodeReq(body, function(err, message){
         		if (err){
         			self.sendHttpError(res, err);
         			return;
@@ -128,7 +128,7 @@ ProxyServer.prototype.socketRequest = function(socket) {
 		socket.on('close', function(code){
 			try {
 				if (!socket) return;
-				global.warn('socket.onClose code:%s', code);
+				global.warn('socket.onClose code:%s, uid: %s, remote: %s', code, socket.__uid, socket.remoteAddress);
 				// handle channels
 				global.base.socketCloseEvent(socket);
 				socket.removeAllListeners();
@@ -136,7 +136,6 @@ ProxyServer.prototype.socketRequest = function(socket) {
                 socket = null;
 			}catch(ex) {
 				global.warn('socket.socketRequest.close ex:%s', ex.message);
-				console.log(ex.stack);
 			}
 		});
 
@@ -159,10 +158,9 @@ ProxyServer.prototype.socketHandler = function (socket, message, flag) {
         	throw new Error('__web_data_type');
         } // dont hanlde binary here
 
-		decodeReq(message, function(err, iMsg){
+		global.utils.decodeReq(message, function(err, iMsg){
 			try {
 				if (err) throw err;
-				console.log(iMsg)
                 if (!iMsg || !iMsg.name || !iMsg.json)
                     throw new Error('__protocol_format');
 
@@ -177,10 +175,12 @@ ProxyServer.prototype.socketHandler = function (socket, message, flag) {
                 self.emit('message', socket, protocol, function(err, iAck){
                 	if (timeId == 0) return;
                 	clearTimeout(timeId);
+                	var now = new Date();
                 	if (err) {
                 		socket.emit('error', err);
-                		self.sendWebSocket(socket, iMsg.name, { result : err.message });
+                		self.sendWebSocket(socket, iMsg.name, { result: err.message, serverTime: now });
                 	}else {
+                		iAck.serverTime = now;
                 		iAck && self.sendWebSocket(socket, iMsg.name, iAck);
                 	}
                 });
@@ -199,7 +199,7 @@ ProxyServer.prototype.socketHandler = function (socket, message, flag) {
 ProxyServer.prototype.sendHttpResponse = function(res, body) {
 	try{
 		res.writeHead(200, {'Content-Type': 'text/plain'});
-		encodeRes(body, function(err, data){
+		global.utils.encodeRes(body, function(err, data){
 			body = null;
 			err || res.end(data);
 		});
@@ -212,7 +212,7 @@ ProxyServer.prototype.sendHttpError = function(res, err) {
 	try{
 		var body = {result: err.message};
 		res.writeHead(200, {'Content-Type': 'text/plain'});
-		encodeRes(body, function(err, data){
+		global.utils.encodeRes(body, function(err, data){
 			err || res.end(data);
 		});
 	}catch(ex) {
@@ -227,7 +227,7 @@ ProxyServer.prototype.sendWebSocket = function(socket, action, iMsg) {
 			name : action,
 			json : JSON.stringify(iMsg)
 		};
-		encodeRes(message, function(err, data){
+		global.utils.encodeRes(message, function(err, data){
 			try {
                 if (err) throw err;
                 socket.send('1' + data);
@@ -242,32 +242,6 @@ ProxyServer.prototype.sendWebSocket = function(socket, action, iMsg) {
 		global.warn('ProxyServer.sendWebSocket. name:%s, error:%s', iMsg.name, ex.message);
 	}
 };
-
-
-function encodeRes(body, cb) {
-	try {
-		var json = JSON.stringify(body);
-		zlib.gzip(json, function(err, data){
-			cb(err, data.toString('base64'));
-		});
-	}catch (ex) {
-		global.warn('encodeRes. error:%s', ex.message);
-		cb(ex);
-	}
-
-}
-
-function decodeReq(body, cb) {
-	try {
-		var buff = new Buffer(body, 'base64');
-		zlib.gunzip(buff, function(err, data){
-			cb(err, JSON.parse(data));
-		});
-	}catch (ex) {
-		global.warn('decodeReq. error:%s', ex.message);
-		cb(ex);
-	}
-}
 
 exports.ProxyServer = function (portNum, options) { 
 	return new ProxyServer(portNum, options);

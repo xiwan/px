@@ -124,8 +124,21 @@ ChannelAgent.prototype.getChannelIdx = function(){
 	return idx;
 };
 
-ChannelAgent.prototype.removeChannel = function() {
+ChannelAgent.prototype.removeChannel = function(socket) {
+	var self = this;
+	try {
+	    if (!socket.__channel) return;
+	    
+	    Object.keys(socket.__channel).forEach(function(idx) {
+	        var key = socket.__channel[idx];
+	        var usage = self.channels[key];
+	        if (!usage) return;
 
+	        delete usage.joins[socket.__id]; // joins
+	    });
+	}catch (ex) {
+		console.log(ex.stack);
+	}
 };
 
 ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
@@ -229,7 +242,7 @@ ChannelAgent.prototype.recvChannelMsg = function(key, iMsg) {
         	var socket = usage.joins[key];
             if (!socket.__channel)
                 return;
-            socket.emit('redirect', 'EERecvChannelMsg', iMsg); // client side need to define 'EFRecvChannelMsg' function
+            socket.emit('redirect', 'SendChattingMsg', iMsg); // client side need to define 'EFRecvChannelMsg' function
         });
 
 	}catch (ex) {
@@ -239,15 +252,23 @@ ChannelAgent.prototype.recvChannelMsg = function(key, iMsg) {
 };
 
 /**
+* @method: send message to one client
+*/
+ChannelAgent.prototype.sendToClient = function(message) {
+	var socket = global.base.users[message.uid];
+	if (!socket) return;
+	socket.emit('redirect', message.name, message.body);
+};
+
+/**
 * @method: send message to multi clients
 */
-ChannelAgent.prototype.sendToMultiClient = function(message, cb){
+ChannelAgent.prototype.sendToMultiClient = function(message){
 	message.uidList.forEach(function(uid){
         var socket = global.base.users[uid];
         if (!socket) return;
         socket.emit('redirect', message.name, message.body);
 	});
-	cb(null, {result : 'success'});
 };
 
 exports.createObject = function(users) {

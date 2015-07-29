@@ -47,43 +47,35 @@ apis.UserSocketLogin = function(socket, protocol, cb) {
             throw new Error('__invalid_param');
 
         clearTimeout(socket.__timeId);
-        delete socket.__timeId;
+        delete socket.__timeId; // successful login will remove the timer
         socket.__appSessionKey = protocol.appSessionKey;
-        socket.__channel = {};
+        socket.__channel = {}; // cache the channels joined [1: pub, 2: clan, 3: team]
         socket.__uid = session.uid;
-        global.base.users[session.uid] = socket;
+        global.base.users[session.uid] = socket; //cache the socket by uid
         cb(null, { result : 'success' });
-
 	}catch (ex) {
 		cb(ex)
 	}
-};
-
-
-apis.HeartBeat = function(socket, protocol, cb) {
-	var now = new Date();
-	var session = protocol.__session;
-        // socket redirection..
-        cb(null, { result : 'success', serverTime : now });
 };
 
 apis.JoinChannel = function(socket, protocol, cb) {
 	var self = this;
 	try {
 		self.channel.joinChannel(socket, protocol.channelType, protocol.idx);
-		var now = new Date();
-		cb(null, { result : 'success', serverTime : now });
+		cb(null, { result : 'success'});
 	}catch (ex) {
 		cb(ex)
 	}
 };
+
+
 
 apis.SendChattingMsg = function(socket, protocol, cb) {
 	var self = this;
 	try {
 		self.channel.sendChannelMsg(socket, protocol.appSessionKey, protocol.channelType, protocol.msg);
 		var now = new Date();
-		cb(null, { result : 'success', serverTime : now });
+		cb(null, { result : 'success'});
 	}catch (ex) {
 		cb(ex)
 	}
@@ -92,6 +84,11 @@ apis.SendChattingMsg = function(socket, protocol, cb) {
 apis.RecvChannelMsg = function(key, message, cb) {
 	var self = this;
 	self.channel.recvChannelMsg(key, {msg: message.msg});
-	cb(null);
+	cb(null, { result : 'success'});
 };
 
+apis.HeartBeat = function(socket, protocol, cb) {
+	var session = protocol.__session;
+    // socket redirection..
+    cb(null, { result : 'success'});
+};

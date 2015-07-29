@@ -230,19 +230,19 @@ Constructor.prototype.genGid = function() {
     return self.gids.get();
 };
 
-Constructor.prototype.socketCloseEvent = function(client) {
+Constructor.prototype.socketCloseEvent = function(socket) {
     var self = this;
-    (client.__uid && (delete self.users[client.__uid]));
-
-    if (!client.__channel) return;
+    (socket.__uid && (delete self.users[socket.__uid]));
+    self.channel && self.channel.removeChannel(socket);
+    // if (!client.__channel) return;
     
-    Object.keys(client.__channel).forEach(function(idx) {
-        var key = client.__channel[idx];
-        var usage = self.channel.channels[key];
-        if (!usage) return;
+    // Object.keys(client.__channel).forEach(function(idx) {
+    //     var key = client.__channel[idx];
+    //     var usage = self.channel.channels[key];
+    //     if (!usage) return;
 
-        delete usage.joins[client.__id]; // joins
-    });
+    //     delete usage.joins[client.__id]; // joins
+    // });
 };
 
 Constructor.prototype.overloading = function(apis, commands){
