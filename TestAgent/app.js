@@ -23,26 +23,26 @@ var bot = new User();
 
 async.waterfall([
 	function (callback) {
-		apis.httpRequest('EFClientLogin', bot, function(err, iAck){
+		apis.httpRequest('ClientLogin', bot, function(err, iAck){
 			bot.appSessionKey = iAck.appSessionKey;
 			callback();
 		});		
 	},
 	function (callback) {
-		apis.wsRequest('EFUserSocketLogin', bot, function(err, iAck){
+		apis.wsRequest('UserSocketLogin', bot, function(err, iAck){
 			callback();
 		});
 	},
 	function (callback) {
-		bot.channelType = 3;
-		bot.idx = 3;
-		apis.wsRequest('EFJoinChannel', bot, function(err, iAck){
+		bot.channelType = 1;
+		bot.idx = 2;
+		apis.wsRequest('JoinChannel', bot, function(err, iAck){
 			callback();
 		});
 	},
 	function (callback) {
 		bot.msg = ' bot msg ' + __.random(1, 100);
-		apis.wsRequest('EFSendChattingMsg', bot, function(err, iAck){
+		apis.wsRequest('SendChattingMsg', bot, function(err, iAck){
 			callback();
 		});
 	}

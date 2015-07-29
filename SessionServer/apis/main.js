@@ -3,7 +3,7 @@
 var apis = exports.apis = {};
 
 // client login: create session for client
-apis.EFClientLogin = function(protocol, cb){
+apis.ClientLogin = function(protocol, cb){
 	var self = this;
 	try {
 		var market = global.const.pMarket[protocol.market];
@@ -30,16 +30,16 @@ apis.EFClientLogin = function(protocol, cb){
 
 
 // user login: generate uid, add more info to session
-apis.EFUserLogin = function(protocol, cb) {
+apis.UserLogin = function(protocol, cb) {
 
 };
 
 // check crc: verify clients master data
-apis.EFCheckTableCrc = function(protocol, cb) {
+apis.CheckTableCrc = function(protocol, cb) {
 
 };
 
-apis.EFUserSocketLogin = function(socket, protocol, cb) {
+apis.UserSocketLogin = function(socket, protocol, cb) {
 	var self = this;
 	try {
 		var session = protocol.__session;
@@ -60,14 +60,14 @@ apis.EFUserSocketLogin = function(socket, protocol, cb) {
 };
 
 
-apis.EFHeartBeat = function(socket, protocol, cb) {
+apis.HeartBeat = function(socket, protocol, cb) {
 	var now = new Date();
 	var session = protocol.__session;
         // socket redirection..
         cb(null, { result : 'success', serverTime : now });
 };
 
-apis.EFJoinChannel = function(socket, protocol, cb) {
+apis.JoinChannel = function(socket, protocol, cb) {
 	var self = this;
 	try {
 		self.channel.joinChannel(socket, protocol.channelType, protocol.idx);
@@ -78,7 +78,7 @@ apis.EFJoinChannel = function(socket, protocol, cb) {
 	}
 };
 
-apis.EFSendChattingMsg = function(socket, protocol, cb) {
+apis.SendChattingMsg = function(socket, protocol, cb) {
 	var self = this;
 	try {
 		self.channel.sendChannelMsg(socket, protocol.appSessionKey, protocol.channelType, protocol.msg);
@@ -89,9 +89,9 @@ apis.EFSendChattingMsg = function(socket, protocol, cb) {
 	}
 };
 
-apis.EFRecvChannelMsg = function(key, message, cb) {
+apis.RecvChannelMsg = function(key, message, cb) {
 	var self = this;
-	self.channel.recvChannelMsg(key, 'hello remote client');
+	self.channel.recvChannelMsg(key, {msg: message.msg});
 	cb(null);
 };
 

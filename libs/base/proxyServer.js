@@ -99,7 +99,7 @@ ProxyServer.prototype.socketRequest = function(socket) {
 	try {
 		var req = socket.upgradeReq;
 		socket.remoteAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-		global.debug(socket.protocol, req.headers.origin);
+		global.debug('socket protocol:%s, remote:%s', socket.protocol, socket.remoteAddress);
 		
         // if (socket.protocol !== 'user-event-socket' || req.headers.origin !== 'EvFun-DH') {
         //     global.warn('socket.error. peer:%s, protocol:%s, origin:%s, error:__invalid_request', socket.remoteAddress, connection.protocol, req.headers.origin);
@@ -162,7 +162,7 @@ ProxyServer.prototype.socketHandler = function (socket, message, flag) {
 		decodeReq(message, function(err, iMsg){
 			try {
 				if (err) throw err;
-
+				console.log(iMsg)
                 if (!iMsg || !iMsg.name || !iMsg.json)
                     throw new Error('__protocol_format');
 
@@ -227,7 +227,6 @@ ProxyServer.prototype.sendWebSocket = function(socket, action, iMsg) {
 			name : action,
 			json : JSON.stringify(iMsg)
 		};
-
 		encodeRes(message, function(err, data){
 			try {
                 if (err) throw err;

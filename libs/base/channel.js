@@ -122,7 +122,11 @@ ChannelAgent.prototype.getChannelIdx = function(){
         idx++;
 	}
 	return idx;
-}
+};
+
+ChannelAgent.prototype.removeChannel = function() {
+
+};
 
 ChannelAgent.prototype.joinChannel = function(socket, channelType, idx) {
 	var self = this;
@@ -192,7 +196,7 @@ ChannelAgent.prototype.sendChannelMsg = function(socket, appSessionKey, channelT
 		if (!usage) throw new Error('__system_error');
 
 		var message = {
-			name : 'EFRecvChannelMsg',
+			name : 'RecvChannelMsg',
 			body : {
 				appSessionKey : appSessionKey, 
 				channelType : channelType,
