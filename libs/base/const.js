@@ -4,6 +4,7 @@ module.exports.Const = {
     SESSION_TTL : 60 * 10,
     OBJECT_TTL : 60 * 20,
     SOCKET_TTL : 1000 * 10,
+    CLOCK_INT : 50,
 
     CHANNEL_USAGE : 'CHANNEL.USAGE',
     CHANNEL_MAX_JOIN_NUM : 300,

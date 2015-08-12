@@ -537,7 +537,7 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		iConstructorCtx.push('var async = require(\'async\');');
 		iConstructorCtx.push('var base = require(\'../libs/app_base\');');
 		iConstructorCtx.push('var commands = require(\'./commands\');');
-		iConstructorCtx.push('var apis = require(\'./apis/main\');');
+		iConstructorCtx.push('var apis = require(\'./apis/main\').apis;');
 		iConstructorCtx.push('');
 		iConstructorCtx.push('var Constructor = function(name) {');
 		iConstructorCtx.push('\tbase.Constructor.apply(this, arguments);');
