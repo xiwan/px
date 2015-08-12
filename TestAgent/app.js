@@ -9,8 +9,6 @@ var WebSocket = require('ws');
 
 var apis = require('./apis/main').apis;
 
-//var ws = new WebSocket('ws://localhost:1437/');
-
 var User = function(){
 	this.appSessionKey = '',
 	this.uid = 0, 

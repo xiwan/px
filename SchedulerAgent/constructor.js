@@ -1,41 +1,44 @@
-'use strict';
+'use strict'
 
 var util = require('util');
 var __ = require('underscore');
 var async = require('async');
-
 var base = require('../libs/app_base');
 var commands = require('./commands');
-var apis = require('./apis/main').apis;
+var apis = require('./apis/main');
 
 var Constructor = function(name) {
-	base.Constructor.apply(this, arguments);	
+	base.Constructor.apply(this, arguments);
+
+	this.clockTT = 1000; // 50ms
 };
 util.inherits(Constructor, base.Constructor);
 
 Constructor.prototype.run = function(cb) {
 	var self = this;
 	try {
-		
 		// init policy instance & load commands
 		self.policy = base.Policy.createObject();
 		self.overloading(apis, commands);
 
-		// init http server & ws server as front
-		var portNo = parseInt(self.cfg.http.port) + self.idx;
-		self.proxy = base.ProxyServer(portNo, { protocol:'http' });
-		self.proxy.on('message', function(client, message, cb){ 
-			self.policy.emit('message', client, message, cb); 
-		});
-
-		self.channel = base.Channel.createObject(self.policy);
-		self.channel.prepare();
-		// init rpc
+		//init rpc server or client
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
+
+		self.onTimer();
+		
 		cb(null);
-	}catch (ex) {
-		cb(ex);		
-	}
+	} catch (ex) {
+		cb(ex)
+	};
+};
+
+
+Constructor.prototype.onTimer = function(){
+	var self = this;
+	setTimeout(function(){
+
+		self.onTimer();
+	}, self.clockTT);
 };
 
 module.exports.Constructor = Constructor;

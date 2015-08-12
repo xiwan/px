@@ -23,6 +23,8 @@ Constructor.prototype.run = function(cb) {
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 
 		self.gameSystem = gameSystem.createObject(global.base.cfg.mysql);
+
+		cb(null);
 	}catch (ex) {
 		cb(ex);		
 	}
