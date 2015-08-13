@@ -43,7 +43,14 @@ async.waterfall([
 		apis.wsRequest('SendChattingMsg', bot, function(err, iAck){
 			callback();
 		});
-	}
+	},
+	function (callback) {
+		bot.sid = 1;
+		apis.httpRequest('StartScence', bot, function(err, iAck){
+			console.log(iAck)
+			callback();
+		});	
+	},
 ], function(err, results){
 	if (err) {
 		console.log(err.stack);

@@ -5,12 +5,12 @@ var __ = require('underscore');
 var async = require('async');
 var base = require('../libs/app_base');
 var commands = require('./commands');
-var apis = require('./apis/main');
+var apis = require('./apis/main').apis;
 
 var Constructor = function(name) {
 	base.Constructor.apply(this, arguments);
 
-	this.clockTT = 1000; // 50ms
+	this.clockINT = global.const.CLOCK_INT; // 50ms
 };
 util.inherits(Constructor, base.Constructor);
 
@@ -24,8 +24,15 @@ Constructor.prototype.run = function(cb) {
 		//init rpc server or client
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 
-		self.onTimer();
-		
+		var simInterval = function() {
+			setTimeout(function(){
+				self.onTimer();
+				simInterval(); // call itself
+			}, self.clockINT );
+		}
+
+		setTimeout(simInterval, 5000);
+
 		cb(null);
 	} catch (ex) {
 		cb(ex)
@@ -35,10 +42,12 @@ Constructor.prototype.run = function(cb) {
 
 Constructor.prototype.onTimer = function(){
 	var self = this;
-	setTimeout(function(){
-
-		self.onTimer();
-	}, self.clockTT);
+	self.simMonster(function(err, data){
+		var services = global.base.getServiceList('SS');
+		services.forEach(function(service){
+			service.requestAction('getUsers', {data: data, name: 'move'}, function(){});
+		});
+	});
 };
 
 module.exports.Constructor = Constructor;

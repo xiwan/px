@@ -38,4 +38,17 @@ Constructor.prototype.run = function(cb) {
 	}
 };
 
+Constructor.prototype.getUsers = function(protocol, cb){
+	var self = this;
+	if (__.size(global.base.users)) {
+		var message = {};
+		message.uidList = Object.keys(global.base.users);
+		message.body = protocol.data;
+		message.name = protocol.name;
+		self.channel.sendToMultiClient(message);					
+	}
+
+	cb(null, {result: 'success'});
+}
+
 module.exports.Constructor = Constructor;

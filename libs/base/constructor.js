@@ -194,6 +194,23 @@ Constructor.prototype.getService = function(key, mandatory, name, cb) {
     }
 };
 
+Constructor.prototype.getServiceList = function(name) {
+    var self = this;
+    try {
+        var clients = self.rpc.client[name];
+        if (!clients)
+            throw new Error('__no_rpc_client');
+        var services = [];
+        for (var idx in clients.server) {
+            var service = clients.server[idx];
+            services.push(service.remote)
+        }
+        return services;
+    }catch (ex){
+        console.log(ex.stack)
+    }
+};
+
 Constructor.prototype.sendErrorHistory = function(err, argv, action) {
     try {
         var stacks = stackTrace.parse(err);

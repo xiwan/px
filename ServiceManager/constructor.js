@@ -35,7 +35,7 @@ Constructor.prototype.run = function(cb) {
 
 	self.monitorChildProcess(cb);
 
-    cb(null)
+    cb(null);
 };
 
 /**

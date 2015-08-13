@@ -197,7 +197,7 @@ Policy.prototype.iPass = function(iList) {
             var idx = __.random(0, 100).toString(); // because no session availble, random policy is ok
             async.waterfall([ 
                 function(callback) {  global.base.getService(idx, true, 'UD', callback); },
-                function(service, callback) { service.requestAction(cmd, protocol, cb); },
+                function(service, callback) { service.requestAction(cmd, protocol, callback); },
             ], cb);
 
         };
@@ -210,12 +210,21 @@ Policy.prototype.iUser = function(iList) {
 
     iList.forEach(function(cmd) {
         self.parser[cmd] = function(client, protocol, cb) {
-
+            var idx = __.random(0, 100).toString(); // because no session availble, random policy is ok
             async.waterfall([
-                function(callback) { callback(); },
-            ], function(err){
-                cb(err, {msg: 'iUser'});
-            });
+                function(callback) { 
+                    self.session.get(protocol.appSessionKey, callback); 
+                },
+                function(session, callback) { 
+                    if (!session.uid) {
+                        return callback(new Error('__invalid_session'));
+                    }
+                    protocol.__session = session;
+                    protocol.__action = cmd;
+                    global.base.getService(idx, true, 'UD', callback); 
+                },
+                function(service, callback) { service.requestAction(cmd, protocol, callback); },
+            ], cb);
 
         };
     });

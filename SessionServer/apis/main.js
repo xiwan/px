@@ -68,8 +68,6 @@ apis.JoinChannel = function(socket, protocol, cb) {
 	}
 };
 
-
-
 apis.SendChattingMsg = function(socket, protocol, cb) {
 	var self = this;
 	try {

@@ -1,5 +1,6 @@
 module.exports = {
-	'iNone': ['ClientLogin'],
+	'iNone' : ['ClientLogin'],
 	'iAuth' : ['UserSocketLogin', 'JoinChannel', 'SendChattingMsg', 'RecvChannelMsg', 'HeartBeat'],
-	'iPass': ['test1', 'testABC'],
+	'iPass' : ['test1', 'testABC'],
+	'iUser' : ['StartScence'],
 };

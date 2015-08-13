@@ -34,7 +34,8 @@ RedisHashRing.prototype.add = function(node, cb) {
 	try {
 		var addr = node.split(':');
 		var client = new redis.createClient(parseInt(addr[1]), addr[0]);
-        self.server[node] = client;    
+        self.server[node] = client;
+        
 		client.hosts = node;
 		self.overloading(client);
 
