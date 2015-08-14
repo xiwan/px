@@ -46,7 +46,7 @@ async.waterfall([
 	},
 	function (callback) {
 		bot.sid = 1;
-		apis.httpRequest('StartScence', bot, function(err, iAck){
+		apis.httpRequest('StartScene', bot, function(err, iAck){
 			console.log(iAck)
 			callback();
 		});	

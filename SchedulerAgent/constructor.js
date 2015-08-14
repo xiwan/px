@@ -42,12 +42,7 @@ Constructor.prototype.run = function(cb) {
 
 Constructor.prototype.onTimer = function(){
 	var self = this;
-	self.simMonster(function(err, data){
-		var services = global.base.getServiceList('SS');
-		services.forEach(function(service){
-			service.requestAction('getUsers', {data: data, name: 'move'}, function(){});
-		});
-	});
+	self.simMonster();
 };
 
 module.exports.Constructor = Constructor;

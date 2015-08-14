@@ -7,7 +7,7 @@ var monsters = [];
 
 var apis = exports.apis = {};
 
-apis.simMonster = function(cb){
+apis.simMonster = function(){
 	var key = 1;
 	var redis = global.base.redis.boss.get(key);
 	if(!redis) {}
@@ -31,14 +31,21 @@ apis.simMonster = function(cb){
 		function(monsters, callback) {
 			if (monsters) {
 				monsters.forEach(function(monster){
-					monster.move.positionY += 1;
+					monster.move.positionZ += 1;
 				});
 				callback(null, monsters);
 			}else {
 				callback(null, null);
 			}
 		}
-	], cb);
+	], function(err, data){
+		if (!err) {
+			var services = global.base.getServiceList('SS');
+			services.forEach(function(service){
+				service.requestAction('notifyUsers', {data: data, name: 'move'}, function(){});
+			});
+		}
+	});
 }
 
 // public class MoveSync : GameSync {

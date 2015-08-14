@@ -20,7 +20,7 @@ apis.test1 = function(protocol, cb) {
 	});	
 };
 
-apis.StartScence = function(protocol, cb) {
+apis.StartScene = function(protocol, cb) {
 	var self = this;
 	try {
 		var redis = global.base.redis.boss.get(protocol.sid);
@@ -62,17 +62,20 @@ apis.StartScence = function(protocol, cb) {
 						move : move,
 					};
 					monster.move.positionX = 10,
+					monster.move.CharGid = monster.gid;
 					monsters.push(monster);
-
+					monster = null;
+					
 					monster = {
 						id : 20122,
 						pos : 2,
 						gid : 61,
 						gold : 4,
 						exp : 2,
-						move : move,
+						move : global.utils.clone(move),
 					};
 					monster.move.positionX = 20,
+					monster.move.CharGid = monster.gid;
 					monsters.push(monster);
 
 					redis.set(protocol.sid, monsters, 60*1000, function(err){
@@ -85,7 +88,7 @@ apis.StartScence = function(protocol, cb) {
 			if (err) {
 				return cb(err);
 			}
-			cb(err, results);
+			cb(err, {result: 'success', monsters: results});
 		});
 
 	}catch (ex) {
