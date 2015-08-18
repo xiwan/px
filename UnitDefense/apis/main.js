@@ -2,6 +2,7 @@
 
 var async = require('async');
 var util = require('util');
+var __ = require('underscore');
 
 var apis = exports.apis = {};
 
@@ -20,6 +21,20 @@ apis.test1 = function(protocol, cb) {
 	});	
 };
 
+
+var move = {
+	CharGid : 0,
+	destinationX : 0,
+	destinationY : 0,
+	destinationZ : 0,
+	positionX : 0,
+	positionY : 0,
+	positionZ : 0,
+	rotationX : 0,
+	rotationY : 0,
+	rotationZ : 0,
+};
+
 apis.StartScene = function(protocol, cb) {
 	var self = this;
 	try {
@@ -28,7 +43,7 @@ apis.StartScene = function(protocol, cb) {
 
 		async.waterfall([
 			function(callback) {
-				redis.get(protocol.sid, 60*1000, function(err, data){
+				redis.get('scene' + protocol.sid, 60*1000, function(err, data){
 					if (err && err.message === '__not_existed_key') {
 						callback(null, null);
 					}else {
@@ -40,18 +55,7 @@ apis.StartScene = function(protocol, cb) {
 				if (data) {
 					callback(null, data);
 				}else {
-					var move = {
-						CharGid : 0,
-						destinationX : 0,
-						destinationY : 0,
-						destinationZ : 0,
-						positionX : 0,
-						positionY : 0,
-						positionZ : 0,
-						rotationX : 0,
-						rotationY : 0,
-						rotationZ : 0,
-					}
+
 					var monsters = [];
 					var monster = {
 						id : 20121,
@@ -59,13 +63,13 @@ apis.StartScene = function(protocol, cb) {
 						gid : 60,
 						gold : 4,
 						exp : 2,
-						move : move,
+						move : global.utils.clone(move),
 					};
 					monster.move.positionX = 10,
 					monster.move.CharGid = monster.gid;
 					monsters.push(monster);
 					monster = null;
-					
+
 					monster = {
 						id : 20122,
 						pos : 2,
@@ -78,11 +82,27 @@ apis.StartScene = function(protocol, cb) {
 					monster.move.CharGid = monster.gid;
 					monsters.push(monster);
 
-					redis.set(protocol.sid, monsters, 60*1000, function(err){
-						cb(err, monsters);
+					var storeData = {players: [], monsters: monsters};
+					redis.set('scene' + protocol.sid, storeData, 60*1000, function(err){
+						callback(err, storeData);
 					});
 				}
 			},
+			function(storeData, callback) {
+				var uid = protocol.__session.uid; 
+				var player = {
+					uid : uid,
+					health : 1000,
+					move : global.utils.clone(move)
+				};
+				player.move.CharGid = protocol.charGid || 0;
+				player.move.positionX = 10 + __.random(0,5);
+				player.move.positionZ = 20;
+				storeData.players.push(player);
+				redis.set('scene' + protocol.sid, storeData, 60*1000, function(err){
+					callback(err, storeData.monsters);
+				});
+			}
 
 		], function(err, results) {
 			if (err) {

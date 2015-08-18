@@ -43,7 +43,7 @@ Constructor.prototype.notifyUsers = function(protocol, cb){
 	if (__.size(global.base.users)) {
 		var message = {};
 		message.uidList = Object.keys(global.base.users);
-		message.body = {monsters: protocol.data};
+		message.body = protocol.data;
 		message.name = protocol.name;
 		self.channel.sendToMultiClient(message);					
 	}

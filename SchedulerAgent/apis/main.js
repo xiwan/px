@@ -2,8 +2,11 @@
 
 var async = require('async');
 var util = require('util');
+var __ = require('underscore');
 
 var monsters = [];
+var players = [];
+var objects = {};
 
 var apis = exports.apis = {};
 
@@ -14,39 +17,54 @@ apis.simMonster = function(){
 
 	async.waterfall([
 		function(callback) {
-			if (monsters.length) {
-				callback(null, monsters);
+			if (__.size(objects) > 0 ) {
+				callback(null, objects);
 			}else {
-				redis.get(key, 60*1000, function(err, data) {
+				redis.get('scene' + key, 60*1000, function(err, data) {
 					if (err && err.message === '__not_existed_key') {
 						callback(null, null);
 					}else {
-						monsters = data;
-						callback(err, monsters);
+						monsters = data.monsters;
+						players = data.players;
+						objects = data;
+						callback(err, objects);
 					}
 				});
 			}
 
 		},
-		function(monsters, callback) {
-			if (monsters) {
-				monsters.forEach(function(monster){
+		function(data, callback) {
+			//console.log('xxxxx==', JSON.stringify(data));
+			if (data && data.monsters) {
+				data.monsters.forEach(function(monster){
 					monster.move.positionZ += 1;
 				});
-				callback(null, monsters);
+				callback(null, data);
 			}else {
 				callback(null, null);
 			}
 		}
 	], function(err, data){
-		if (!err) {
+		if (!err && data) {
 			var services = global.base.getServiceList('SS');
 			services.forEach(function(service){
 				service.requestAction('notifyUsers', {data: data, name: 'move'}, function(){});
 			});
 		}
 	});
-}
+};
+
+apis.simPlayers = function(protocol, cb) {
+	var self = this;
+	try {
+
+
+
+
+	}catch (ex) {
+		cb(ex);
+	}
+};
 
 // public class MoveSync : GameSync {
 // 	public string CharGid;
