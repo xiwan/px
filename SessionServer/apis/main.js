@@ -82,8 +82,9 @@ apis.SendChattingMsg = function(socket, protocol, cb) {
 apis.RecvChannelMsg = function(key, message, cb) {
 	var self = this;
 	self.channel.recvChannelMsg(key, {msg: message.msg});
-	//var service = global.base.getServiceList('SA')[0];
-	//service.requestAction('simPlayers', {msg: message.msg}, function(){});
+	
+	var service = global.base.getServiceList('SA')[0];
+	service.requestAction('simPlayers', {msg: message.msg}, function(){});
 
 	cb(null, { result : 'success'});
 };

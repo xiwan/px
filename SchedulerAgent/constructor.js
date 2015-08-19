@@ -42,7 +42,7 @@ Constructor.prototype.run = function(cb) {
 
 Constructor.prototype.onTimer = function(){
 	var self = this;
-	self.simMonster();
+	self.simScene();
 };
 
 module.exports.Constructor = Constructor;

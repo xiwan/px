@@ -4,13 +4,23 @@ var async = require('async');
 var util = require('util');
 var __ = require('underscore');
 
-var monsters = [];
-var players = [];
+// var monsters = [];
+// var players = [];
 var objects = {};
+var monsterAttr = {
+	speed : 0.1,
+	range : 1,
+};
 
 var apis = exports.apis = {};
 
-apis.simMonster = function(){
+apis.refreshObejct = function(protocol, cb){
+	objects = protocol.data;
+	console.log('xxxxxx', JSON.stringify(objects));
+	cb(null, objects);
+};
+
+apis.simScene = function(){
 	var key = 1;
 	var redis = global.base.redis.boss.get(key);
 	if(!redis) {}
@@ -24,21 +34,44 @@ apis.simMonster = function(){
 					if (err && err.message === '__not_existed_key') {
 						callback(null, null);
 					}else {
-						monsters = data.monsters;
-						players = data.players;
+						// monsters = data.monsters;
+						// players = data.players;
 						objects = data;
 						callback(err, objects);
 					}
 				});
 			}
-
 		},
 		function(data, callback) {
-			//console.log('xxxxx==', JSON.stringify(data));
-			if (data && data.monsters) {
-				data.monsters.forEach(function(monster){
-					monster.move.positionZ += 1;
-				});
+			
+			if (data) {
+				if (data.monsters && data.players) {
+					var lastPlayer = data.players[data.players.length-1];
+					data.monsters.forEach(function(monster){
+						monster.move.destinationX = lastPlayer.move.positionX;
+						monster.move.destinationY = lastPlayer.move.positionY;
+						monster.move.destinationZ = lastPlayer.move.positionZ;
+
+						var radians = Math.atan((monster.move.destinationZ-monster.move.positionZ)/(monster.move.destinationX-monster.move.positionX));
+						var Vx = monsterAttr.speed * Math.cos(radians);
+						var Vz = monsterAttr.speed * Math.sin(radians);
+
+						var factor1 = (monster.move.destinationX > monster.move.positionX) ? 1 : -1;
+						var factor2 = (monster.move.destinationZ > monster.move.positionZ) ? 1 : -1;
+
+						if (monster.move.destinationX + monsterAttr.range > monster.move.positionX ||
+							monster.move.destinationX - monsterAttr.range < monster.move.positionX)
+							factor1 = 0;
+						if (monster.move.destinationZ + monsterAttr.range > monster.move.positionZ ||
+							monster.move.destinationZ - monsterAttr.range < monster.move.positionZ)
+							factor2 = 0;
+
+						monster.move.positionX = monster.move.positionX + Vx * factor1;
+						monster.move.positionY = monster.move.positionY;
+						monster.move.positionZ = monster.move.positionZ + Vz * factor2;						
+					});
+				}
+
 				callback(null, data);
 			}else {
 				callback(null, null);
@@ -55,12 +88,22 @@ apis.simMonster = function(){
 };
 
 apis.simPlayers = function(protocol, cb) {
-	var self = this;
+	var self = this; 
 	try {
-
-
-
-
+		var msg = JSON.parse(protocol.msg);
+		// update current player postion
+		objects.players && objects.players.forEach(function(player) {
+			console.log(msg.SyncName, player.move.CharGid, msg.CharGid);
+			if (msg.SyncName == "Move" && player.move.CharGid == msg.CharGid) {
+				player.move.positionX = msg.positionX;
+				player.move.positionY = msg.positionY;
+				player.move.positionZ = msg.positionZ;
+				player.move.rotationX = msg.rotationX;
+				player.move.rotationY = msg.rotationY;
+				player.move.rotationZ = msg.rotationZ;
+			}
+		});
+		
 	}catch (ex) {
 		cb(ex);
 	}

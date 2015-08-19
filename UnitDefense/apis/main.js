@@ -66,6 +66,7 @@ apis.StartScene = function(protocol, cb) {
 						move : global.utils.clone(move),
 					};
 					monster.move.positionX = 10,
+					monster.move.positionZ = 10,
 					monster.move.CharGid = monster.gid;
 					monsters.push(monster);
 					monster = null;
@@ -79,6 +80,7 @@ apis.StartScene = function(protocol, cb) {
 						move : global.utils.clone(move),
 					};
 					monster.move.positionX = 20,
+					monster.move.positionZ = 10,
 					monster.move.CharGid = monster.gid;
 					monsters.push(monster);
 
@@ -95,10 +97,13 @@ apis.StartScene = function(protocol, cb) {
 					health : 1000,
 					move : global.utils.clone(move)
 				};
-				player.move.CharGid = protocol.charGid || 0;
+				player.move.CharGid = protocol.CharGid || 0;
 				player.move.positionX = 10 + __.random(0,5);
+				player.move.positionY = 0;
 				player.move.positionZ = 20;
+				storeData.players.length = 0;
 				storeData.players.push(player);
+				console.log('xxxxxx ', JSON.stringify(storeData), protocol);
 				redis.set('scene' + protocol.sid, storeData, 60*1000, function(err){
 					callback(err, storeData.monsters);
 				});
