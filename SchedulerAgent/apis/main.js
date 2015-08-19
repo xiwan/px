@@ -8,8 +8,8 @@ var __ = require('underscore');
 // var players = [];
 var objects = {};
 var monsterAttr = {
-	speed : 0.1,
-	range : 1,
+	speed : 0.05,
+	range : 3,
 };
 
 var apis = exports.apis = {};
@@ -52,19 +52,20 @@ apis.simScene = function(){
 						monster.move.destinationY = lastPlayer.move.positionY;
 						monster.move.destinationZ = lastPlayer.move.positionZ;
 
-						var radians = Math.atan((monster.move.destinationZ-monster.move.positionZ)/(monster.move.destinationX-monster.move.positionX));
-						var Vx = monsterAttr.speed * Math.cos(radians);
-						var Vz = monsterAttr.speed * Math.sin(radians);
+						var disZ = monster.move.destinationZ-monster.move.positionZ;
+						var disX = monster.move.destinationX-monster.move.positionX;
+
+						var radians = Math.atan(disZ/disX);
+						var Vx = monsterAttr.speed; //* Math.cos(radians);
+						var Vz = monsterAttr.speed; //* Math.sin(radians);
 
 						var factor1 = (monster.move.destinationX > monster.move.positionX) ? 1 : -1;
 						var factor2 = (monster.move.destinationZ > monster.move.positionZ) ? 1 : -1;
 
-						if (monster.move.destinationX + monsterAttr.range > monster.move.positionX ||
-							monster.move.destinationX - monsterAttr.range < monster.move.positionX)
+						if (Math.pow(disZ, 2) + Math.pow(disX, 2) < Math.pow(monsterAttr.range, 2)){
 							factor1 = 0;
-						if (monster.move.destinationZ + monsterAttr.range > monster.move.positionZ ||
-							monster.move.destinationZ - monsterAttr.range < monster.move.positionZ)
 							factor2 = 0;
+						}
 
 						monster.move.positionX = monster.move.positionX + Vx * factor1;
 						monster.move.positionY = monster.move.positionY;
