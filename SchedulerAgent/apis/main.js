@@ -8,15 +8,15 @@ var __ = require('underscore');
 // var players = [];
 var objects = {};
 var monsterAttr = {
-	speed : 0.1,
-	range : 3,
+	speed : 0.05,
+	range : 1,
+	size : 0.5,
 };
 
 var apis = exports.apis = {};
 
 apis.refreshObejct = function(protocol, cb){
 	objects = protocol.data;
-	console.log('xxxxxx', JSON.stringify(objects));
 	cb(null, objects);
 };
 
@@ -24,7 +24,7 @@ apis.simScene = function(){
 	var key = 1;
 	var redis = global.base.redis.boss.get(key);
 	if(!redis) {}
-
+	
 	async.waterfall([
 		function(callback) {
 			if (__.size(objects) > 0 ) {
@@ -45,6 +45,7 @@ apis.simScene = function(){
 		function(data, callback) {
 			
 			if (data) {
+				var actions = [];
 				if (data.monsters && data.players) {
 					var lastPlayer = data.players[data.players.length-1];
 					data.monsters.forEach(function(monster){
@@ -54,26 +55,32 @@ apis.simScene = function(){
 
 						var disZ = monster.move.destinationZ - monster.move.positionZ;
 						var disX = monster.move.destinationX - monster.move.positionX;
-
+						// calculate the angle and speed on different dimension
 						var radians = Math.atan(disZ/disX);
 						var Vx = Math.abs(monsterAttr.speed * Math.cos(radians));
 						var Vz = Math.abs(monsterAttr.speed * Math.sin(radians));
-
-						var factor1 = (monster.move.destinationX > monster.move.positionX) ? 1 : -1;
-						var factor2 = (monster.move.destinationZ > monster.move.positionZ) ? 1 : -1;
+						// calculate the direction
+						var factorX = (monster.move.destinationX > monster.move.positionX) ? 1 : -1;
+						var factorZ = (monster.move.destinationZ > monster.move.positionZ) ? 1 : -1;
 
 						if (Math.pow(disZ, 2) + Math.pow(disX, 2) < Math.pow(monsterAttr.range, 2)){
-							factor1 = 0;
-							factor2 = 0;
+							factorX = 0;
+							factorZ = 0;
+							actions.push({
+								CharGid : monster.move.CharGid,
+								CriticalDmg : 100,
+								atk : 10,
+								miss : false,
+							});
 						}
-						// console.log(monster.gid, monster.move.destinationZ, monster.move.destinationX, disZ, disX, radians, Vz, Vx, factor2, factor1, monster.move.positionZ, monster.move.positionX);
-						monster.move.positionX = monster.move.positionX + Vx * factor1;
+						
+						monster.move.positionX = monster.move.positionX + Vx * factorX;
 						monster.move.positionY = monster.move.positionY;
-						monster.move.positionZ = monster.move.positionZ + Vz * factor2;						
+						monster.move.positionZ = monster.move.positionZ + Vz * factorZ;						
 					});
 				}
 
-				callback(null, data);
+				callback(null, {move: data, action: actions});
 			}else {
 				callback(null, null);
 			}
@@ -82,7 +89,10 @@ apis.simScene = function(){
 		if (!err && data) {
 			var services = global.base.getServiceList('SS');
 			services.forEach(function(service){
-				service.requestAction('notifyUsers', {data: data, name: 'move'}, function(){});
+				service.requestAction('notifyUsers', {data: data.move, name: 'move'}, function(){});
+				if (data.action && data.action.length) {
+					service.requestAction('notifyUsers', {data: data.action, name: 'action'}, function(){});
+				}
 			});
 		}
 	});
@@ -104,7 +114,6 @@ apis.simPlayers = function(protocol, cb) {
 				player.move.rotationZ = msg.rotationZ;
 			}
 		});
-		
 	}catch (ex) {
 		cb(ex);
 	}

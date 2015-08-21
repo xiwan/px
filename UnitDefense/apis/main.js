@@ -103,7 +103,7 @@ apis.StartScene = function(protocol, cb) {
 				player.move.positionZ = 20;
 				storeData.players.length = 0;
 				storeData.players.push(player);
-				console.log('xxxxxx ', JSON.stringify(storeData), protocol);
+				
 				redis.set('scene' + protocol.sid, storeData, 60*1000, function(err){
 					callback(err, storeData.monsters);
 				});
