@@ -168,52 +168,19 @@ projectX做法是要求客户端每次登陆游戏的时候带着当前版本号
 
 #### request & response
 
-#### rpc
+###### 路由router
+对于不同的请求，需要有不同handler来处理。路由的配置主要在commands.js中完成，一个例子：
 
-#### broadcast & channel
+	module.exports = {
+		'iNone' : ['ClientLogin'],
+		'iAuth' : ['UserSocketLogin', 'JoinChannel', 'SendChattingMsg', 'RecvChannelMsg', 'HeartBeat'],
+		'iPass' : ['test1', 'testABC'],
+		'iUser' : ['StartScene'],
+	};
+	
+在这个对象中，key值是过滤器，也是下面谈到的策略policy。后面数组中的就是一个一个的具体handler.
 
-projectX设计有三类channel: pub， clan，和friends。代表了三种不同的粒度。
-
-* pub主要负责广播全局的消息。
-* clan是负责工会内部消息，比如成员的变动。
-* friends是负责好友动态的更新。
-
-每个独立用户登录游戏后需要socketLogin，生成socket, 这个是通讯的基础。然后再joinChannel，把socket加入到各个不同的channel中。通常来说pub是每一个用户都需要加入的，clan和friends则是玩家需要达成一定条件才可以加入的channel。
-
-这些不同的channel设计原理其实是一样的，通过redis的pub/sub机制来实现跨进程的广播。
-
-#### session
-
-#### model
-
-#### construtor
-Constructor是所有其他进程的父类。提供了供子类访问的各种对象和方法。
-
-init方法由Constructor本身管理。负责获取命令行启动参数，配置数据。然后初始化Logger， Redis，并最后兼听当前process状态.
-
-run方法由各个子process管理，不同角色的子process会有不同的运行方案。如果是frontend主要是建立proxyServer和rpc模块；如果是backend则主要是rpc模块和业务逻辑
-
-#### redis
-对于缓存部分，redis模块通过读取配置文件config.ini在constructor中初始化。
-
-redis server安装好以后，通过 
-
-		sh start.sh -redis
-启动redis client。根据配置来说，有可能我们会有多个redis server情况,比如：
-
-	1735293225 49869     1   0 Tue12PM ??         1:34.73 redis-server *:16101   
-	1735293225 49872     1   0 Tue12PM ??         1:33.97 redis-server *:16201   
-	1735293225 49875     1   0 Tue12PM ??         1:33.80 redis-server *:16202   
-	1735293225 49878     1   0 Tue12PM ??         1:33.88 redis-server *:16301   
-	1735293225 49881     1   0 Tue12PM ??         1:33.49 redis-server *:16401   
-	1735293225 49884     1   0 Tue12PM ??         1:34.00 redis-server *:16402 
-
-这个时候对于同一个session，需要将其请求转到同一个redis，否则缓存则会失效。
-redis模块采用了`constant hashing`算法(hashring模块)来达到上述目的。其基本思路就是每次node的增加和删除在平均情况下只会导致K/n个hash结果重新映射(K是hash的key值，n是node数目)；而不是大量的重新映射导致缓存的失败。
-
-这样开发者要做的其实就很简单了：保证传入hash值的稳定性。常见的做法就是通过session提取出uid。这样就可以保证玩家每次的请求都在固定的node上被响应。
-
-#### policy
+###### policy
 
 对于服务器来说，无论是何种请求，采用何种对应的策略(policy)处理该请求是关键。这里的策略(policy)可以理解为多个过滤器(Filter)。
 
@@ -246,6 +213,61 @@ policy类继承于`EventEmitter`, 监听下面几个事件
 * message: 主要是用于处理http或者websocket请求过来的事件
 * requestAction:
 * requestMessage:
+
+###### response
+返回的数据根据是http或者socket会略有不同，但都会进行一个加密过程base64+zip，同里客户端需要进行解密才能处理返回数据。
+
+#### rpc
+想进行rpc调用，可以通过constructor的两个方法：getService(单个)或者getServiceList（多个）来实现：
+
+		var services = global.base.getServiceList('SS');
+		services.forEach(function(service){
+			service.requestAction('notifyUsers', data, function(){});
+		});
+
+#### broadcast & channel
+
+projectX设计有三类channel: pub， clan，和friends。代表了三种不同的粒度。
+
+* pub主要负责广播全局的消息。
+* clan是负责工会内部消息，比如成员的变动。
+* friends是负责好友动态的更新。
+
+每个独立用户登录游戏后需要socketLogin，生成socket, 这个是通讯的基础。然后再joinChannel，把socket加入到各个不同的channel中。通常来说pub是每一个用户都需要加入的，clan和friends则是玩家需要达成一定条件才可以加入的channel。
+
+这些不同的channel设计原理其实是一样的，通过redis的pub/sub机制来实现跨进程的广播。
+
+#### session
+
+#### model
+
+#### construtor
+Constructor是所有其他进程的父类。提供了供子类访问的各种对象和方法。
+
+init方法由Constructor本身管理。负责获取命令行启动参数，配置数据。然后初始化Logger， Redis，并最后兼听当前process状态.
+
+run方法由各个子process管理，不同角色的子process会有不同的运行方案。如果是frontend主要是建立proxyServer和rpc模块；如果是backend则主要是rpc模块和业务逻辑
+
+#### redis
+对于缓存部分，redis通过读取配置文件config.ini在constructor中初始化。
+
+redis server安装好以后，通过 
+
+		sh start.sh -redis
+启动redis client。根据配置来说，有可能我们会有多个redis server情况,比如：
+
+	1735293225 49869     1   0 Tue12PM ??         1:34.73 redis-server *:16101   
+	1735293225 49872     1   0 Tue12PM ??         1:33.97 redis-server *:16201   
+	1735293225 49875     1   0 Tue12PM ??         1:33.80 redis-server *:16202   
+	1735293225 49878     1   0 Tue12PM ??         1:33.88 redis-server *:16301   
+	1735293225 49881     1   0 Tue12PM ??         1:33.49 redis-server *:16401   
+	1735293225 49884     1   0 Tue12PM ??         1:34.00 redis-server *:16402 
+
+这个时候对于同一个session，需要将其请求转到同一个redis，否则缓存则会失效。
+redis模块采用了`constant hashing`算法(hashring模块)来达到上述目的。其基本思路就是每次node的增加和删除在平均情况下只会导致K/n个hash结果重新映射(K是hash的key值，n是node数目)；而不是大量的重新映射导致缓存的失败。
+
+这样开发者要做的其实就很简单了：保证传入hash值的稳定性。常见的做法就是通过session提取出uid。这样就可以保证玩家每次的请求都在固定的node上被响应。
+
 
 #### proxyServer
 
@@ -391,6 +413,7 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 	4. EFGetUserData		//获取游戏账号用户数据
 	5. EFUpdateNick			//更新玩家昵称
 	6. EFUserSocketLogin	//websocket请求登陆
+	7. EFJoinChannel 		//加入channel
 
 #### 多人战斗pvp
 
