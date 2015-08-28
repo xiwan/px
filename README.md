@@ -140,6 +140,30 @@ projectX服务器提供了一系列强大的后台管理工具，主要有监测
 * commands.js 模块handler部分
 * constructor.js 模块初始化和主要业务逻辑部分。
 
+###资源
+
+游戏中涉及到的资源一般有几种：声音，图片，AssetBuddle, 脚本，核心数据等等。首先，这些资源会统一存放在cdn服务器中，通过日期或者版本号之类命名规则来进行区别。并且在projectX中进行了部分整合，脚本会按照核心数据的组成部分打入到核心包中，声音和图片会打入AssetBuddle中，但这里要注意的是运营部分的图片还是会分开独立存放的。
+
+这样对于核心数据的生成会是这样一个流程：策划在xls中配置好游戏的核心数据（包括脚本），通过后台提供的接口上传到目标服务器，然后开始进行转换，生成json／sqlite文件；其中json是给服务器端用，sqlite会继续上传到cdn服务器上提供给客户端更新用。
+
+AssetBuddle和图片等其他不需要加工的资源可以通过ftp直接放置在cdn服务器对应的目录中即可。
+
+![webagent module](https://cloud.githubusercontent.com/assets/931632/9538030/9370d14c-4d72-11e5-8ef8-0801679efa99.png)
+
+
+####什么时候更新资源呢？
+
+当资源准备好后，什么时候更新资源呢？
+
+projectX做法是要求客户端每次登陆游戏的时候带着当前版本号vid和服务器的进行比对，如果客户端的小于服务器的版本号，那么客户端将进入下载资源的流程，并且更新他本地的vid；如果用户在游戏中，服务器对核心数据进行了版本升级，同里，由于每个http请求都有vid，这样可以在任何节点进行更新操作，然后客户端重新登录游戏即可。
+
+####更新哪些资源呢？
+
+进一步来说，由于每次改动可多可少，客户端进行全量更新比较保险但会照成很多浪费。projectX会采用差量更新的方案。在服务器每次生成新的核心数据同时，会生成一份本次改动的列表。当客户端需要进行更新操作时候，先获取这份列表，只下载列表上对应的资源文件即可。
+
+下载完成之后客户端还需要对每个文件做一次crc校验，保证文件的完整性。
+
+
 ### 底层设计
 
 #### request & response
@@ -148,19 +172,28 @@ projectX服务器提供了一系列强大的后台管理工具，主要有监测
 
 #### broadcast & channel
 
+projectX设计有三类channel: pub， clan，和friends。代表了三种不同的粒度。
+
+* pub主要负责广播全局的消息。
+* clan是负责工会内部消息，比如成员的变动。
+* friends是负责好友动态的更新。
+
+每个独立用户登录游戏后需要socketLogin，生成socket, 这个是通讯的基础。然后再joinChannel，把socket加入到各个不同的channel中。通常来说pub是每一个用户都需要加入的，clan和friends则是玩家需要达成一定条件才可以加入的channel。
+
+这些不同的channel设计原理其实是一样的，通过redis的pub/sub机制来实现跨进程的广播。
+
 #### session
 
+#### model
 
-#### model模块
-
-#### construtor模块
+#### construtor
 Constructor是所有其他进程的父类。提供了供子类访问的各种对象和方法。
 
 init方法由Constructor本身管理。负责获取命令行启动参数，配置数据。然后初始化Logger， Redis，并最后兼听当前process状态.
 
 run方法由各个子process管理，不同角色的子process会有不同的运行方案。如果是frontend主要是建立proxyServer和rpc模块；如果是backend则主要是rpc模块和业务逻辑
 
-#### redis模块
+#### redis
 对于缓存部分，redis模块通过读取配置文件config.ini在constructor中初始化。
 
 redis server安装好以后，通过 
@@ -180,7 +213,7 @@ redis模块采用了`constant hashing`算法(hashring模块)来达到上述目�
 
 这样开发者要做的其实就很简单了：保证传入hash值的稳定性。常见的做法就是通过session提取出uid。这样就可以保证玩家每次的请求都在固定的node上被响应。
 
-#### policy模块
+#### policy
 
 对于服务器来说，无论是何种请求，采用何种对应的策略(policy)处理该请求是关键。这里的策略(policy)可以理解为多个过滤器(Filter)。
 
@@ -214,7 +247,7 @@ policy类继承于`EventEmitter`, 监听下面几个事件
 * requestAction:
 * requestMessage:
 
-#### proxyServer模块
+#### proxyServer
 
 proxyServer模块主要是提供了一个类似connector的解决方案。它既可以是一个http服务器也可以是一个websocket服务器。
 
