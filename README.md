@@ -238,6 +238,20 @@ projectX设计有三类channel: pub， clan，和friends。代表了三种不同
 这些不同的channel设计原理其实是一样的，通过redis的pub/sub机制来实现跨进程的广播。
 
 #### session
+用来保持客户端与服务器的会话,当用户成功登陆后，session创建成功会返回一个唯一的appsessionKey,这个key是以后客户端与服务器通信的必要参数。如果它一旦过期则会要求客户端重新登录来获取新的appsessionKey.
+
+通常的一个session结构有：
+	var session = {
+		key : uuid.v1(),
+		deviceId : message.deviceId,
+		dataVersion : message.dataVersion,
+		hosts : client.hosts,
+		market : message.market,
+		os : message.os,
+		date : new Date(),
+        uid : __.random(1, 1000),
+        wid : 0,
+	};
 
 #### model
 

@@ -16,6 +16,7 @@ Session.prototype.createSession = function(message, cb) {
 		os : message.os,
 		date : new Date(),
         uid : __.random(1, 1000),
+        wid : 0,
 	};
 	var encrypt = global.utils.encrypt(JSON.stringify(session), 'session');
 
