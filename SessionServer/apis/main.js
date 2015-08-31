@@ -51,6 +51,7 @@ apis.UserSocketLogin = function(socket, protocol, cb) {
         socket.__appSessionKey = protocol.appSessionKey;
         socket.__channel = {}; // cache the channels joined [1: pub, 2: clan, 3: team]
         socket.__uid = session.uid;
+        socket.__expire = (new Date()).getTime() + global.const.SOCKET_EXPIRE;
         global.base.users[session.uid] = socket; //cache the socket by uid
         cb(null, { result : 'success' });
 	}catch (ex) {

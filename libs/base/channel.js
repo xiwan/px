@@ -22,8 +22,7 @@ ChannelAgent.prototype.prepare = function(){
 		self.checkChannelUsage();
 		self.prepare();
 	}, 1000 * 5);
-}
-
+};
 
 ChannelAgent.prototype.checkChannelUsage = function(){
 	var self = this;
@@ -32,10 +31,15 @@ ChannelAgent.prototype.checkChannelUsage = function(){
 		var key = global.const.CHANNEL_USAGE;
 		var keys = Object.keys(global.base.users);
 		var redis = global.base.redis.system.get(key);
+		var now = (new Date()).getTime();
 
 		keys.forEach(function(key){
 			var socket = global.base.users[key];
-			if (socket.__timeId || !socket.__channel) return;
+			if (!socket || socket.__timeId || !socket.__channel) return;
+			if (socket.__expire < now) {
+				socket = null;
+				return;
+			};
 
 			var idxList = Object.keys(socket.__channel);
 			idxList.forEach(function(idx){
