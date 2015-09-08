@@ -103,6 +103,7 @@ projectX服务器提供了一系列强大的后台管理工具，主要有监测
 	monitorInterval = 6000 			//监控间隔
 
 	[services.SS]
+	disable							//暂停使用标志
 	name = SessionServer			//模块全称
 	service = SS					//模块缩写
 	machines[] = localhost:201 		//模块启动位置+idx

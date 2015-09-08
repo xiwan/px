@@ -8,6 +8,12 @@ var forever = require('forever-monitor');
 var base = require('../libs/app_base');
 var server = require('./cmdServer');
 
+// var helloAddon = require('../build/Release/hello');
+// var addAddon = require('../build/Release/add');
+// var callbackAddon = require('../build/Release/callback');
+// var objFactoryAddon = require('../build/Release/objFactory');
+// var funFactoryAddon = require('../build/Release/funFactory');
+
 var Constructor = function(name) {
 	base.Constructor.apply(this, arguments);
 
@@ -17,7 +23,21 @@ var Constructor = function(name) {
     this.parser = null;
     this.deployDir = null;
     this.usage = null;
-    this.mode = null;	
+    this.mode = null;
+
+    // callbackAddon(function(msg){
+    //     console.log(msg);
+    //     console.log(helloAddon.hello());
+    // });
+        
+    // console.log(addAddon.add(3,5));
+
+    // var obj1 = objFactoryAddon("Xi");
+    // var obj2 = objFactoryAddon("Wan");
+    // console.log(obj1.msg + " " + obj2.msg);
+
+    // var fn = funFactoryAddon();
+    // console.log(fn()); 
 };
 util.inherits(Constructor, base.Constructor);
 
@@ -79,7 +99,7 @@ Constructor.prototype.getChildProcess = function(){
     var iList = [];
     for (var key in self.cfg.services) {
         var services = self.cfg.services[key];
-        if (!services.name) continue;
+        if (!services.name || services.disable) continue;
         for (var i=0; i<services.machines.length; i++) {
             var machine = services.machines[i].split(':');
             var host = machine[0] || 'localhost';
@@ -91,7 +111,7 @@ Constructor.prototype.getChildProcess = function(){
             process.name = services.name;
             process.service = services.service;
             process.idx = idx;
-            process.machine = host
+            process.machine = host;
             iList.push(process)
         }
     } 
