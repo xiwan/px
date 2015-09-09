@@ -1,6 +1,6 @@
 #!bin/bash
 
-basePath="/Users/xi.a.wan/Documents/dev/projectX"
+basePath=`pwd`
 binPath="$basePath/bin"
 config="$basePath/cfg"
 dbhost="localhost"

@@ -7,12 +7,14 @@
     var channel = require('./base/channel.js');
     var policy = require('./base/policy.js');
     var server = require('./base/proxyServer.js');
+    var httpServer = require('./base/httpServer.js');
 
     module.exports.Constructor = base.Constructor;
     module.exports.Usage = usage.Usage;
     module.exports.ProxyServer = server.ProxyServer;
-    module.exports.Policy = policy
-    module.exports.Channel = channel
+    module.exports.Policy = policy;
+    module.exports.Channel = channel;
+    module.exports.HttpServer = httpServer;
 
     module.exports.app = function(appMain){
 		//var appMain = new main.Constructor(name);

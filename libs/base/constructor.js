@@ -70,9 +70,10 @@ Constructor.prototype.init = function(cb) {
         global.argv = require('optimist').argv;
         global.hostname = require('os').hostname(); // get current hostname
         global.base = self; // global.base is current object
-        self.idx = global.argv.idx?global.argv.idx : 0;
-        self.ipAddr = global.utils.getIPAddress();
         global.argv.cfg || (global.argv.cfg = '');
+
+        self.idx = global.argv.idx ? global.argv.idx : 0;
+        self.ipAddr = global.utils.getIPAddress();
 
 	    if (fs.existsSync(global.argv.cfg)) { // for sm process
 	        var config = ini.parse(fs.readFileSync(global.argv.cfg, 'utf-8'));
