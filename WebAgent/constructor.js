@@ -30,6 +30,15 @@ Constructor.prototype.run = function(cb) {
 		//init rpc server or client
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 
+		// ftp configuration
+		var ftpInfos = self.cfg.services[self.name].ftp.split(':');
+		self.ftpConfig = {
+            host : ftpInfos[0],
+            port : ftpInfos[1],
+            user : ftpInfos[2],
+            password : ftpInfos[3]
+		};
+
 		// html viewer
 		var server = base.HttpServer.createServer({
 			root : __dirname + '/public',
@@ -45,7 +54,7 @@ Constructor.prototype.run = function(cb) {
                 + ' on port: '
                 + portNo.toString());
         });
-	
+		
 	} catch (ex) {
 		cb(ex)
 	};

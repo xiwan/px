@@ -1,11 +1,13 @@
 'use strict';
 
-var fs = require('fs'),
-    util = require('util'),
-    union = require('union'),
-    ecstatic = require('ecstatic');
+var fs = require('fs');
+var util = require('util');
+var union = require('union');
+var ecstatic = require('ecstatic');
+var director = require('director');
 
 var HttpServer = function(options) {
+	var self = this;
 	options = options || {};
 
 	if (options.root) {
@@ -30,7 +32,7 @@ var HttpServer = function(options) {
     if (options.ext) {
         this.ext = options.ext === true ? 'html' : options.ext;
     }
-
+    var router = new director.http.Router();
     this.server = union.createServer({
     	before: (options.before || []).concat([
             ecstatic({
@@ -39,10 +41,22 @@ var HttpServer = function(options) {
                 showDir : this.showDir,
                 autoIndex: this.autoIndex,
                 defaultExt: this.ext
-            })
+            }),
+		    function (req, res) {
+		      var found = router.dispatch(req, res);
+		      if (!found) {
+		        res.emit('next');
+		      }
+		    }
         ]),
         headers: this.headers || {}
     });
+
+    router.get('*', function () {
+	  // this.res.writeHead(200, { 'Content-Type': 'text/plain' })
+	  // this.res.end('hello world\n');
+	  	self.doAction('post', this.req, this.res);
+	});
 
 };
 
@@ -53,6 +67,19 @@ HttpServer.prototype.listen = function () {
 HttpServer.prototype.close = function () {
     return this.server.close();
 };
+
+HttpServer.prototype.doAction = function(method, req, res) {
+    var self = this;
+    try {
+    	console.log(req.url)
+        var name = req.url.replace('/', '');
+       	res.writeHead(200, { 'Content-Type': 'text/plain' })
+       	res.end( name);
+    } catch (ex) {
+        global.warn('HttpServer.doAction. url:%s, error:%s', req.url, ex.message);
+        console.log(ex.stack);
+    };
+}
 
 exports.createServer = function (options) {
     return new HttpServer(options);
