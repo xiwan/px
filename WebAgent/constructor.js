@@ -51,16 +51,20 @@ Constructor.prototype.run = function(cb) {
 
 		var portNo = parseInt(self.cfg.services[self.name].webPortNo);
         server.listen(portNo, '0.0.0.0', function() {
-            global.warn('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
+            global.debug('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
         });
-
+        // url starting with wb treated as post reqs
 	    this.router.post('/wb*', function () {
 		  	self.doAction('post', this.req, this.res);
 		});
-
+	    // url starting with api treated as post reqs
 	    this.router.get('/api*', function () {
 		  	self.doAction('get', this.req, this.res);
 		});
+
+		this.router.get('/ApiConvertLocalization', function(){
+			self.doAction('get', this.req, this.res);
+		})
 
 	} catch (ex) {
 		cb(ex)
@@ -68,7 +72,7 @@ Constructor.prototype.run = function(cb) {
 };
 
 Constructor.prototype.requestAction = function(self, name, method, req, res, cb){
-	
+
 	if (typeof(self[name]) != 'function') {
 		return cb(new Error('unregistered_open_api'));
 	}
