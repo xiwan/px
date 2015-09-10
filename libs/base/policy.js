@@ -31,6 +31,7 @@ Policy.prototype.load = function(owner, commands) {
     keys.forEach(function(key){
         var iList = commands[key];
         if (owner[key]){
+            //console.log(iList, key, owner[key])
             owner[key](iList);
         }else if (self[key]) {
             self[key](iList);

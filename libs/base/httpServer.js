@@ -6,7 +6,7 @@ var union = require('union');
 var ecstatic = require('ecstatic');
 var director = require('director');
 
-var HttpServer = function(options) {
+var HttpServer = function(options, router) {
 	var self = this;
 	options = options || {};
 
@@ -32,7 +32,7 @@ var HttpServer = function(options) {
     if (options.ext) {
         this.ext = options.ext === true ? 'html' : options.ext;
     }
-    var router = new director.http.Router();
+    // var router = new director.http.Router();
     this.server = union.createServer({
     	before: (options.before || []).concat([
             ecstatic({
@@ -43,20 +43,18 @@ var HttpServer = function(options) {
                 defaultExt: this.ext
             }),
 		    function (req, res) {
-		      var found = router.dispatch(req, res);
-		      if (!found) {
-		        res.emit('next');
-		      }
+		      	var found = router.dispatch(req, res);
+		      	if (!found) {
+		        	res.emit('next');
+		      	}
 		    }
         ]),
         headers: this.headers || {}
     });
 
-    router.get('*', function () {
-	  // this.res.writeHead(200, { 'Content-Type': 'text/plain' })
-	  // this.res.end('hello world\n');
-	  	self.doAction('post', this.req, this.res);
-	});
+ //    router.get('*', function () {
+	//   	self.doAction('post', this.req, this.res);
+	// });
 
 };
 
@@ -71,7 +69,6 @@ HttpServer.prototype.close = function () {
 HttpServer.prototype.doAction = function(method, req, res) {
     var self = this;
     try {
-    	console.log(req.url)
         var name = req.url.replace('/', '');
        	res.writeHead(200, { 'Content-Type': 'text/plain' })
        	res.end( name);
@@ -81,6 +78,6 @@ HttpServer.prototype.doAction = function(method, req, res) {
     };
 }
 
-exports.createServer = function (options) {
-    return new HttpServer(options);
+exports.createServer = function (options, router) {
+    return new HttpServer(options, router);
 };
