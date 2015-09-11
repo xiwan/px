@@ -52,10 +52,6 @@ var HttpServer = function(options, router) {
         headers: this.headers || {}
     });
 
- //    router.get('*', function () {
-	//   	self.doAction('post', this.req, this.res);
-	// });
-
 };
 
 HttpServer.prototype.listen = function () {
@@ -65,18 +61,6 @@ HttpServer.prototype.listen = function () {
 HttpServer.prototype.close = function () {
     return this.server.close();
 };
-
-HttpServer.prototype.doAction = function(method, req, res) {
-    var self = this;
-    try {
-        var name = req.url.replace('/', '');
-       	res.writeHead(200, { 'Content-Type': 'text/plain' })
-       	res.end( name);
-    } catch (ex) {
-        global.warn('HttpServer.doAction. url:%s, error:%s', req.url, ex.message);
-        console.log(ex.stack);
-    };
-}
 
 exports.createServer = function (options, router) {
     return new HttpServer(options, router);

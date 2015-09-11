@@ -64,7 +64,7 @@ Constructor.prototype.run = function(cb) {
 
 		this.router.get('/ApiConvertLocalization', function(){
 			self.doAction('get', this.req, this.res);
-		})
+		});
 
 	} catch (ex) {
 		cb(ex)
