@@ -11,8 +11,6 @@
 		<meta name="description" content="">
 		
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes">
-
-		<script type="text/javascript" src="/scripts/utils/jquery-2.1.4.min.js"></script>
     </head>	
     <style>
 	    
@@ -20,12 +18,16 @@
         
     </style>
     <body>
-    	<h1>Rogus Admin Page</h1>
-    	<button id="gotoTableVersions"> gotoTableVersions </button>
+		<b>* Excel Upload</b>
+		<div id="viewTable"></div>
+		<br />    
+		<div id="fileDiv"></div>
+		  
+		<input id='uploadExcel' type='file' name='iFile' >
+		<input id='uploadFileTable' type='file' name='iFile' >
+		<input id='uploadFileLang' type='file' name='iFile'>
+		<input id='uploadFileEvt' type='file' name='iFile'>
+		<pre id="incomming"></pre>
     </body>
-    <script type="text/javascript">
-    		$('#gotoTableVersions').click(function(){
-    			location.href = '/forms/etc/TableVersions.html';
-    		});
-    </script>
+
 </html>

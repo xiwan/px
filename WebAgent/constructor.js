@@ -26,8 +26,8 @@ Constructor.prototype.run = function(cb) {
 	var self = this;
 	try {
 		// init policy instance & load commands
-		self.policy = base.Policy.createObject();
-		self.overloading(apis, commands);
+		// self.policy = base.Policy.createObject();
+		// self.overloading(apis, commands);
 
 		// init rpc server or client
 		// self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
