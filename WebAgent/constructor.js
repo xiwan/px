@@ -26,8 +26,8 @@ Constructor.prototype.run = function(cb) {
 	var self = this;
 	try {
 		// init policy instance & load commands
-		// self.policy = base.Policy.createObject();
-		// self.overloading(apis, commands);
+		self.policy = base.Policy.createObject();
+		self.overloading(apis, {});
 
 		// init rpc server or client
 		// self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
@@ -40,31 +40,32 @@ Constructor.prototype.run = function(cb) {
             user : ftpInfos[2],
             password : ftpInfos[3]
 		};
-		this.router = new director.http.Router();
+		self.router = new director.http.Router();
 		// html viewer
 		var server = base.HttpServer.createServer({
 			root : __dirname + '/public',
 			cache : 10,
 			showDir : false,
 			autoIndex : false
-		}, this.router);
+		}, self.router);
 
 		var portNo = parseInt(self.cfg.services[self.name].webPortNo);
         server.listen(portNo, '0.0.0.0', function() {
             global.debug('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
         });
-        // url starting with wb treated as post reqs
-	    this.router.post('/wb*', function () {
-		  	self.doAction('post', this.req, this.res);
-		});
-	    // url starting with api treated as post reqs
-	    this.router.get('/api*', function () {
-		  	self.doAction('get', this.req, this.res);
-		});
 
-		this.router.get('/ApiConvertLocalization', function(){
-			self.doAction('get', this.req, this.res);
-		});
+        // register all get handlers
+        commands['get'] && commands['get'].forEach(function(handler){
+            self.router['get'](handler, function(){
+                self.doAction('get', this.req, this.res);
+            });
+        });
+        // register all post handlers
+        commands['post'] && commands['post'].forEach(function(handler){
+            self.router['post'](handler, function(){
+                self.doAction('post', this.req, this.res);
+            });
+        });
 
 	} catch (ex) {
 		cb(ex)
@@ -72,7 +73,7 @@ Constructor.prototype.run = function(cb) {
 };
 
 Constructor.prototype.requestAction = function(self, name, method, req, res, cb){
-
+    console.log()
 	if (typeof(self[name]) != 'function') {
 		return cb(new Error('unregistered_open_api'));
 	}

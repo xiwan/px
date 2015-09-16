@@ -1,4 +1,5 @@
 module.exports = {
-	'iAuth' : ['ApiConvertLocalization'],
+	'get' : ['/api*', '/ApiFileUploadReq'],
+	'post' : ['/wb*', '/ApiFileUploadReq'],
 };
 
