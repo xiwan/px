@@ -1,5 +1,10 @@
 module.exports = {
-	'get' : ['/api*', '/ApiFileUploadReq'],
-	'post' : ['/wb*', '/ApiFileUploadReq'],
+	'get' : [
+		'/api*'
+	],
+	'post' : [
+		'/wb*', 
+		'/ApiFileUploadReq'
+	],
 };
 

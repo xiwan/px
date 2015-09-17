@@ -6,7 +6,7 @@ var union = require('union');
 var ecstatic = require('ecstatic');
 var director = require('director');
 
-var HttpServer = function(options, router) {
+var HttpServer = function(options, portNo) {
 	var self = this;
 	options = options || {};
 
@@ -42,15 +42,12 @@ var HttpServer = function(options, router) {
                 autoIndex: this.autoIndex,
                 defaultExt: this.ext
             }),
-		    function (req, res) {
-		      	var found = router.dispatch(req, res);
-		      	if (!found) {
-		        	res.emit('next');
-		      	}
-		    }
+	        function (req, res) {
+	        	global.debug('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
+		    },
         ]),
         headers: this.headers || {}
-    });
+    }).listen(portNo);
 
 };
 
@@ -62,6 +59,6 @@ HttpServer.prototype.close = function () {
     return this.server.close();
 };
 
-exports.createServer = function (options, router) {
-    return new HttpServer(options, router);
+exports.createServer = function (options, portNo) {
+    return new HttpServer(options, portNo);
 };

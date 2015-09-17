@@ -11,6 +11,7 @@
 		<meta name="description" content="">
 		
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes">
+		<script type="text/javascript" src="/scripts/utils/jquery-2.1.4.min.js"></script>
     </head>	
     <style>
 	    
@@ -29,5 +30,33 @@
 		<input id='uploadFileEvt' type='file' name='iFile'>
 		<pre id="incomming"></pre>
     </body>
+    <script type="text/javascript">
+		$('#uploadExcel').change(function(){
+			uploadReq($(this), function(err, data){
+				console.log(data)
+			});
+		});
 
+		function uploadReq(obj, cb) {
+			var data = new FormData();
+			data.append('iFile', obj[0].files[0]);
+
+			$.ajax({
+				url : 'http://localhost:3901/ApiFileUploadReq',
+				data : data,
+		        processData : false,
+		        contentType : false,
+		        type : 'POST',
+		        success : function(data){
+		        	cb(null, data);
+		        },
+		        error : function(xhr, ajaxOptions, thrownError) {
+		            cb({
+		                status: xhr.status,
+		                message: thrownError
+		            }, null);		        	
+		        }
+			});
+		}
+    </script>
 </html>
