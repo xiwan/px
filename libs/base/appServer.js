@@ -42,10 +42,10 @@ AppServer.prototype.doAction = function(method, req, res) {
                 self.sendErrorMsg(req, res, err);
                 return;
         	}
-
         	if (ack) {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(ack));
+                res.header("Access-Control-Allow-Origin", "*");
+                res.header("Access-Control-Allow-Headers", "X-Requested-With");
+                res.send(ack);
         	}
         });
     } catch (ex) {
@@ -56,10 +56,12 @@ AppServer.prototype.doAction = function(method, req, res) {
 
 AppServer.prototype.sendErrorMsg = function(req, res, ex) {
     if (res) {
-		res.writeHead(200, { 'Content-Type': 'application/json' });
-		res.end(JSON.stringify({
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+        res.send({
             result : ex.message
-        }));
+        });
     }
 };
 

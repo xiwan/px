@@ -5,7 +5,7 @@ var fs = require('fs');
 var apis = exports.apis = {};
 
 apis.ApiFileUploadReq = function(req, cb) {
-	global.debug('AppParser.ApiFileUploadReq Call.', req.files, req.iFile);
+	global.debug('AppParser.ApiFileUploadReq Call.');
 
 	try {
 		var iAry = [];
@@ -25,7 +25,15 @@ apis.ApiFileUploadReq = function(req, cb) {
         };
 
         if (fs.existsSync(iFile.path)) {
-
+        	var idx = global.utils.getArrayIndex(global.base.uploads, 'name', iFile.name);
+        	if (idx < 0) {
+        		global.base.uploads.push({
+        			name : iFile.name,
+        			path : iFile.path
+        		});
+        	} else {
+        		global.base.uploads[idx].path = iFile.path;
+        	}
         }else {
         	iAck.result = 'not_found_file';
         }
@@ -37,12 +45,9 @@ apis.ApiFileUploadReq = function(req, cb) {
         global.debug('AppParser.ApiFileUploadReq error: %s', ex.message);
         cb(ex);
 	}
-
-    // res.writeHead(200, { 'Content-Type': 'application/json' })
-    // res.end('ApiFileUploadReq');
 }
 
-apis.apiTest = function(req, res){
+apis.dpiTest = function(req, res){
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end('xxxxxxxxxxx2');
 }

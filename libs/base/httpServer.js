@@ -42,13 +42,10 @@ var HttpServer = function(options, portNo) {
                 autoIndex: this.autoIndex,
                 defaultExt: this.ext
             }),
-	        function (req, res) {
-	        	global.debug('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
-		    },
         ]),
         headers: this.headers || {}
     }).listen(portNo);
-
+    global.debug('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
 };
 
 HttpServer.prototype.listen = function () {

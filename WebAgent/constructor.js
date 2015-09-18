@@ -30,8 +30,9 @@ Constructor.prototype.run = function(cb) {
 		// init rpc server or client
 		// self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 
+        var conf = self.cfg.services[self.name];
 		// ftp configuration
-		var ftpInfos = self.cfg.services[self.name].ftp.split(':');
+		var ftpInfos = conf.ftp.split(':');
 		self.ftpConfig = {
             host : ftpInfos[0],
             port : ftpInfos[1],
@@ -40,11 +41,11 @@ Constructor.prototype.run = function(cb) {
 		};
 
         // express server
-        var bindPortNo = parseInt(self.cfg.services[self.name].bindPortNo);
+        var bindPortNo = parseInt(conf.bindPortNo);
         self.service = base.AppServer.createServer(bindPortNo, commands);
 
 		// html viewer
-        var webPortNo = parseInt(self.cfg.services[self.name].webPortNo);
+        var webPortNo = parseInt(conf.webPortNo);
 		var server = base.HttpServer.createServer({
 			root : __dirname + '/public',
 			cache : 10,
@@ -72,7 +73,6 @@ Constructor.prototype.requestAction = function(name, method, req, res, cb){
         iAction(req, res);
         return;
     }
-
     // for posting method
     iAction(req, function(err, ack){
     	cb(err, ack);

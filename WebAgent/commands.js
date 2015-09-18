@@ -1,6 +1,6 @@
 module.exports = {
 	'get' : [
-		'/api*'
+		'/dpi*'
 	],
 	'post' : [
 		'/wb*', 
