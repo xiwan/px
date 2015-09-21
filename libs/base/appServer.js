@@ -19,13 +19,13 @@ var AppServer = exports.AppServer = function(portNo, commands) {
 
     // register all get handlers
     commands['get'] && commands['get'].forEach(function(handler){
-        self.app['get'](handler, function(req, res){
+        self.app['get']('/' + handler, function(req, res){
         	self.doAction('get', req, res);
         });
     });
     // register all post handlers
     commands['post'] && commands['post'].forEach(function(handler){
-        self.app['post'](handler, function(req, res){
+        self.app['post']('/' + handler, function(req, res){
         	self.doAction('post', req, res);
         });
     });
