@@ -17,6 +17,8 @@ var Constructor = function(name) {
     this.monitor = null;
     this.uploads = [];
 	this.jobList = {};
+    this.dataVersions = [];
+    this.rootPath = '';
 };
 util.inherits(Constructor, base.Constructor);
 
@@ -45,6 +47,7 @@ Constructor.prototype.run = function(cb) {
         self.service = base.AppServer.createServer(bindPortNo, commands);
 
 		// html viewer
+        self.rootPath = __dirname;
         var webPortNo = parseInt(conf.webPortNo);
 		var server = base.HttpServer.createServer({
 			root : __dirname + '/public',
@@ -77,6 +80,23 @@ Constructor.prototype.requestAction = function(name, method, req, res, cb){
     iAction(req, function(err, ack){
     	cb(err, ack);
     })
+};
+
+Constructor.prototype.addAsyncJob = function(action) {
+    var self = this;
+    try {
+        var jobItem = {
+            id : self.genGid(),
+            state : 1,      // 1: Preparing, 2: Working, 3: Finished
+            action : action,
+            status : {}
+        };
+        self.jobList[jobItem.id] = jobItem;
+        return jobItem;
+    } catch (ex) {
+        global.warn('Constructor.addAsyncJob. error:%s', ex.message);
+        return null;
+    }
 };
 
 

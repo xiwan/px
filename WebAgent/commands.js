@@ -1,10 +1,13 @@
 module.exports = {
 	'get' : [
-		'/dpi*'
+		'dpi*'
 	],
 	'post' : [
-		'/wb*', 
-		'/ApiFileUploadReq'
+		'wb*', 
+		'ApiFileUploadReq',
+		'ApiConvertToJson',
+		'ApiApplyTables',
+		'ApiGetAsyncJobData',
 	],
 };
 

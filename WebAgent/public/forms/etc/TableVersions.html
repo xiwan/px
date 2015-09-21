@@ -12,6 +12,8 @@
 		
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes">
 		<script type="text/javascript" src="/scripts/utils/jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="/scripts/utils/protocol.js"></script>
+		<script type="text/javascript" src="TableVersions.js"></script>
     </head>	
     <style>
 	    
@@ -23,40 +25,21 @@
 		<div id="viewTable"></div>
 		<br />    
 		<div id="fileDiv"></div>
-		  
+		<select id='selectExcelType'>
+			<option value='excel'>Excel</option>
+			<option value='language'>Language</option>
+			<option value='event'>Event</option>
+		</select>
+
 		<input id='uploadExcel' type='file' name='iFile' >
 		<input id='uploadFileTable' type='file' name='iFile' >
 		<input id='uploadFileLang' type='file' name='iFile'>
 		<input id='uploadFileEvt' type='file' name='iFile'>
 		<pre id="incomming"></pre>
+
+		<button id="fileSave">file save</button>
     </body>
     <script type="text/javascript">
-		$('#uploadExcel').change(function(){
-			uploadReq($(this), function(err, data){
-				console.log(data)
-			});
-		});
-
-		function uploadReq(obj, cb) {
-			var data = new FormData();
-			data.append('iFile', obj[0].files[0]);
-
-			$.ajax({
-				url : 'http://localhost:3900/ApiFileUploadReq',
-				data : data,
-		        processData : false,
-		        contentType : false,
-		        type : 'POST',
-		        success : function(data){
-		        	cb(null, data);
-		        },
-		        error : function(xhr, ajaxOptions, thrownError) {
-		            cb({
-		                status: xhr.status,
-		                message: thrownError
-		            }, null);		        	
-		        }
-			});
-		}
+    	$(document).ready(onReday);
     </script>
 </html>

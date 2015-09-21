@@ -332,7 +332,7 @@ exports.ftpUploadReq = function(version, changeLog, job, cb) {
                 iSum += item.version;
             });
 
-            var iName = util.format('/tmp/DH_VersionList_%d_%d', version, iSum);
+            var iName = util.format(global.base.rootPath + '/public/db/DH_VersionList_%d_%d', version, iSum);
             job.status['VersionList'] = {
                 version : iSum,
                 message : 'Make Version File',
@@ -349,52 +349,53 @@ exports.ftpUploadReq = function(version, changeLog, job, cb) {
                         return;
                     }
                     iFiles.push({ sheet : 'VersionList', path : iName });
-                    var client = new ftp();
-                    client.on('ready', function() {
-                        global.debug('ftpUploadReq. onReady');
-                        client.binary(function(err) {
-                            if (err) {
-                                cb(err);
-                                job.status['VersionList'].message = err.message;
-                                client.end();
-                                return;
-                            }
-                            global.debug('ftpUploadReq.binary');
-                            async.eachSeries(iFiles, function(fileObj, cb) {
-                                setTimeout(function() {
-                                    var fileName = fileObj.path.substring(5);
-                                    var target = 'EveryFun/HeartOfDragon/GameTable/' + fileName;
-                                    async.waterfall([
-                                        function(callback) { client.put(fileObj.path, target, callback); },
-                                        function(callback) { client.size(target, callback); }
-                                    ], function(err, size) {
-                                        var result = err ? err.message : 'success';
-                                        job.status[fileObj.sheet].message = 'ftp result : ' + result;
-                                        global.debug('ftpUploadReq.binary. name:%s, result:%s(%s)', fileName, result, size);
-                                        cb(err);
-                                    });
-                                }, 300);
-                            }, function(err) {
-                                if (err) {
-                                    cb(err);
-                                    client.end();
-                                    return;
-                                }
-                                global.debug('ftpUploadReq.put');
-                                client.end();
-                            })
-                        })
-                    });
-                    client.on('end', function() {
-                        global.debug('ftpUploadReq.end');
-                        cb && cb(null, iFiles);
-                    });
-                    client.on('error', function(err) {
-                        global.warn('ftpUploadReq. error:%s', err.message);
-                        job.status['VersionList'].message = err.message;
-                        cb && cb(err);
-                    });
-                    client.connect(global.base.ftpConfig);
+                    // var client = new ftp();
+                    // client.on('ready', function() {
+                    //     global.debug('ftpUploadReq. onReady');
+                    //     client.binary(function(err) {
+                    //         if (err) {
+                    //             cb(err);
+                    //             job.status['VersionList'].message = err.message;
+                    //             client.end();
+                    //             return;
+                    //         }
+                    //         global.debug('ftpUploadReq.binary');
+                    //         async.eachSeries(iFiles, function(fileObj, cb) {
+                    //             setTimeout(function() {
+                    //                 var fileName = fileObj.path.substring(5);
+                    //                 var target = 'EveryFun/HeartOfDragon/GameTable/' + fileName;
+                    //                 async.waterfall([
+                    //                     function(callback) { client.put(fileObj.path, target, callback); },
+                    //                     function(callback) { client.size(target, callback); }
+                    //                 ], function(err, size) {
+                    //                     var result = err ? err.message : 'success';
+                    //                     job.status[fileObj.sheet].message = 'ftp result : ' + result;
+                    //                     global.debug('ftpUploadReq.binary. name:%s, result:%s(%s)', fileName, result, size);
+                    //                     cb(err);
+                    //                 });
+                    //             }, 300);
+                    //         }, function(err) {
+                    //             if (err) {
+                    //                 cb(err);
+                    //                 client.end();
+                    //                 return;
+                    //             }
+                    //             global.debug('ftpUploadReq.put');
+                    //             client.end();
+                    //         })
+                    //     })
+                    // });
+                    // client.on('end', function() {
+                    //     global.debug('ftpUploadReq.end');
+                    //     cb && cb(null, iFiles);
+                    // });
+                    // client.on('error', function(err) {
+                    //     global.warn('ftpUploadReq. error:%s', err.message);
+                    //     job.status['VersionList'].message = err.message;
+                    //     cb && cb(err);
+                    // });
+                    // client.connect(global.base.ftpConfig);
+                    cb && cb(null, iFiles);
                 });
             });
         });
@@ -508,7 +509,7 @@ exports.mrgMaintenance = function(protocol, cb) {
 /** */
 function zipAndWritFile(version, iLog, job, cb) {
     try {
-        var iName = util.format('/tmp/DH_%s_%d_%d_db', iLog.sheet, version, iLog.version);
+        var iName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', iLog.sheet, version, iLog.version);
         fs.existsSync(iName) && fs.unlinkSync(iName);
 
         var iMsg = {

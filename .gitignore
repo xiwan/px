@@ -1,6 +1,7 @@
 node_modules/
 test/
 libs/schema/
+WebAgent/public/db/*
 build/
 *~$*
 *.DS_St
