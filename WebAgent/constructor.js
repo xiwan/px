@@ -26,11 +26,11 @@ Constructor.prototype.run = function(cb) {
 	var self = this;
 	try {
 		// init policy instance & load commands
-		// self.policy = base.Policy.createObject();
+		self.policy = base.Policy.createObject();
 		self.overloading(apis, {});
 
 		// init rpc server or client
-		// self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
+		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
 
         var conf = self.cfg.services[self.name];
 		// ftp configuration
@@ -122,6 +122,24 @@ Constructor.prototype.getVersionsFromDB = function(cb) {
             }
         });
     } catch (ex) {
+        cb(ex);
+    }
+};
+
+Constructor.prototype.getCurrentVersion = function(cb){
+    var self = this;
+    try {
+        var iList = [], iSum = 0;
+        global.base.dataVersions.forEach(function(item) {
+            iList.push({
+                category : item.category,
+                sheet : item.sheet,
+                version : item.version
+            });
+            iSum += item.version;
+        });
+        cb(null, iList, iSum);
+    }catch(ex) {
         cb(ex);
     }
 };

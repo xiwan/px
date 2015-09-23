@@ -58,8 +58,9 @@ ProxyServer.prototype.webHandler = function (req, res) {
 
 		action = url.parse(req.url).pathname;
 		action = action.substr(1);
-        // if (action.substr(0, 2) !== 'EF')
-        //     throw new Error('__protocol_name');
+		action = action.replace(/Req$|Request$/g, '');
+        if (action.substr(0, 2) !== 'EF')
+            throw new Error('__protocol_name');
 
         body = '';
         req.setMaxListeners(0);

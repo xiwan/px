@@ -28,10 +28,19 @@ apis.ClientLogin = function(protocol, cb){
 	}
 };
 
-apis.GetVersionList = function(protocol, cb) {
+apis.EFGetVersionList = function(protocol, cb) {
 	var self = this;
 	try {
-		var dataVersion = protocol.dataVersion;
+		var dataVersion = parseInt(protocol.dataVersion);
+
+		var service = global.base.getServiceList('WA')[0];
+		service.requestAction('getCurrentVersion', function(err, iList, iSum){
+			if (dataVersion < iSum) {
+				cb(null, {result : 'success', iList: iList, iSum: iSum});
+			}else {
+				cb(null, {result : 'success', iSum: iSum});
+			}
+		});
 
 	}catch(ex) {
 		cb(ex)
