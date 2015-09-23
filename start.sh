@@ -99,7 +99,7 @@ case "$1" in
 	-redis )
 		initRedis
 		;;
-	-init )
+	-db )
 		cd $binPath
 		node mysql_init_database.js
 		node mysql_init_schema.js
