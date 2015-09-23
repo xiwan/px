@@ -134,7 +134,8 @@ Constructor.prototype.getCurrentVersion = function(cb){
             iList.push({
                 category : item.category,
                 sheet : item.sheet,
-                version : item.version
+                version : item.version,
+                crc : item.crc
             });
             iSum += item.version;
         });

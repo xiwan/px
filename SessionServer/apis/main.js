@@ -1,9 +1,11 @@
 'use strict';
 
+var util = require('util');
+
 var apis = exports.apis = {};
 
 // client login: create session for client
-apis.ClientLogin = function(protocol, cb){
+apis.EFClientLogin = function(protocol, cb){
 	var self = this;
 	try {
 		var market = global.const.pMarket[protocol.market];
@@ -24,6 +26,7 @@ apis.ClientLogin = function(protocol, cb){
 	    });
 
 	}catch (ex) {
+		global.warn('EFClientLogin message: %s', ex.message);
 		cb(ex)
 	}
 };
@@ -31,8 +34,10 @@ apis.ClientLogin = function(protocol, cb){
 apis.EFGetVersionList = function(protocol, cb) {
 	var self = this;
 	try {
+		if (!protocol.dataVersion||
+	        typeof(protocol.dataVersion) !== 'number')
+			throw new Error('__invalid_param');
 		var dataVersion = parseInt(protocol.dataVersion);
-
 		var service = global.base.getServiceList('WA')[0];
 		service.requestAction('getCurrentVersion', function(err, iList, iSum){
 			if (dataVersion < iSum) {
@@ -43,9 +48,39 @@ apis.EFGetVersionList = function(protocol, cb) {
 		});
 
 	}catch(ex) {
+		global.warn('EFGetVersionList message: %s', ex.message);
 		cb(ex)
 	}
 
+};
+
+// check crc: verify clients master data
+apis.EFCheckTableCrc = function(protocol, cb) {
+	var self = this;
+	try {
+        if (!util.isArray(protocol.items))
+            throw new Error('__invalid_param');
+        if (protocol.items.length === 0 && !(process.env.mode == 'dev' || process.env.mode == 'test' ))
+            throw new Error('__invalid_param');
+        
+        var service = global.base.getServiceList('WA')[0];
+		service.requestAction('getCurrentVersion', function(err, iList, iSum){
+			var flag = true;
+	        protocol.items.forEach(function(item) {
+	        	iList.forEach(function(list){
+		        	if (item.name == list.sheet) {
+		        		if (item.crc != list.crc) {
+		        			flag = false;
+		        		}
+		        	}
+        		});					
+			});
+			cb(null, {result : 'success', crc: flag});
+		});
+	}catch(ex) {
+		global.warn('EFCheckTableCrc message: %s', ex.message);
+		cb(ex)
+	}
 };
 
 // user login: generate uid, add more info to session
@@ -53,10 +88,7 @@ apis.UserLogin = function(protocol, cb) {
 
 };
 
-// check crc: verify clients master data
-apis.CheckTableCrc = function(protocol, cb) {
 
-};
 
 apis.UserSocketLogin = function(socket, protocol, cb) {
 	var self = this;

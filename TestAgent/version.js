@@ -11,13 +11,22 @@ var apis = require('./apis/main').apis;
 
 var User = function(){
 	this.dataVersion = 1;
+	this.items = [{
+		name : 'Behavior',
+		crc : 11998743091
+	}];
 }
 
-var bot = new User();
+var payload = new User();
 
 async.waterfall([
+	// function (callback) {
+	// 	apis.httpRequest('EFGetVersionListReq', payload, function(err, iAck){
+	// 		callback(err, iAck);
+	// 	});		
+	// },
 	function (callback) {
-		apis.httpRequest('EFGetVersionListReq', bot, function(err, iAck){
+		apis.httpRequest('EFCheckTableCrcReq', payload, function(err, iAck){
 			callback(err, iAck);
 		});		
 	},
