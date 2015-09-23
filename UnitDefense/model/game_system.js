@@ -5,7 +5,7 @@ var async = require('async');
 var util = require('util');
 
 var mConn = require('../../libs/base/mysqlConn');
-var iApp = require('../../libs/schema/test2/App.js');
+var iApp = require('../../libs/schema/system/App.js');
 
 var GameSystem = exports.GameSystem = function(property) {
     var self = this;

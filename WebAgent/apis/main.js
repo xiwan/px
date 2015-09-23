@@ -161,7 +161,7 @@ apis.ApiApplyTables = function(req, cb) {
                 });
             } else {
                 var item = global.base.dataVersions[pos];
-                if (item.json !== base64) {
+                //if (item.json !== base64) {
                     item.version++;
                     item.json = base64;
                     version = item.version;
@@ -169,7 +169,7 @@ apis.ApiApplyTables = function(req, cb) {
                         sql : 'UPDATE T_APP_DATA SET maxVersion = ? where appId = ? and sheet = ?',
                         data : [item.version, global.const.appId, key]
                     })
-                }
+                //}
             }
             if (version > 0) {
                 changeLog.push({
@@ -187,7 +187,6 @@ apis.ApiApplyTables = function(req, cb) {
 				async.waterfall([
 					function (callback) { appUtils.ftpUploadReq(iNum, changeLog, job, callback); },
                     function (iFiles, callback) {
-                    	console.log(iFiles)
                         iFiles.forEach(function(fileObj){
                             if(fileObj.sheet !== 'VersionList'){
                                 var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
@@ -209,6 +208,9 @@ apis.ApiApplyTables = function(req, cb) {
                         });
                         callback(null);
                         job.status['DataGrp'] = { message : 'begin', total : 1, progress : 1 };
+                    },
+                    function (callback) { 
+                        global.base.systemDB.executeAdvTrans(qryList, callback);
                     },
 				], function(err){
                     if (err) {

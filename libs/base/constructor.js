@@ -40,6 +40,7 @@ var Constructor = function (name, local) {
     this.gids = null;
     this.cfg = null;
     this.users = null;      // socket cache
+    this.systemDB = null;
 
     this.waitForTerminate = 1;
 
@@ -83,6 +84,8 @@ Constructor.prototype.init = function(cb) {
 	        self.cfg = JSON.parse(process.env.cfg);
 	    }
         
+        self.systemDB = mysqlConn.createObject(self.cfg.mysql, 'systemDB');
+
 	    async.waterfall([
 	    	function(callback) {self.initLogger(self.cfg.logs, callback)},
 	    	function(callback) {self.initRedis(self.cfg.redis, callback)},

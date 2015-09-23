@@ -19,7 +19,7 @@ var ConnectionMgr = function(cfg, domain) {
 			port : cfg.master.port,
 			user : cfg[cfg.database].user,
 			password : cfg[cfg.database].password,
-			database : cfg[domain].database || cfg.database		
+			database : cfg[domain].database || cfg.database	// use domain or default database	
 		}// always have one master
 		poolCluster.add('MASTER', masterConfig);
 
@@ -42,6 +42,7 @@ var ConnectionMgr = function(cfg, domain) {
     self.key = '';
     self.domain = domain ? domain : '*';
 
+    self.use('master');
 };
 
 ConnectionMgr.prototype.use = function(pattern) {
@@ -272,7 +273,7 @@ ConnectionMgr.prototype.executeTrans = function(qry, cb) {
                                 callback(err);
 							});
 						}, function(err){
-							self.releaseTrans(connection, begin, ex, cb);
+							self.releaseTrans(connection, begin, err, cb);
 						});
 					}catch (ex) {
 						self.releaseTrans(connection, begin, ex, cb);
@@ -285,6 +286,40 @@ ConnectionMgr.prototype.executeTrans = function(qry, cb) {
 	}catch (ex) {
 		cb(ex);
 	}
+};
+
+/** 
+* advanced qry with sql and data props
+*/
+ConnectionMgr.prototype.executeAdvTrans = function(qry, cb) {
+    var self = this;
+    try {
+        var qryList = util.isArray(qry) ? qry : [qry];
+        var begin = new Date();
+        self.pool.getConnection(function(err, connection) {
+            try {
+                if (err) throw err;
+                connection.beginTransaction(function(err){
+                    try {
+                        async.eachSeries(qryList, function(_qry, callback){
+                            connection.query(_qry.sql, _qry.data, function(err) {
+                                err && console.dir(_qry);
+                                callback(err);
+                            });
+                        }, function(err){
+                            self.releaseTrans(connection, begin, err, cb);
+                        });
+                    }catch (ex) {
+                        self.releaseTrans(connection, begin, ex, cb);
+                    }
+                });
+            }catch (ex) {
+                cb(ex);
+            }
+        });
+    }catch (ex) {
+        cb(ex);
+    }
 };
 
 ConnectionMgr.prototype.releaseTrans = function(connection, begin, err, cb) {

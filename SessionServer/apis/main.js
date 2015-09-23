@@ -28,6 +28,16 @@ apis.ClientLogin = function(protocol, cb){
 	}
 };
 
+apis.GetVersionList = function(protocol, cb) {
+	var self = this;
+	try {
+		var dataVersion = protocol.dataVersion;
+
+	}catch(ex) {
+		cb(ex)
+	}
+
+};
 
 // user login: generate uid, add more info to session
 apis.UserLogin = function(protocol, cb) {

@@ -60,6 +60,11 @@ Constructor.prototype.run = function(cb) {
         //     global.debug('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
         // });
 
+        self.getVersionsFromDB(function(err) {
+            global.debug('WebAgentServer.run. success');
+            cb(err);
+        });
+
 	} catch (ex) {
 		cb(ex)
 	};
@@ -96,6 +101,28 @@ Constructor.prototype.addAsyncJob = function(action) {
     } catch (ex) {
         global.warn('Constructor.addAsyncJob. error:%s', ex.message);
         return null;
+    }
+};
+
+Constructor.prototype.getVersionsFromDB = function(cb) {
+    var self = this;
+    try {
+        var iQry = [];
+        iQry.push('select x.sheet, x.category, y.version, y.json, y.crc, x.excel as name, y.date from T_APP_DATA x');
+        iQry.push('join (select * from T_APP_DATA_VERSION) y');
+        iQry.push('on (x.appId = y.appId and x.sheet = y.sheet and x.maxVersion = y.version)');
+        iQry.push(util.format('where x.appId = "%s"', global.const.appId));
+        self.systemDB.execute(iQry.join(' '), function(err, results) {
+            try {
+                if (err) throw err;
+                self.dataVersions = results;
+                cb(null);
+            } catch (ex) {
+                cb(ex);
+            }
+        });
+    } catch (ex) {
+        cb(ex);
     }
 };
 
