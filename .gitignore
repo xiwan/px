@@ -1,4 +1,6 @@
 node_modules/
+tgz/
+logs/
 test/
 libs/schema/
 WebAgent/public/db/*

@@ -3,6 +3,8 @@
 basePath=`pwd`
 binPath="$basePath/bin"
 config="$basePath/cfg"
+logPath="$basePath/logs"
+tgzPath="$basePath/tgz"
 dbhost="localhost"
 apphost="localhost"
 configFile="config.ini"
@@ -87,14 +89,31 @@ while [ -n "$1" ]
 do 
 case "$1" in
 	-on )
-		mv ./nohup.out ./nohup.`date '+%j'`.bk
-		# nohup node ./ServiceManager/app.js --idx=901 --cfg=./cfg/config.ini &
-		node ./ServiceManager/app.js --idx=901 --cfg=./cfg/config.ini
+		re='^[0-9]+$'
+		if ! [[ $packnumber =~ $re ]] ; then
+			packnumber="`mysql -u root -h $dbhost -p'pa$$w0rd' -N  -e "SELECT deployVersion FROM test_game_system.t_app_base"`"
+		fi
+		echo "pack number is : $packnumber"
+
+		if [ ! -e "$basePath/tgz/$packnumber" ]; then
+			echo "not find packnumber : $packnumber"
+		  	exit 1
+		fi
+
+		mv $basePath/logs/nohup.out $basePath/logs/nohup.`date '+%j'`.bk
+		# nohup node ./ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/cfg/config.ini > "$basePath/logs/nohup.out" &
+		node $basePath/tgz/$packnumber/ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/$packnumber/cfg/config.ini
+		echo "set sm on server: ".`hostname`
 		;;
 
 	-off )
 		echo "set sm off server: ".`hostname`
 		killall node
+		;;
+	-tar )
+		tarName=`date +"%Y%m%d%H%m"`
+		gnutar cvfz "$tgzPath/$tarName.tgz" --exclude=node_modules --exclude=tgz --exclude=logs * > "$logPath/$tarName.log"
+		echo "tar output : $tarName"
 		;;
 	-redis )
 		initRedis
