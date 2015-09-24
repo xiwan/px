@@ -161,7 +161,7 @@ apis.ApiApplyTables = function(req, cb) {
                 });
             } else {
                 var item = global.base.dataVersions[pos];
-                //if (item.json !== base64) {
+                if (item.json !== base64) {
                     item.version++;
                     item.json = base64;
                     version = item.version;
@@ -169,7 +169,7 @@ apis.ApiApplyTables = function(req, cb) {
                         sql : 'UPDATE T_APP_DATA SET maxVersion = ? where appId = ? and sheet = ?',
                         data : [item.version, global.const.appId, key]
                     })
-                //}
+                }
             }
             if (version > 0) {
                 changeLog.push({
