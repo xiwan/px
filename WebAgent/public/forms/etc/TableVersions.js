@@ -16,7 +16,7 @@ function onReday() {
 		data.append('iFile', obj[0].files[0]);
 
 		$.ajax({
-			url : 'http://localhost:3900/ApiFileUploadReq',
+			url : get_server_url(3900) + '/ApiFileUploadReq',
 			data : data,
 	        processData : false,
 	        contentType : false,
