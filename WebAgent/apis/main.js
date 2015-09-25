@@ -146,7 +146,8 @@ apis.ApiApplyTables = function(req, cb) {
                     sheet : key,
                     category : iFile.category,
                     version : 1,
-                    json : base64
+                    json : base64,
+                    crc : 0,
                 });
                 version = 1;
                 qryList.push({
@@ -191,6 +192,7 @@ apis.ApiApplyTables = function(req, cb) {
                             if(fileObj.sheet !== 'VersionList'){
                                 var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
                                 var item = global.base.dataVersions[pos];
+                                item.crc = self.getCrc32(fileObj.path);
                                 qryList.push({
                                     sql : 'INSERT INTO T_APP_DATA_VERSION SET ?',
                                     data : {
@@ -199,7 +201,7 @@ apis.ApiApplyTables = function(req, cb) {
                                         version : item.version,
                                         date : global.utils.toDateTime(new Date()),
                                         json : item.json,
-                                        crc : self.getCrc32(fileObj.path)
+                                        crc : item.crc
                                     }
                                 })
                             }
