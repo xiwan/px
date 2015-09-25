@@ -214,7 +214,8 @@ apis.ApiApplyTables = function(req, cb) {
                     },
 				], function(err){
                     if (err) {
-                        job.status['DataGrp'].message = err.message;
+                        if (job.status['DataGrp'])
+                            job.status['DataGrp'].message = err.message;
                         global.warn(err.stack);
                     } else {
                         job.status['DataGrp'].message = 'complete';

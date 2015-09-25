@@ -38,7 +38,7 @@ exports.loadExcel2Json = function(filePath, ignores) {
             try {
                 var csv = XL.utils.sheet_to_csv(sheet).split('\n');
                 var obj = XL.utils.sheet_to_row_object_array(sheet);
-
+                
                 if (!csv[2] || !csv[1])
                     continue;
 
@@ -568,7 +568,7 @@ function zipAndWritFile(version, iLog, job, cb) {
             }
             iMsg.total = iRows.length;
             iMsg.message = 'insert rows';
-
+            
             async.eachSeries(iRows, function(row, callback) {
                 iDB.insert(iLog.sheet, row, function(err) {
                     iMsg.progress++;
