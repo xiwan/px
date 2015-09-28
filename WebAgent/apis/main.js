@@ -205,11 +205,22 @@ apis.ApiGetAsyncJobData = function(req, cb) {
     }
 };
 
-apis.dpiTest = function(req, res){
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end('xxxxxxxxxxx2');
+function apiDetector() {
+    fs.readdir(__dirname, function(err, files) {
+        if (err) return;
+        files.forEach(function(f) {
+            if (f != 'main.js'){
+                var __apis = require('./' + f.replace('.js', '')).apis;
+                for (var key in __apis) {
+                    var handler = __apis[key];
+                    if (!apis[key]) {
+                        apis[key] = handler;
+                    }else {
+                        global.warn('there is duplicate handlers in apis: %s, please rename it', key);
+                    }
+                }
+            }
+        });
+    });   
 }
-
-apis.wbTest = function(protocol, cb){
-	cb(null, { result : 'success'});
-}
+apiDetector();
