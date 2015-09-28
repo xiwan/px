@@ -150,18 +150,18 @@ apis.ApiApplyTables = function(req, cb) {
                 });
                 version = 1;
                 qryList.push(
-                    global.base.sqls.ApiApplyTables_instertAppData(global.const.appId, key, iFile.excel, category, version)
+                    global.base.sqls.ApiApplyTables_instertAppData(global.const.appId, key, iFile.excel, iFile.category, version)
                 );
             } else {
                 var item = global.base.dataVersions[pos];
-                //if (item.json !== base64) {
+                if (item.json !== base64) {
                     item.version++;
                     item.json = base64;
                     version = item.version;
                     qryList.push(
                         global.base.sqls.ApiApplyTables_updateAppData(item.version, global.const.appId, key)
                     );
-               // }
+                }
             }
             if (version > 0) {
                 changeLog.push({

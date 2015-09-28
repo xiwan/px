@@ -257,6 +257,13 @@ ConnectionMgr.prototype.execute = function(qry, cb) {
 	}
 };
 
+/**
+* @mehtod: executeTrans
+* @params: qry
+* @qry:  string
+*        object {sql: string, data: object}
+*        array
+*/
 ConnectionMgr.prototype.executeTrans = function(qry, cb) {
 	var self = this;
 	try {
@@ -268,10 +275,18 @@ ConnectionMgr.prototype.executeTrans = function(qry, cb) {
 				connection.beginTransaction(function(err){
 					try {
 						async.eachSeries(qryList, function(_qry, callback){
-							connection.query(_qry, function(err) {
-                                err && console.dir(_qry);
-                                callback(err);
-							});
+                            if (__.isObject(_qry) && _qry.sql &&_qry.data) {
+                                connection.query(_qry.sql, _qry.data, function(err) {
+                                    err && console.dir(_qry);
+                                    callback(err);
+                                });
+                            }else {
+                                connection.query(_qry, function(err) {
+                                    err && console.dir(_qry);
+                                    callback(err);
+                                });                                
+                            }
+
 						}, function(err){
 							self.releaseTrans(connection, begin, err, cb);
 						});
