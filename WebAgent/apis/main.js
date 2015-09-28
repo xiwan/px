@@ -5,8 +5,9 @@ var async = require('async');
 var util = require('util');
 var __ = require('underscore');
 var crc = require('../../libs/crc');
-var appLang = require('../utils/lang_utils');
+var langUtils = require('../utils/lang_utils');
 var appUtils = require('../utils/app_utils');
+var miscUtils = require('../utils/misc_utils');
 
 var apis = exports.apis = {};
 
@@ -93,46 +94,13 @@ apis.ApiConvertToJson = function(req, cb) {
     }
 };
 
-apis.getJSON = function(name) {
-    if (name.length === 0)
-        return null;
-
-    var idx = global.utils.getArrayIndex(global.base.uploads, 'name', name);
-    if (idx < 0)
-        return null;
-
-    return global.base.uploads[idx].json;
-};
-
-apis.getApplyFile = function(body) {
-    var self = apis;
-    var iList = [self.getJSON(body.excel), self.getJSON(body.language), self.getJSON(body.event)];
-    var excelFile = [body.excel, body.language, body.event];
-    var nameList = ['excel', 'language', 'event'];
-    for(var i= 0, iLen=3; i<iLen; i++) {
-        if (iList[i])
-            return {
-                data : iList[i],
-                excel : excelFile[i],
-                category : nameList[i]
-            }
-    }
-    throw new Error('invalid_parameter');
-};
-
-apis.getCrc32 = function(path){
-    var buf = fs.readFileSync(path);
-    var crcVal = crc.buffer.crc32(buf);
-    return crcVal;
-};
-
 apis.ApiApplyTables = function(req, cb) {
 	var self = apis;
 	global.debug('AppParser.ApiApplyTables Call.');
 	try {
         var body = req.body;
         var iNum = parseInt(body.num);
-        var iFile = self.getApplyFile(body);
+        var iFile = miscUtils.getApplyFile(body);
         var keys = Object.keys(iFile.data);
         var qryList = [], changeLog = [];
         keys.forEach(function(key) {
@@ -183,7 +151,7 @@ apis.ApiApplyTables = function(req, cb) {
                             if(fileObj.sheet !== 'VersionList'){
                                 var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
                                 var item = global.base.dataVersions[pos];
-                                item.crc = self.getCrc32(fileObj.path);
+                                item.crc = miscUtils.getCrc32(fileObj.path);
                                 qryList.push(
                                     global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
                                 );
