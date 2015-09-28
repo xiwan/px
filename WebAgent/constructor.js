@@ -19,6 +19,7 @@ var Constructor = function(name) {
 	this.jobList = {};
     this.dataVersions = [];
     this.rootPath = '';
+    this.sqls = require('./sqls');
 };
 util.inherits(Constructor, base.Constructor);
 
@@ -107,12 +108,7 @@ Constructor.prototype.addAsyncJob = function(action) {
 Constructor.prototype.getVersionsFromDB = function(cb) {
     var self = this;
     try {
-        var iQry = [];
-        iQry.push('select x.sheet, x.category, y.version, y.json, y.crc, x.excel as name, y.date from T_APP_DATA x');
-        iQry.push('join (select * from T_APP_DATA_VERSION) y');
-        iQry.push('on (x.appId = y.appId and x.sheet = y.sheet and x.maxVersion = y.version)');
-        iQry.push(util.format('where x.appId = "%s"', global.const.appId));
-        self.systemDB.execute(iQry.join(' '), function(err, results) {
+        self.systemDB.execute(self.sqls.getVersionsFromDB(global.const.appId), function(err, results) {
             try {
                 if (err) throw err;
                 self.dataVersions = results;

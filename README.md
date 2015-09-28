@@ -415,7 +415,47 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 	sh start -db // 初始化数据库命令
 	
 执行以上命令后会自动在目标服务器内建立配置数据库。当数据库建立完毕后，会查询同目录下Name对应的数据库schema设计。比如game_system_test.xlsx。
+
+### sql Builder
+
+对于node来说方便的sql管理是十分重要的。一般的写法都是把sql与逻辑代码混淆在一起，这样给工程维护带来了难度；第二种方案是引入第三方的npm包，把复杂的sql抽象成js对象，这个本身是无可厚非的，但增加了一定的学习成本。projectX采用了一个折中的方案：集中管理sql。
+
+我们在模块下面建立文件sqls.js，它就是这个模块所有sql存放的地方。下面是两个例子
 	
+	var util = require('util');
+
+	module.exports = {
+		// 简单的sql链接
+		getVersionsFromDB : function(appId){
+        	var iQry = [];
+        	iQry.push('select x.sheet, x.category, y.version, y.json, y.crc, x.excel as name, y.date from T_APP_DATA x');
+        	iQry.push('join (select * from T_APP_DATA_VERSION) y');
+        	iQry.push('on (x.appId = y.appId and x.sheet = y.sheet and x.maxVersion = y.version)');
+        	iQry.push(util.format('where x.appId = "%s"', appId));
+        	return iQry.join(' ');
+		},
+		
+		// 或者利用对象来构建sql
+		ApiApplyTables_instertAppData : function(appId, key, excel, category, version) {
+			return {
+            	sql : 'INSERT INTO T_APP_DATA SET ?',
+            	data : {
+                	appId : appId,
+                	sheet : key,
+                	excel : excel,
+                	category : category,
+                	maxVersion : version
+            	}
+        	}
+		},
+		...
+	};
+
+然后在需要调用sql的地方：
+	
+	// global.base.sqls在constructor中
+	global.base.sqls.ApiApplyTables_instertAppData(global.const.appId, key, iFile.excel, category, version)
+
 ### 如何发布
 	
 #### 打包项目工程

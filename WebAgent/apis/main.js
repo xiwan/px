@@ -12,7 +12,6 @@ var apis = exports.apis = {};
 
 apis.ApiFileUploadReq = function(req, cb) {
 	global.debug('AppParser.ApiFileUploadReq Call.');
-
 	try {
 		var iAry = [];
 		for (var key in req.files) {
@@ -150,27 +149,19 @@ apis.ApiApplyTables = function(req, cb) {
                     crc : 0,
                 });
                 version = 1;
-                qryList.push({
-                    sql : 'INSERT INTO T_APP_DATA SET ?',
-                    data : {
-                        appId : global.const.appId,
-                        sheet : key,
-                        excel : iFile.excel,
-                        category : iFile.category,
-                        maxVersion : version
-                    }
-                });
+                qryList.push(
+                    global.base.sqls.ApiApplyTables_instertAppData(global.const.appId, key, iFile.excel, category, version)
+                );
             } else {
                 var item = global.base.dataVersions[pos];
-                if (item.json !== base64) {
+                //if (item.json !== base64) {
                     item.version++;
                     item.json = base64;
                     version = item.version;
-                    qryList.push({
-                        sql : 'UPDATE T_APP_DATA SET maxVersion = ? where appId = ? and sheet = ?',
-                        data : [item.version, global.const.appId, key]
-                    })
-                }
+                    qryList.push(
+                        global.base.sqls.ApiApplyTables_updateAppData(item.version, global.const.appId, key)
+                    );
+               // }
             }
             if (version > 0) {
                 changeLog.push({
@@ -193,17 +184,9 @@ apis.ApiApplyTables = function(req, cb) {
                                 var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
                                 var item = global.base.dataVersions[pos];
                                 item.crc = self.getCrc32(fileObj.path);
-                                qryList.push({
-                                    sql : 'INSERT INTO T_APP_DATA_VERSION SET ?',
-                                    data : {
-                                        appId : global.const.appId,
-                                        sheet : item.sheet,
-                                        version : item.version,
-                                        date : global.utils.toDateTime(new Date()),
-                                        json : item.json,
-                                        crc : item.crc
-                                    }
-                                })
+                                qryList.push(
+                                    global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
+                                );
                             }
                             job.status[fileObj.sheet].message = 'success';
                             //try { fs.unlinkSync(fileObj.path); } catch (ex) {}
