@@ -403,8 +403,11 @@ CmdServer.prototype.stop = function(argv, cb) {
     }
 
     function stopProcess(argv, cb) {
-        var service = argv.subs[1].toUpperCase();
-        var idx = argv.subs[2] ? parseInt(argv.subs[2]) : 0;
+        // var service = argv.subs[1].toUpperCase();
+        // var idx = argv.subs[2] ? parseInt(argv.subs[2]) : 0;
+        var argObj = argv.subs[1].split('.');
+        var service = argObj[0].toUpperCase();
+        var idx = argObj[1] ? parseInt(argObj[1]) : 0;
 
         var output = [];
         for(var i in global.base.process) {
