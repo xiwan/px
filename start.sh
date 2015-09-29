@@ -95,15 +95,26 @@ case "$1" in
 		fi
 		echo "pack number is : $packnumber"
 
-		if [ ! -e "$basePath/tgz/$packnumber" ]; then
+		if [ ! -e "$basePath/tgz/$packnumber" ] ; then
 			echo "not find packnumber : $packnumber"
 		  	exit 1
 		fi
 
 		mv $basePath/logs/nohup.out $basePath/logs/nohup.`date '+%j'`.bk
+
+		if [[ -z $mod ]] || [[ $mod != 'pod' ]] ; then
+			mod='dev'
+		fi
+
 		# nohup node ./ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/cfg/config.ini > "$basePath/logs/nohup.out" &
-		node $basePath/tgz/$packnumber/ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/$packnumber/cfg/config.ini
-		echo "set sm on server: ".`hostname`
+		
+		if [[ $mod == 'pod' ]] ; then
+			echo "set sm on server: ".`hostname`." mod: $mod"
+			nohup node $basePath/tgz/$packnumber/ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/$packnumber/cfg/config.ini &
+		else 
+			echo "set sm on server: ".`hostname`." mod: $mod"
+			node ./ServiceManager/app.js --idx=901 --cfg=./cfg/config.ini
+		fi
 		;;
 
 	-off )

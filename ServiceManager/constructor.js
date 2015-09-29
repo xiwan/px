@@ -189,14 +189,14 @@ Constructor.prototype.startProcess = function(item) {
         if (child.pid > 0) {
             return 'already_started_process';
         }	
-        var service = util.format('./%s/app.js',item.name);
+        var service = util.format(__dirname + '/../%s/app.js', item.name);
         child.process = new (forever.Monitor)(service, {
             max : 1,
             slient : true,
             args : ["--idx=" + item.idx]        	
         });	
-
-       child.process.on('exit', function() {
+        
+        child.process.on('exit', function() {
             var location = util.format('%s.%d', item.service, item.idx);
             child.pid = 0;
             child.time = new Date();
