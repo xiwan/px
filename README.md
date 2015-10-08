@@ -455,6 +455,19 @@ proxyServer模块主要是提供了一个类似connector的解决方案。它既
 	
 	// global.base.sqls在constructor中
 	global.base.sqls.ApiApplyTables_instertAppData(global.const.appId, key, iFile.excel, category, version)
+	
+### 定时器
+
+projectX没有采用cronjob形式来作为定时器，当然你也可以这么做。projectX采用的方案是启动独立进程**SchedulerAgent**来处理定时器任务。需要做的仍然是简单的配置一下commands文件
+
+下面是一个简单的例子，test1和test2分别是已经写好的任务，后面的数字就是间隔时间的毫秒(ms)
+	
+	module.exports = {
+		'test1' : 3000,
+		'test2' : 1000,
+	};
+	
+需要说明的是，定时器设定的最小粒度是50ms。小于这个时间的都会被认为是50ms。
 
 ### 如何发布
 	
