@@ -173,7 +173,7 @@ apis.getServices = function() {
 	        });
         }
 
-        console.log(iQryList);
+        // console.log(iQryList);
         logQry.executeTrans(iQryList,function(err, results){
             if (err) {
                 console.log("err:"+JSON.stringify(err));
