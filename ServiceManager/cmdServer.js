@@ -536,7 +536,7 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		iConstructorCtx.push('\'use strict\'');
 		iConstructorCtx.push('');
 		iConstructorCtx.push('var util = require(\'util\');');
-		iConstructorCtx.push('var __ = require(\'underscore\');');
+		iConstructorCtx.push('var __ = require(\'lodash\');');
 		iConstructorCtx.push('var async = require(\'async\');');
 		iConstructorCtx.push('var base = require(\'../libs/app_base\');');
 		iConstructorCtx.push('var commands = require(\'./commands\');');

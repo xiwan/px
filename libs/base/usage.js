@@ -1,7 +1,7 @@
 
 'use strict';
 var spawn = require('child_process').spawn;
-var __ = require('underscore');
+var __ = require('lodash');
 var fs = require('fs');	
 
 var Usage = function(interval) {
