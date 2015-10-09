@@ -160,7 +160,6 @@ Constructor.prototype.initRedis = function(cfg, cb) {
 			self.redis[key] = redisHash.createObject(cfg[key], key);
 			self.redis[key].init(callback);
 		}, cb);
-		
 	} catch (ex) {
 		cb(ex)
 	}

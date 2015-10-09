@@ -3,7 +3,6 @@
 TOOLSET := target
 TARGET := hello
 DEFS_Debug := \
-	'-DNODE_GYP_MODULE_NAME=hello' \
 	'-D_DARWIN_USE_64_BIT_INODE=1' \
 	'-D_LARGEFILE_SOURCE' \
 	'-D_FILE_OFFSET_BITS=64' \
@@ -40,13 +39,11 @@ CFLAGS_OBJC_Debug :=
 CFLAGS_OBJCC_Debug :=
 
 INCS_Debug := \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/include/node \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/src \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/deps/uv/include \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/deps/v8/include
+	-I/Users/changjun.zhou/.node-gyp/0.10.39/src \
+	-I/Users/changjun.zhou/.node-gyp/0.10.39/deps/uv/include \
+	-I/Users/changjun.zhou/.node-gyp/0.10.39/deps/v8/include
 
 DEFS_Release := \
-	'-DNODE_GYP_MODULE_NAME=hello' \
 	'-D_DARWIN_USE_64_BIT_INODE=1' \
 	'-D_LARGEFILE_SOURCE' \
 	'-D_FILE_OFFSET_BITS=64' \
@@ -81,10 +78,9 @@ CFLAGS_OBJC_Release :=
 CFLAGS_OBJCC_Release :=
 
 INCS_Release := \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/include/node \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/src \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/deps/uv/include \
-	-I/Users/xi.a.wan/.node-gyp/0.12.7/deps/v8/include
+	-I/Users/changjun.zhou/.node-gyp/0.10.39/src \
+	-I/Users/changjun.zhou/.node-gyp/0.10.39/deps/uv/include \
+	-I/Users/changjun.zhou/.node-gyp/0.10.39/deps/v8/include
 
 OBJS := \
 	$(obj).target/$(TARGET)/src/hello.o
@@ -116,28 +112,25 @@ $(obj).$(TOOLSET)/$(TARGET)/%.o: $(obj)/%.cc FORCE_DO_CMD
 # End of this set of suffix rules
 ### Rules for final target.
 LDFLAGS_Debug := \
-	-undefined dynamic_lookup \
 	-Wl,-search_paths_first \
 	-mmacosx-version-min=10.5 \
 	-arch x86_64 \
 	-L$(builddir)
 
 LIBTOOLFLAGS_Debug := \
-	-undefined dynamic_lookup \
 	-Wl,-search_paths_first
 
 LDFLAGS_Release := \
-	-undefined dynamic_lookup \
 	-Wl,-search_paths_first \
 	-mmacosx-version-min=10.5 \
 	-arch x86_64 \
 	-L$(builddir)
 
 LIBTOOLFLAGS_Release := \
-	-undefined dynamic_lookup \
 	-Wl,-search_paths_first
 
-LIBS :=
+LIBS := \
+	-undefined dynamic_lookup
 
 $(builddir)/hello.node: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(builddir)/hello.node: LIBS := $(LIBS)

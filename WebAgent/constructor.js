@@ -7,6 +7,7 @@ var base = require('../libs/app_base');
 var commands = require('./commands');
 var apis = require('./apis/main').apis;
 
+
 var Constructor = function(name) {
 	base.Constructor.apply(this, arguments);
 
@@ -56,12 +57,13 @@ Constructor.prototype.run = function(cb) {
 			showDir : false,
 			autoIndex : false
 		}, webPortNo);
-
         // server.listen(portNo, '0.0.0.0', function() {
         //     global.debug('starting up http-server, serving ' + '/public' + ' on port: ' + portNo.toString());
         // });
 
-        self.getVersionsFromDB(function(err) {
+        async.waterfall([
+            function(callback) {self.getVersionsFromDB(callback);},
+        ], function(err){
             global.debug('WebAgentServer.run. success');
             cb(err);
         });
@@ -140,6 +142,5 @@ Constructor.prototype.getCurrentVersion = function(cb){
         cb(ex);
     }
 };
-
 
 module.exports.Constructor = Constructor;

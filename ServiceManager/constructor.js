@@ -7,6 +7,8 @@ var forever = require('forever-monitor');
 
 var base = require('../libs/app_base');
 var server = require('./cmdServer');
+var mConn = require('../libs/base/mysqlConn');
+var redis = require('redis');
 
 // var helloAddon = require('../build/Release/hello');
 // var addAddon = require('../build/Release/add');
@@ -49,12 +51,20 @@ Constructor.prototype.run = function(cb) {
 
     self.hostname = require('os').hostname();
     self.ipAddr = global.utils.getIPAddress();
-
     self.cmds = new server.CmdServer(self.name + '.' + self.idx, self.cfg.tcp.port, '0.0.0.0');
     self.cmds.run({});
 
+    self.redis = global.base.redis.system.get(global.const.CHANNEL_USAGE);
 	self.monitorChildProcess(cb);
-
+    self.getServiceList();
+    self.subRedis = new redis.createClient();
+    self.subRedis.subscribe('AppCmds');
+    self.subRedis.on('message', function(channel, message) {
+        console.log(channel);
+        var iMsg = JSON.parse(message);
+        console.log(JSON.stringify(iMsg));
+        self.cmds.onMsg(null, iMsg.body);
+    });
     cb(null);
 };
 
@@ -165,15 +175,43 @@ Constructor.prototype.sendServiceAuxLog = function(iList) {
                 date : item.updateDate,
                 service : item.service,
                 idx : item.idx,
-                ipAddr : self.ipAddr,
+                hosts : item.hosts,
                 pid : item.pid,
                 cpu : item.cpu,
                 memory : item.memory,
-                rss : item.rss
+                rss : item.rss,
+                state: item.state
             })
         });
         if (iLog.length > 0) {
         	//global.info(JSON.stringify(iLog));
+            var output = {};
+            self.redis.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err,data) {
+                output = data;
+                for (var key in output) {
+                    output[key].pid = 0;
+                    output[key].state = 0;
+                    output[key].cpu = 0;
+                    output[key].memory = 0;
+                    output[key].pid = 0;
+                    output[key].rss = 0;
+                }
+
+                iLog.forEach(function(log) {
+                    var value = output[log.idx];
+                    if (value) {
+                        value.pid = log.pid;
+                        value.state = log.state;
+                        value.cpu = log.cpu;
+                        value.memory = log.memory;
+                        value.rss = log.rss;
+                        value.updateDate = log.date;
+                        output[log.idx] = value;
+                    }
+                });
+                // console.log(JSON.stringify(output));
+                self.redis.set(global.const.SERVICE_LIST_KEY, JSON.stringify(output));
+            });
         }
     } catch (ex) {
         global.warn('Constructor.sendServiceAuxLog. error:%s', ex.message);
@@ -228,6 +266,46 @@ Constructor.prototype.startProcess = function(item) {
         global.warn(ex.track);
         return 'fail';		
 	}
+};
+
+Constructor.prototype.getServiceList = function() {
+    var self = this;
+    var serviceCfg = global.base.cfg.services;
+    var logs = {};
+    try {
+        for (var idx in global.base.process) {
+            var item = global.base.process[idx];
+            var host = 'localhost';
+            var cfg = serviceCfg[item.name];
+            if (cfg) {
+                for (var j = 0; j < cfg.machines.length; ++j) {
+                    var args = cfg.machines[j].split(':');
+                    if (args[1] == item.idx) {
+                        host = args[0];
+                        break;
+                    }
+                }
+            }
+
+            logs[idx] = {
+                idx : item.idx,
+                service : item.name,
+                hosts : host,
+                pid : item.pid,
+                state : item.state,
+                cpu : item.usage ? item.usage.cpu : 0,
+                memory : item.usage ? item.usage.memory : 0,
+                rss : item.usage ? item.usage.rss : 0,
+                startDate : item.startDate,
+                updateDate : 0,
+            };
+        }
+
+        self.redis.set(global.const.SERVICE_LIST_KEY, JSON.stringify(logs));
+    }catch (ex) {
+        global.warn(ex.track);
+        return 'fail';
+    }
 };
 
 module.exports.Constructor = Constructor;

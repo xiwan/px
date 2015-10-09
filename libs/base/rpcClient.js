@@ -100,7 +100,7 @@ ClientHashRing.prototype.remove = function(key, flag, error) {
         self.server[key] = null;
         delete self.server[key];
 
-        global.warn('ClientHashRing.remove. key:%s, flag:%s, err:%s', key, flag, error.message);
+        // global.warn('ClientHashRing.remove. key:%s, flag:%s, err:%s', key, flag, error.message);
     } catch (ex) {
         global.warn('ClientHashRing.remove. key:%s, flag:%s, ex:%s', key, flag, ex.message);
     }

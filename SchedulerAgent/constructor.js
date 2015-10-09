@@ -47,7 +47,6 @@ Constructor.prototype.run = function(cb) {
 		}
 
 		setTimeout(simInterval, 5000);
-
 		cb(null);
 	} catch (ex) {
 		cb(ex)

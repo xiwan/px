@@ -43,5 +43,9 @@ module.exports = {
             }
         }
 	},
+
+    GetServiceList : function() {
+        return ['SELECT * FROM T_MON_SERVICE'];
+    },
 	
 };
