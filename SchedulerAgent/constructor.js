@@ -31,7 +31,9 @@ Constructor.prototype.run = function(cb) {
 			if (!self.timerFuncs[key]) {
 				self.timerFuncs[key] = {};
 			}
-			self.timerFuncs[key].des = Math.ceil((self.commands[key] || self.clockINT)/self.clockINT);
+			// ignore small interval
+			if (self.commands[key] >= self.clockINT)
+				self.timerFuncs[key].des = Math.ceil((self.commands[key] || self.clockINT)/self.clockINT);
 
 			var makeTimerFunc = self.makeTimerObj(key);
 			self.timmerArray.push(makeTimerFunc);

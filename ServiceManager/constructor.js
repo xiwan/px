@@ -1,7 +1,7 @@
 'use strict';
 
 var util = require('util');
-var __ = require('underscore');
+var __ = require('lodash');
 var async = require('async');
 var forever = require('forever-monitor');
 

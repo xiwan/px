@@ -3,7 +3,7 @@
 var fs = require('fs');
 var async = require('async');
 var util = require('util');
-var __ = require('underscore');
+var __ = require('lodash');
 
 // var monsters = [];
 // var players = [];

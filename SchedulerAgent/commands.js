@@ -1,5 +1,5 @@
 module.exports = {
-	'test1' : 3000,
+	'test1' : 0,
 	'test2' : 1000,
 };
 
