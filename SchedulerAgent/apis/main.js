@@ -153,7 +153,7 @@ apis.getServices = function() {
 	redis.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err, data) {
 		if (err) return;
 		var iQryList = [];
-		// iQryList.push('DELETE FROM `T_MON_SERVICE`');
+		iQryList.push('DELETE FROM `T_MON_SERVICE`');
         for (var key in data) {
             var log = data[key];
             iQryList.push({
