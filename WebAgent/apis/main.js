@@ -243,8 +243,10 @@ apis.ApiActionServiceReq = function(req, cb) {
             service = service + '.' + body.idx.toString();
         }
         iCmd.push(service);
-        var redisClient = new redis.createClient();
-        redisClient.publish('AppCmds', JSON.stringify({action : body.action,  body : iCmd.join(' ')}));
+        var redisCli = global.base.redis.system.get(global.const.CHANNEL_USAGE);
+        redisCli.emit('subscribe', 'AppCmds', {});
+        if (redisCli._client) console.log('aaaa');
+        redisCli._client && redisCli._client.publish('AppCmds', JSON.stringify({action : body.action,  body : iCmd.join(' ')}));
         global.debug('AppParser.ApiActionServiceReq Result. success.');
         cb(null, iAck);
     } catch (ex) {
