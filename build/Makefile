@@ -49,7 +49,15 @@ LDFLAGS.target ?= $(LDFLAGS)
 AR.target ?= $(AR)
 
 # C++ apps need to be linked with g++.
-LINK ?= $(CXX.target)
+#
+# Note: flock is used to seralize linking. Linking is a memory-intensive
+# process so running parallel links can often lead to thrashing.  To disable
+# the serialization, override LINK via an envrionment variable as follows:
+#
+#   export LINK=g++
+#
+# This will allow make to invoke N linker processes as specified in -jN.
+LINK ?= ./gyp-mac-tool flock $(builddir)/linker.lock $(CXX.target)
 
 # TODO(evan): move all cross-compilation logic to gyp-time so we don't need
 # to replicate this environment fallback in make as well.
@@ -326,13 +334,28 @@ ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
 endif
 ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
     $(findstring $(join ^,$(prefix)),\
+                 $(join ^,callback.target.mk)))),)
+  include callback.target.mk
+endif
+ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
+    $(findstring $(join ^,$(prefix)),\
+                 $(join ^,funFactory.target.mk)))),)
+  include funFactory.target.mk
+endif
+ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
+    $(findstring $(join ^,$(prefix)),\
                  $(join ^,hello.target.mk)))),)
   include hello.target.mk
 endif
+ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
+    $(findstring $(join ^,$(prefix)),\
+                 $(join ^,objFactory.target.mk)))),)
+  include objFactory.target.mk
+endif
 
 quiet_cmd_regen_makefile = ACTION Regenerating $@
-cmd_regen_makefile = cd $(srcdir); /opt/local/lib/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "--toplevel-dir=." -I/Users/xi.a.wan/Documents/dev/projectX/build/config.gypi -I/opt/local/lib/node_modules/node-gyp/addon.gypi -I/Users/xi.a.wan/.node-gyp/0.12.7/common.gypi "--depth=." "-Goutput_dir=." "--generator-output=build" "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/xi.a.wan/.node-gyp/0.12.7" "-Dnode_gyp_dir=/opt/local/lib/node_modules/node-gyp" "-Dnode_lib_file=node.lib" "-Dmodule_root_dir=/Users/xi.a.wan/Documents/dev/projectX" binding.gyp
-Makefile: $(srcdir)/../../../.node-gyp/0.12.7/common.gypi $(srcdir)/../../../../../opt/local/lib/node_modules/node-gyp/addon.gypi $(srcdir)/build/config.gypi $(srcdir)/binding.gyp
+cmd_regen_makefile = cd $(srcdir); /Users/changjun.zhou/.nvm/v0.10.39/lib/node_modules/npm/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "--toplevel-dir=." -I/Users/changjun.zhou/Documents/Cjzhou/projectX_Server/build/config.gypi -I/Users/changjun.zhou/.nvm/v0.10.39/lib/node_modules/npm/node_modules/node-gyp/addon.gypi -I/Users/changjun.zhou/.node-gyp/0.10.39/common.gypi "--depth=." "-Goutput_dir=." "--generator-output=build" "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/changjun.zhou/.node-gyp/0.10.39" "-Dmodule_root_dir=/Users/changjun.zhou/Documents/Cjzhou/projectX_Server" binding.gyp
+Makefile: $(srcdir)/../../../.nvm/v0.10.39/lib/node_modules/npm/node_modules/node-gyp/addon.gypi $(srcdir)/build/config.gypi $(srcdir)/binding.gyp $(srcdir)/../../../.node-gyp/0.10.39/common.gypi
 	$(call do_cmd,regen_makefile)
 
 # "all" is a concatenation of the "all" targets from all the included

@@ -5,12 +5,12 @@ var async = require('async');
 var util = require('util');
 
 var mConn = require('../../libs/base/mysqlConn');
-var iApp = require('../../libs/schema/system/App.js');
+// var iApp = require('../../libs/schema/system/App.js');
 
 var GameSystem = exports.GameSystem = function(property) {
     var self = this;
     self.app = mConn.createObject(property, 'systemDB');
-    self.app.init(iApp.getDictionary());
+    // self.app.init(iApp.getDictionary());
 };
 
 GameSystem.prototype.testABC = function(cb){
