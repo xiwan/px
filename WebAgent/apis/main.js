@@ -8,8 +8,10 @@ var crc = require('../../libs/crc');
 var langUtils = require('../utils/lang_utils');
 var appUtils = require('../utils/app_utils');
 var miscUtils = require('../utils/misc_utils');
-
+var mConn = require('../../libs/base/mysqlConn');
 var apis = exports.apis = {};
+var base = require('../../libs/app_base');
+var redis = require('redis');
 
 apis.ApiFileUploadReq = function(req, cb) {
 	global.debug('AppParser.ApiFileUploadReq Call.');
@@ -204,6 +206,52 @@ apis.ApiGetAsyncJobData = function(req, cb) {
         cb(ex);
     }
 };
+
+apis.ApiGetServiceList = function(req, cb) {
+    var protocol = req.body;
+    try {
+        var self = apis;
+
+        var list = [];
+        var redisCli = global.base.redis.system.get(global.const.CHANNEL_USAGE);
+        redisCli.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err,data) {
+            if (err) {
+                cb(err);
+                return;
+            }
+            for (var key in data) {
+                list.push(data[key]);
+            }
+            cb(null, list);
+        });
+    } catch (ex) {
+        global.warn('AppParser.ApiGetServiceList. error:%s', ex.message);
+        cb(ex); 
+    }
+}
+
+apis.ApiActionServiceReq = function(req, cb) {
+    var self = apis;
+    var body = req.body;
+    try {
+        var iAck = {result : 'success'};
+        if (body.service == 'WA')
+            throw new Error('no_permission');
+        var iCmd = [body.action, 'process'];
+        var service = body.service;
+        if (body.idx) {
+            service = service + '.' + body.idx.toString();
+        }
+        iCmd.push(service);
+        var redisClient = new redis.createClient();
+        redisClient.publish('AppCmds', JSON.stringify({action : body.action,  body : iCmd.join(' ')}));
+        global.debug('AppParser.ApiActionServiceReq Result. success.');
+        cb(null, iAck);
+    } catch (ex) {
+        global.warn('AppParser.ApiActionServiceReq. error:%s', ex.message);
+        cb(ex);
+    }
+}
 
 function apiDetector() {
     fs.readdir(__dirname, function(err, files) {

@@ -1,18 +1,19 @@
 {
-	"author": "xi.wan <5155280@qq.com>",  
-
-  	"name": "projectX",
-  	"version": "1.0.0",
-  	"license": "MIT",
-	"repository": {
-	    "type": "git",
-	    "url": "git://github.com/xiwan/projectX"
-	},
-	"dependencies": {
-	    "ws" : "^0.7.2",
-	    "forever-monitor" : "~1.5.2",
-	    "async" : "1.x",
-	    "underscore" : "^1.8.3",
-	    "mysql" : "~2.7.0"
-	}
+  "author": "xi.wan <5155280@qq.com>",
+  "name": "projectX",
+  "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/xiwan/projectX"
+  },
+  "dependencies": {
+    "async": "1.x",
+    "forever-monitor": "~1.5.2",
+    "ini": "^1.3.4",
+    "log4js": "^0.6.27",
+    "mysql": "~2.7.0",
+    "underscore": "^1.8.3",
+    "ws": "^0.7.2"
+  }
 }

@@ -8,6 +8,8 @@ module.exports = {
 		'ApiConvertToJson',
 		'ApiApplyTables',
 		'ApiGetAsyncJobData',
+		'ApiGetServiceList',
+		'ApiActionServiceReq',
 	],
 };
 
