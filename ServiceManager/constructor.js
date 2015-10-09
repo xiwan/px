@@ -54,9 +54,10 @@ Constructor.prototype.run = function(cb) {
     self.cmds = new server.CmdServer(self.name + '.' + self.idx, self.cfg.tcp.port, '0.0.0.0');
     self.cmds.run({});
 
-    self.redisSys = global.base.redis.system.get(global.const.CHANNEL_USAGE);
+    
 	self.monitorChildProcess(cb);
     self.getServiceList();
+    self.redisSys = global.base.redis.system.get(global.const.CHANNEL_USAGE);
     self.redisSys.emit('subscribe', 'AppCmds', {});
     self.redisSys._client.subscribe('AppCmds');
     self.redisSys._client.on('message', function(channel, message) {
