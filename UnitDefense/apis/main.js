@@ -4,24 +4,10 @@ var fs = require('fs');
 var async = require('async');
 var util = require('util');
 var __ = require('lodash');
+var base = require('../../libs/app_base');
 
 var apis = exports.apis = {};
-
-apis.testABC = function(protocol, cb) {
-	var self = this;
-	self.gameSystem.testABC(function(err, results){
-		cb(err, {msg: results})		
-	});
-
-};
-
-apis.test1 = function(protocol, cb) {
-	var self = this;
-	self.gameSystem.test1(function(err, results){
-		cb(err, {msg: results})		
-	});	
-};
-
+base.apiDetector(apis, __dirname);
 
 var move = {
 	CharGid : 0,
@@ -121,24 +107,3 @@ apis.StartScene = function(protocol, cb) {
 		cb(ex);
 	}
 };
-
-
-function apiDetector() {
-    fs.readdir(__dirname, function(err, files) {
-        if (err) return;
-        files.forEach(function(f) {
-            if (f != 'main.js'){
-                var __apis = require('./' + f.replace('.js', '')).apis;
-                for (var key in __apis) {
-                    var handler = __apis[key];
-                    if (!apis[key]) {
-                        apis[key] = handler;
-                    }else {
-                        global.warn('there is duplicate handlers in apis: %s, please rename it', key);
-                    }
-                }
-            }
-        });
-    });   
-}
-apiDetector();

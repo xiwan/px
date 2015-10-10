@@ -8,10 +8,11 @@ var crc = require('../../libs/crc');
 var langUtils = require('../utils/lang_utils');
 var appUtils = require('../utils/app_utils');
 var miscUtils = require('../utils/misc_utils');
-var mConn = require('../../libs/base/mysqlConn');
-var apis = exports.apis = {};
 var base = require('../../libs/app_base');
-var redis = require('redis');
+
+var apis = exports.apis = {};
+
+base.apiDetector(apis, __dirname);
 
 apis.ApiFileUploadReq = function(req, cb) {
 	global.debug('AppParser.ApiFileUploadReq Call.');
@@ -253,23 +254,3 @@ apis.ApiActionServiceReq = function(req, cb) {
         cb(ex);
     }
 }
-
-function apiDetector() {
-    fs.readdir(__dirname, function(err, files) {
-        if (err) return;
-        files.forEach(function(f) {
-            if (f != 'main.js'){
-                var __apis = require('./' + f.replace('.js', '')).apis;
-                for (var key in __apis) {
-                    var handler = __apis[key];
-                    if (!apis[key]) {
-                        apis[key] = handler;
-                    }else {
-                        global.warn('there is duplicate handlers in apis: %s, please rename it', key);
-                    }
-                }
-            }
-        });
-    });   
-}
-apiDetector();

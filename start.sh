@@ -115,9 +115,6 @@ case "$1" in
 			echo "set sm on server: ".`hostname`." mod: $mod"
 			node ./ServiceManager/app.js --idx=901 --cfg=./cfg/config.ini
 		fi
-		
-		echo "set sm on server: ".`hostname`
-
 		;;
 
 	-off )
@@ -135,7 +132,7 @@ case "$1" in
 	-db )
 		cd $binPath
 		node mysql_init_database.js
-		# node mysql_init_schema.js
+		node mysql_init_schema.js
 		cd $basePath
 		;;
 esac

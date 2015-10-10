@@ -573,28 +573,10 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		iApisCtx.push('\'use strict\'');
 		iApisCtx.push('');
         iApisCtx.push('var fs = require(\'fs\');');
+        iApisCtx.push('var base = require(\'../../libs/app_base\');');
         iApisCtx.push('');
         iApisCtx.push('var apis = exports.apis = {};');
-        iApisCtx.push('');
-        iApisCtx.push('function apiDetector() {');
-        iApisCtx.push('fs.readdir(__dirname, function(err, files) {');
-        iApisCtx.push('\tif (err) return;');
-        iApisCtx.push('\tfiles.forEach(function(f) {');
-        iApisCtx.push('\t\tif (f != \'main.js\'){');
-        iApisCtx.push('\t\t\tvar __apis = require(\'./\' + f.replace(\'.js\', \'\')).apis;');
-        iApisCtx.push('\t\t\tfor (var key in __apis) {');
-        iApisCtx.push('\t\t\t\tvar handler = __apis[key];');
-        iApisCtx.push('\t\t\t\tif (!apis[key]) {');
-        iApisCtx.push('\t\t\t\t\tapis[key] = handler;');
-        iApisCtx.push('\t\t\t\t}else {');
-        iApisCtx.push('\t\t\t\t\tglobal.warn(\'there is duplicate handlers in apis: %s, please rename it\', key);');
-        iApisCtx.push('\t\t\t\t}');
-        iApisCtx.push('\t\t\t}');
-        iApisCtx.push('\t\t}');
-        iApisCtx.push('\t});');
-        iApisCtx.push('});');
-        iApisCtx.push('}');
-        iApisCtx.push('apiDetector();');
+        iApisCtx.push('base.apiDetector(apis, __dirname);');
 		
 		try { 
 			fs.mkdirSync(iDir); 

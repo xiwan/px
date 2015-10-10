@@ -7,7 +7,6 @@ var base = require('../libs/app_base');
 var commands = require('./commands');
 var apis = require('./apis/main').apis;
 
-
 var Constructor = function(name) {
 	base.Constructor.apply(this, arguments);
 

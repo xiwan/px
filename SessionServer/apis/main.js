@@ -2,8 +2,10 @@
 
 var fs = require('fs');
 var util = require('util');
+var base = require('../../libs/app_base');
 
 var apis = exports.apis = {};
+base.apiDetector(apis, __dirname);
 
 // client login: create session for client
 apis.EFClientLogin = function(protocol, cb){
@@ -148,24 +150,3 @@ apis.HeartBeat = function(socket, protocol, cb) {
     cb(null, { result : 'success'});
 };
 
-
-
-function apiDetector() {
-    fs.readdir(__dirname, function(err, files) {
-        if (err) return;
-        files.forEach(function(f) {
-            if (f != 'main.js'){
-                var __apis = require('./' + f.replace('.js', '')).apis;
-                for (var key in __apis) {
-                    var handler = __apis[key];
-                    if (!apis[key]) {
-                        apis[key] = handler;
-                    }else {
-                        global.warn('there is duplicate handlers in apis: %s, please rename it', key);
-                    }
-                }
-            }
-        });
-    });   
-}
-apiDetector();

@@ -4,10 +4,8 @@ var util = require('util');
 var __ = require('lodash');
 var async = require('async');
 var forever = require('forever-monitor');
-
 var base = require('../libs/app_base');
 var server = require('./cmdServer');
-var mConn = require('../libs/base/mysqlConn');
 var redis = require('redis');
 
 // var helloAddon = require('../build/Release/hello');

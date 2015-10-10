@@ -281,7 +281,6 @@ Constructor.prototype.overloading = function(apis, commands){
         self.policy.load(self, commands);
 };
 
-
 module.exports.Constructor = Constructor;
 
 

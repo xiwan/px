@@ -4,7 +4,8 @@ var fs = require('fs');
 var async = require('async');
 var util = require('util');
 var __ = require('lodash');
-var mConn = require('../../libs/base/mysqlConn');
+var base = require('../../libs/app_base');
+//var mConn = require('../../libs/base/mysqlConn');
 
 // var monsters = [];
 // var players = [];
@@ -16,6 +17,8 @@ var monsterAttr = {
 };
 
 var apis = exports.apis = {};
+
+base.apiDetector(apis, __dirname);
 
 apis.refreshObejct = function(protocol, cb){
 	objects = protocol.data;
@@ -121,30 +124,11 @@ apis.simPlayers = function(protocol, cb) {
 	}
 };
 
-function apiDetector() {
-    fs.readdir(__dirname, function(err, files) {
-        if (err) return;
-        files.forEach(function(f) {
-            if (f != 'main.js'){
-                var __apis = require('./' + f.replace('.js', '')).apis;
-                for (var key in __apis) {
-                    var handler = __apis[key];
-                    if (!apis[key]) {
-                        apis[key] = handler;
-                    }else {
-                        global.warn('there is duplicate handlers in apis: %s, please rename it', key);
-                    }
-                }
-            }
-        });
-    });   
-}
-apiDetector();
-
 apis.getServices = function() {
 	var self = this;
 	var redis = global.base.redis.system.get(global.const.CHANNEL_USAGE);
 	if (!redis) return;
+	var mConn = base.MysqlConn;
 	var logQry = mConn.createObject(global.base.cfg.mysql, 'systemDB');
 	if (!logQry) return;
     logQry.use('master');
@@ -173,7 +157,6 @@ apis.getServices = function() {
 	        });
         }
 
-        // console.log(iQryList);
         logQry.executeTrans(iQryList,function(err, results){
             if (err) {
                 console.log("err:"+JSON.stringify(err));
@@ -182,21 +165,3 @@ apis.getServices = function() {
         });
 	});
 };
-
-// public class MoveSync : GameSync {
-// 	public string CharGid;
-// 	public float destinationX;
-// 	public float destinationY;
-// 	public float destinationZ;
-// 	public float positionX;
-// 	public float positionY;
-// 	public float positionZ;
-// 	public float rotationX;
-// 	public float rotationY;
-// 	public float rotationZ;
-// 	public MoveSync() {
-// 		SyncName = "Move";
-// 	}
-// }
-
-// {"result":"success","linkNo":0,"links":[{"idx":12,"rewardIds":[],"bossReward":0,"key":1,"monsters":[{"id":20122,"pos":1,"gid":60,"gold":4,"exp":2},{"id":20122,"pos":2,"gid":61,"gold":4,"exp":2},{"id":20101,"pos":4,"gid":63,"gold":2,"exp":1},{"id":20101,"pos":5,"gid":64,"gold":2,"exp":1}]},{"idx":37,"rewardIds":[],"bossReward":0,"key":2,"monsters":[{"id":20103,"pos":1,"gid":160,"gold":7,"exp":2},{"id":20122,"pos":3,"gid":162,"gold":4,"exp":2}]},{"idx":51,"rewardIds":[],"bossReward":0,"key":3,"monsters":[{"id":20103,"pos":1,"gid":260,"gold":7,"exp":2},{"id":20115,"pos":4,"gid":263,"gold":4,"exp":1},{"id":20115,"pos":5,"gid":264,"gold":4,"exp":1},{"id":20115,"pos":8,"gid":267,"gold":4,"exp":1}]},{"idx":67,"rewardIds":[],"bossReward":0,"key":4,"monsters":[{"id":20101,"pos":1,"gid":360,"gold":2,"exp":1},{"id":20101,"pos":3,"gid":362,"gold":2,"exp":1},{"id":20101,"pos":4,"gid":363,"gold":2,"exp":1}]},{"idx":78,"rewardIds":[],"bossReward":0,"key":5,"monsters":[{"id":20103,"pos":1,"gid":460,"gold":7,"exp":2},{"id":20101,"pos":4,"gid":463,"gold":2,"exp":1},{"id":20101,"pos":5,"gid":464,"gold":2,"exp":1},{"id":20117,"pos":8,"gid":467,"gold":4,"exp":1}],"goblin":{"id":400001,"level":1,"hits":30,"goldDrop":30,"goldTotal":900,"ggid":39}}]}

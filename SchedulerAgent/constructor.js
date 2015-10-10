@@ -4,7 +4,6 @@ var util = require('util');
 var __ = require('underscore');
 var async = require('async');
 var base = require('../libs/app_base');
-
 var apis = require('./apis/main').apis;
 
 var Constructor = function(name) {
@@ -21,7 +20,7 @@ Constructor.prototype.run = function(cb) {
 	try {
 		// init policy instance & load commands
 		self.policy = base.Policy.createObject();
-		self.overloading(apis, {});
+		self.overloading(apis, {}, __dirname);
 
 		//init rpc server or client
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);
