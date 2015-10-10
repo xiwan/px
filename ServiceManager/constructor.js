@@ -54,13 +54,13 @@ Constructor.prototype.run = function(cb) {
     self.cmds = new server.CmdServer(self.name + '.' + self.idx, self.cfg.tcp.port, '0.0.0.0');
     self.cmds.run({});
 
-    self.redis = global.base.redis.system.get(global.const.CHANNEL_USAGE);
+    
 	self.monitorChildProcess(cb);
     self.getServiceList();
-    self.subRedis = new redis.createClient();
-    self.subRedis.subscribe('AppCmds');
-    self.subRedis.on('message', function(channel, message) {
-        console.log(channel);
+    self.redisSys = global.base.redis.system.get(global.const.CHANNEL_USAGE);
+    self.redisSys.emit('subscribe', 'AppCmds', {});
+    self.redisSys._client.subscribe('AppCmds');
+    self.redisSys._client.on('message', function(channel, message) {
         var iMsg = JSON.parse(message);
         console.log(JSON.stringify(iMsg));
         self.cmds.onMsg(null, iMsg.body);
@@ -186,7 +186,7 @@ Constructor.prototype.sendServiceAuxLog = function(iList) {
         if (iLog.length > 0) {
         	//global.info(JSON.stringify(iLog));
             var output = {};
-            self.redis.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err,data) {
+            self.redisSys.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err,data) {
                 output = data;
                 for (var key in output) {
                     output[key].pid = 0;
@@ -210,7 +210,7 @@ Constructor.prototype.sendServiceAuxLog = function(iList) {
                     }
                 });
                 // console.log(JSON.stringify(output));
-                self.redis.set(global.const.SERVICE_LIST_KEY, JSON.stringify(output));
+                self.redisSys.set(global.const.SERVICE_LIST_KEY, JSON.stringify(output));
             });
         }
     } catch (ex) {
@@ -301,7 +301,7 @@ Constructor.prototype.getServiceList = function() {
             };
         }
 
-        self.redis.set(global.const.SERVICE_LIST_KEY, JSON.stringify(logs));
+        self.redisSys.set(global.const.SERVICE_LIST_KEY, JSON.stringify(logs));
     }catch (ex) {
         global.warn(ex.track);
         return 'fail';
