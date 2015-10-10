@@ -89,35 +89,32 @@ while [ -n "$1" ]
 do 
 case "$1" in
 	-on )
-
-		# re='^[0-9]+$'
-		# if ! [[ $packnumber =~ $re ]] ; then
-		# 	packnumber="`mysql -u root -h $dbhost -p'pa$$w0rd' -N  -e "SELECT deployVersion FROM test_game_system.t_app_base"`"
-		# fi
-		# echo "pack number is : $packnumber"
-
-		# if [ ! -e "$basePath/tgz/$packnumber" ] ; then
-		# 	echo "not find packnumber : $packnumber"
-		#   	exit 1
-		# fi
-
-		# mv $basePath/logs/nohup.out $basePath/logs/nohup.`date '+%j'`.bk
+		mv $basePath/logs/nohup.out $basePath/logs/nohup.`date '+%j'`.bk
 		
-		# if [[ -z $mod ]] || [[ $mod != 'pod' ]] ; then
-		# 	mod='dev'
-		# fi
+		if [[ -z $mod ]] || [[ $mod != 'pod' ]] ; then
+			mod='dev'
+		fi
 
 		# nohup node ./ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/cfg/config.ini > "$basePath/logs/nohup.out" &
-		node ./ServiceManager/app.js --idx=901 --cfg=$basePath/cfg/config.ini
-
+		# node ./ServiceManager/app.js --idx=901 --cfg=$basePath/cfg/config.ini
 		
-		# if [[ $mod == 'pod' ]] ; then
-		# 	echo "set sm on server: ".`hostname`." mod: $mod"
-		# 	nohup node $basePath/tgz/$packnumber/ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/$packnumber/cfg/config.ini &
-		# else 
-		# 	echo "set sm on server: ".`hostname`." mod: $mod"
-		# 	node ./ServiceManager/app.js --idx=901 --cfg=./cfg/config.ini
-		# fi
+		if [[ $mod == 'pod' ]] ; then
+			re='^[0-9]+$'
+			if ! [[ $packnumber =~ $re ]] ; then
+				packnumber="`mysql -u root -h $dbhost -p'pa$$w0rd' -N  -e "SELECT deployVersion FROM test_game_system.t_app_base"`"
+			fi
+			echo "pack number is : $packnumber"
+
+			if [ ! -e "$basePath/tgz/$packnumber" ] ; then
+				echo "not find packnumber : $packnumber"
+			  	exit 1
+			fi
+			echo "set sm on server: ".`hostname`." mod: $mod"
+			nohup node $basePath/tgz/$packnumber/ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/$packnumber/cfg/config.ini &
+		else 
+			echo "set sm on server: ".`hostname`." mod: $mod"
+			node ./ServiceManager/app.js --idx=901 --cfg=./cfg/config.ini
+		fi
 		
 		echo "set sm on server: ".`hostname`
 
