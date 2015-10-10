@@ -1,0 +1,11 @@
+#v1.01
+#更新了auto_deploy_db.sh脚本，加入了mongodb install
+
+#v1.02
+#更新了auto_deploy_db.sh脚本，加入了redis,memcached install
+
+#v1.03
+#加入了nginx install
+
+#v1.04
+#加入了mysql install

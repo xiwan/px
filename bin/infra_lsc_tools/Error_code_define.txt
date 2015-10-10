@@ -1,0 +1,54 @@
+0 Program execution is normal 程序正常执行
+000001 The program input parameter error 程序输入参数错误
+
+system
+000100 A file or directory does not exist 文件或目录不存在
+000101 Failed to create link 创建软连失败
+000102 Script failed to create lock 脚本创建锁失败
+000103 Command does not exist 命令不存在
+
+make
+000201 make error make错误
+000202 make install error  make install错误
+000203 configure error configure错误
+
+check
+900100 check_info function.Check the information is not correct.
+人工检验到信息不正确
+900101 ip_ssh_check function.Can't ssh to ${check_ip}.
+ssh无法连结至${check_ip}
+
+tar
+100100 run tar zcvf error 执行tar zcvf命令错误
+100101 run tar zxvf error 执行tar zxvf命令错误
+
+mongodb
+100200 Mongo server installation configuration file already exists or
+starting. mongodb安装配置文件已存在或正在运行
+100201 Mongo start fail. mongod启动失败
+100202 Mongod not find. mongod不存在
+100203 Run mongo js failed. 执行mongo js 失败
+100204 Fail to run mongodb_install.sh
+
+memcached
+100300 The host already has a memcached instance.
+Memcached安装配置文件已存在或正在运行
+100301 Memcached start fail. Memcached启动失败
+
+Redis
+100400 The host already has a redis instance. Redis安装配置文件已存在或正在运行
+100401 Redis start fail. redis启动失败
+
+Nginx
+100500 The host already has a redis instance. Nginx安装配置文件已存在或正在运行
+
+Node
+100600 The host already has a Node instance. Node安装配置文件已存在或正在运行
+
+Python
+100700 The host already has python and version is greater than the 2.7.x. Python已安装并且版本大于2.7.x
+
+lvm
+500101 Logical volume already exists in volume group. 逻辑卷在卷组已经存在
+
+

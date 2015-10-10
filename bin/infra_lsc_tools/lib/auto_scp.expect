@@ -1,0 +1,11 @@
+#!/usr/bin/expect
+set SCP_IP [lindex $argv 0]
+set SCP_NAME [lindex $argv 1]
+set SCP_PATH [lindex $argv 2]
+set ROOT_PASS [lindex $argv 3]
+
+spawn scp $SCP_NAME root@$SCP_IP:$SCP_PATH
+expect "root@$SCP_IP's password:"
+send "$ROOT_PASS\r"
+expect eof
+exit
