@@ -126,42 +126,47 @@ apis.simPlayers = function(protocol, cb) {
 
 apis.getServices = function() {
 	var self = this;
-	var redis = global.base.redis.system.get(global.const.CHANNEL_USAGE);
-	if (!redis) return;
-	var mConn = base.MysqlConn;
-	var logQry = mConn.createObject(global.base.cfg.mysql, 'systemDB');
-	if (!logQry) return;
-    logQry.use('master');
-	var list = [];
-	console.log("apis getServices");
-	redis.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err, data) {
-		if (err) return;
-		var iQryList = [];
-		iQryList.push('DELETE FROM `T_MON_SERVICE`');
-        for (var key in data) {
-            var log = data[key];
-            iQryList.push({
-            	sql : 'INSERT INTO T_MON_SERVICE SET ?',
-	            data : {
-	                idx : log.idx,
-	                service : log.service,
-	                hosts : log.hosts,
-	                pid : log.pid,
-	                state : log.state,
-	                cpu : log.cpu,
-	                memory : log.memory,
-	                rss : log.rss,
-	                startDate : log.startDate,
-	                updateDate : log.updateDate
+	try {
+		var redis = global.base.redis.system.get(global.const.CHANNEL_USAGE);
+		if (!redis) return;
+		var logQry = mConn.createObject(global.base.cfg.mysql, 'systemDB');
+		if (!logQry) return;
+	    logQry.use('master');
+		var list = [];
+		redis.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err, data) {
+			if (err){
+			    global.warn(err);
+			    return;
+			}
+			var iQryList = [];
+			iQryList.push('DELETE FROM `T_MON_SERVICE`');
+	        for (var key in data) {
+	            var log = data[key];
+	            iQryList.push({
+	            	sql : 'INSERT INTO T_MON_SERVICE SET ?',
+		            data : {
+		                idx : log.idx,
+		                service : log.service,
+		                hosts : log.hosts,
+		                pid : log.pid,
+		                state : log.state,
+		                cpu : log.cpu,
+		                memory : log.memory,
+		                rss : log.rss,
+		                startDate : log.startDate,
+		                updateDate : log.updateDate
+		            }
+		        });
+	        }
+
+	        // console.log(iQryList);
+	        logQry.executeTrans(iQryList,function(err, results){
+	            if (err) {
+	                global.warn(err);
 	            }
 	        });
-        }
-
-        logQry.executeTrans(iQryList,function(err, results){
-            if (err) {
-                console.log("err:"+JSON.stringify(err));
-                return;
-            }
-        });
-	});
+		});
+	}catch(ex) {
+		global.warn(ex.message);
+	}
 };

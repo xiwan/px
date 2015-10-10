@@ -52,17 +52,19 @@ Constructor.prototype.run = function(cb) {
     self.cmds = new server.CmdServer(self.name + '.' + self.idx, self.cfg.tcp.port, '0.0.0.0');
     self.cmds.run({});
 
-    
 	self.monitorChildProcess(cb);
-    self.getServiceList();
     self.redisSys = global.base.redis.system.get(global.const.CHANNEL_USAGE);
-    self.redisSys.emit('subscribe', 'AppCmds', {});
-    self.redisSys._client.subscribe('AppCmds');
-    self.redisSys._client.on('message', function(channel, message) {
-        var iMsg = JSON.parse(message);
-        console.log(JSON.stringify(iMsg));
-        self.cmds.onMsg(null, iMsg.body);
-    });
+    self.getServiceList();
+
+    var redisMsg = global.base.redis.message.get('AppCmds');
+    if (redisMsg) {
+        redisMsg.subscribe('AppCmds');
+        redisMsg.on('message', function(channel, message) {
+            var iMsg = JSON.parse(message);
+            console.log(JSON.stringify(iMsg));
+            self.cmds.onMsg(null, iMsg.body);
+        });
+    }
     cb(null);
 };
 
@@ -185,6 +187,7 @@ Constructor.prototype.sendServiceAuxLog = function(iList) {
         	//global.info(JSON.stringify(iLog));
             var output = {};
             self.redisSys.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err,data) {
+                if (err) throw new Error('sendServiceAuxLog get redis error.'+err.stack);
                 output = data;
                 for (var key in output) {
                     output[key].pid = 0;
@@ -208,7 +211,9 @@ Constructor.prototype.sendServiceAuxLog = function(iList) {
                     }
                 });
                 // console.log(JSON.stringify(output));
-                self.redisSys.set(global.const.SERVICE_LIST_KEY, JSON.stringify(output));
+                self.redisSys.set(global.const.SERVICE_LIST_KEY, JSON.stringify(output), function(err, res){
+                    if (err) throw new Error('sendServiceAuxLog set redis error.'+err.stack);
+                });
             });
         }
     } catch (ex) {
@@ -268,20 +273,19 @@ Constructor.prototype.startProcess = function(item) {
 
 Constructor.prototype.getServiceList = function() {
     var self = this;
-    var serviceCfg = global.base.cfg.services;
     var logs = {};
     try {
+        var serviceCfg = global.base.cfg.services;
         for (var idx in global.base.process) {
             var item = global.base.process[idx];
             var host = 'localhost';
             var cfg = serviceCfg[item.name];
-            if (cfg) {
-                for (var j = 0; j < cfg.machines.length; ++j) {
-                    var args = cfg.machines[j].split(':');
-                    if (args[1] == item.idx) {
-                        host = args[0];
-                        break;
-                    }
+            if (!cfg) continue;
+            for (var j = 0; j < cfg.machines.length; ++j) {
+                var args = cfg.machines[j].split(':');
+                if (args[1] == item.idx) {
+                    host = args[0];
+                    break;
                 }
             }
 
@@ -299,8 +303,11 @@ Constructor.prototype.getServiceList = function() {
             };
         }
 
-        self.redisSys.set(global.const.SERVICE_LIST_KEY, JSON.stringify(logs));
+        self.redisSys.set(global.const.SERVICE_LIST_KEY, JSON.stringify(logs), function(err, res){
+            if (err) throw new Error('system redis set servicelist error.'+err.stack);
+        });
     }catch (ex) {
+        global.warn(ex.message);
         global.warn(ex.track);
         return 'fail';
     }
