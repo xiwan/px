@@ -120,6 +120,7 @@ function saveDomain(schema, data, cb) {
         iCtx.push(util.format('exports.getDictionary = function () { return (new %s()).get(); };', name));
 
         var iName = schema.Name.split('_');
+        try { fs.mkdirSync(baseDir); } catch (ex) {}
         var iDir = baseDir + '/' + iName[iName.length-1];
         try { fs.mkdirSync(iDir); } catch (ex) {}
         var iFile = iDir + '/' + name + '.js';

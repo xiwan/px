@@ -129,8 +129,8 @@ apis.getServices = function() {
 	try {
 		var redis = global.base.redis.system.get(global.const.CHANNEL_USAGE);
 		if (!redis) return;
-		var mConn = base.MysqlConn
-		var logQry = mConn.createObject(global.base.cfg.mysql, 'systemDB');
+		var mConn = base.MysqlConn;
+		var logQry = mConn.createObject(global.base.cfg.mysql, 'logDB');
 		if (!logQry) return;
 	    logQry.use('master');
 		var list = [];
