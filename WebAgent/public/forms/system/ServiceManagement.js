@@ -21,7 +21,6 @@ function getServiceList() {
         if (err) {
             return;
         }
-        console.log("getServiceList");
         var iList = [];
         for (var idx in data) {
             iList.push(data[idx]);
@@ -47,8 +46,7 @@ function getServiceList() {
         iList.forEach(function (item) {
             var startTime = item.startDate || 0;
             var param = item.service + '.' + item.idx;
-            if (item.state) startTime = "0";//convertToDateTimeString(startTime);
-            else {
+            if (!item.state) {
                 startTime = '';
                 item.memory = item.cpu = 0;
             }
