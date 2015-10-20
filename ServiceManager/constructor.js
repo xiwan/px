@@ -3,6 +3,7 @@
 var util = require('util');
 var __ = require('lodash');
 var async = require('async');
+var fs = require('fs');
 var forever = require('forever-monitor');
 var base = require('../libs/app_base');
 var server = require('./cmdServer');
@@ -55,6 +56,18 @@ Constructor.prototype.run = function(cb) {
 	self.monitorChildProcess(cb);
     self.redisSys = global.base.redis.system.get(global.const.CHANNEL_USAGE);
     self.getServiceList();
+
+    // here clean-up the service-connection map of last time
+    try {
+        var iMap = './' + global.const.SERVICE_MAP_FILE;
+        if (fs.existsSync(iMap) && fs.statSync(iMap).isFile()) {
+            fs.unlinkSync(iMap);
+        }
+        fs.writeFileSync(iMap, ''); 
+    }catch (ex) {
+        console.log(ex.stack);
+        global.error(iMap + ' failed!!');
+    }  
 
     var redisMsg = global.base.redis.message.get('AppCmds');
     if (redisMsg) {
@@ -312,5 +325,7 @@ Constructor.prototype.getServiceList = function() {
         return 'fail';
     }
 };
+
+
 
 module.exports.Constructor = Constructor;

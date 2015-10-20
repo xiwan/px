@@ -15,7 +15,10 @@ module.exports.Const = {
     CHANNEL_CLAN_IDX : 2,
     CHANNEL_TEAM : 'team',
     CHANNEL_TEAM_IDX : 3, 
-    SERVICE_LIST_KEY : 'services',
+
+    SERVICE_MAP_FILE : 'service_map.txt',
+    SERVICE_LIST_KEY : 'service_list',
+
     pMarket : {
         1 : 'google',
         2 : 'apple'

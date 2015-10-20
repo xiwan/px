@@ -4,13 +4,15 @@ var HashRing = require('hashring');
 var util = require('util');
 var dnode = require('dnode');
 var net = require('net');
+var fs = require('fs');
 
-var ClientHashRing = exports.ClientHashRing = function(name, options) {
+var ClientHashRing = exports.ClientHashRing = function(remote, options) {
     var self = this;
     self.ring = new HashRing();
     self.redis = options.redis;
     self.server = {};
-    self.name = name;
+    self.remote = remote;
+    self.name = options.alias;
 
     setInterval(function() { self.check(); }, 100);
 };
@@ -18,8 +20,9 @@ var ClientHashRing = exports.ClientHashRing = function(name, options) {
 ClientHashRing.prototype.check = function() {
     var self = this;
     try {
-        var client = self.redis.get(self.name);
-        client.hget(self.name, function(err, vals, keys) {
+        var client = self.redis.get(self.remote);
+        if (!client) throw new Error('out-of-service');
+        client.hget(self.remote, function(err, vals, keys) {
             try {
                 if (err) throw err;
                 keys.forEach(function(key, pos) {
@@ -27,15 +30,14 @@ ClientHashRing.prototype.check = function() {
                         key : key,
                         data : JSON.parse(vals[pos])
                     };
-
                     self.add(server);
                 });
             } catch (ex) {
-                global.warn('ClientHashRing.check.hkeys name:%s, ex:%s', self.name, ex.message);
+                global.warn('ClientHashRing.check.hkeys name:%s, ex:%s', self.remote, ex.message);
             }
         });
     } catch (ex) {
-        global.warn('ClientHashRing.check. name:%s, err:%s', self.name, ex.message);
+        global.warn('ClientHashRing.check. name:%s, err:%s', self.remote, ex.message);
     }
 };
 
@@ -46,10 +48,12 @@ ClientHashRing.prototype.add = function(server) {
         if (self.server[server.key])
             return;
 
-        var addr, rpc, now, lastUpdateDate;
+        var addr, rpc, now, lastUpdateDate, alias;
 
         now = new Date();
         lastUpdateDate = new Date(server.data.lastUpdateDate);
+        alias = server.data.alias;
+        // too long and consider as drop
         if (now - lastUpdateDate > 10000)
             return;
 
@@ -70,7 +74,19 @@ ClientHashRing.prototype.add = function(server) {
             var vnode = {};
             vnode[rpc.key] = { vnodes : 50 };
             self.ring.add(vnode);
-            global.debug('ClientHashRing.add. name:%s, node:%s', self.name, rpc.key);
+            
+            process.nextTick(function(){
+                try {
+                    var iMap = './' + global.const.SERVICE_MAP_FILE;
+                    if (fs.existsSync(iMap) && fs.statSync(iMap).isFile()) {
+                        fs.appendFileSync(iMap, self.name + ' -> ' + alias + '\n');
+                    } 
+                }catch (ex) {
+                    console.log(ex.stack);
+                }               
+            });
+
+            global.debug('ClientHashRing.add. name:%s, node:%s', self.remote, server.key);
         });
 
         rpc.socket = net.connect(addr[1], addr[0]);
@@ -100,7 +116,7 @@ ClientHashRing.prototype.remove = function(key, flag, error) {
         self.server[key] = null;
         delete self.server[key];
 
-        // global.warn('ClientHashRing.remove. key:%s, flag:%s, err:%s', key, flag, error.message);
+        global.warn('ClientHashRing.remove. key:%s, flag:%s, err:%s', key, flag, error.message);
     } catch (ex) {
         global.warn('ClientHashRing.remove. key:%s, flag:%s, ex:%s', key, flag, ex.message);
     }
@@ -124,6 +140,6 @@ ClientHashRing.prototype.getByKey = function(key) {
     return rpc;
 };
 
-exports.createObject = function(name, options) {
-    return new ClientHashRing(name, options);
+exports.createObject = function(remote, options) {
+    return new ClientHashRing(remote, options);
 };

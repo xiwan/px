@@ -168,12 +168,12 @@ Constructor.prototype.initRedis = function(cfg, cb) {
 Constructor.prototype.initForRPC = function(property, emitter) {
 	var self = this;
 	self.rpc = {};
-	var options = {redis: self.redis.system};
+	var options = {redis: self.redis.system, alias: self.name + '.' + self.idx};
 
     if (property.client) {
         self.rpc.client = {};
-        property.client.forEach(function(key) {
-            self.rpc.client[key] = rpcClient.createObject(key, options);
+        property.client.forEach(function(remote) {
+            self.rpc.client[remote] = rpcClient.createObject(remote, options);
         });
     }
 

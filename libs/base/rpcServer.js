@@ -8,6 +8,7 @@ var Server = exports.Server = function(name, portNum, options) {
 	var self = this;
 
 	self.name = name;
+    self.alias = options.alias;
 	self.ipAddr = global.utils.getIPAddress();
 	self.portNum = portNum;
 	options.redis && (self.redis = options.redis);
@@ -75,7 +76,7 @@ Server.prototype.update = function() {
     var self = this;
     try {
         var client = self.redis.get(self.name);
-        client.hset(self.name, self.key, JSON.stringify({lastUpdateDate : new Date()}), function(err) {
+        client.hset(self.name, self.key, JSON.stringify({lastUpdateDate : new Date(), alias : self.alias}), function(err) {
             err && global.warn('Server.update. key:%s, err:%s', self.key, err.message);
         });
     } catch (ex) {
