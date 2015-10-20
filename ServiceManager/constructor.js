@@ -74,7 +74,6 @@ Constructor.prototype.run = function(cb) {
         redisMsg.subscribe('AppCmds');
         redisMsg.on('message', function(channel, message) {
             var iMsg = JSON.parse(message);
-            console.log(JSON.stringify(iMsg));
             self.cmds.onMsg(null, iMsg.body);
         });
     }

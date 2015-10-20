@@ -43,7 +43,7 @@ var Server = exports.Server = function(name, portNum, options) {
     self.rpc.listen(portNum, '0.0.0.0', function(err) {
         if (err) throw err;     //< throw uncaughtException to kill process
 
-        self.redis && setInterval(function() {self.update();}, 100);
+        self.redis && setInterval(function() {self.update();}, 500);
     });
 };
 

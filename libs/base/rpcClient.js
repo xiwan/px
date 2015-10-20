@@ -14,7 +14,7 @@ var ClientHashRing = exports.ClientHashRing = function(remote, options) {
     self.remote = remote;
     self.name = options.alias;
 
-    setInterval(function() { self.check(); }, 100);
+    setInterval(function() { self.check(); }, 500);
 };
 
 ClientHashRing.prototype.check = function() {
@@ -65,9 +65,9 @@ ClientHashRing.prototype.add = function(server) {
             socket : null
         };
 
-        rpc.node.on('end', function()  { self.remove(rpc.key, 1, new Error('__remote_down')); });
-        rpc.node.on('fail', function(err) { self.remove(rpc.key, 2, err); });
-        rpc.node.on('error', function(err) { self.remove(rpc.key, 3, err); });
+        rpc.node.on('end', function()  { self.remove(rpc.key, alias, 1, new Error('__remote_down')); });
+        rpc.node.on('fail', function(err) { self.remove(rpc.key, alias, 2, err); });
+        rpc.node.on('error', function(err) { self.remove(rpc.key, alias, 3, err); });
         rpc.node.on('remote', function (remote) {
             rpc.remote = remote;
             rpc.remote.__key = rpc.key;
@@ -79,7 +79,16 @@ ClientHashRing.prototype.add = function(server) {
                 try {
                     var iMap = './' + global.const.SERVICE_MAP_FILE;
                     if (fs.existsSync(iMap) && fs.statSync(iMap).isFile()) {
-                        fs.appendFileSync(iMap, self.name + ' -> ' + alias + '\n');
+                        var oMsg = self.name + ' x ' + alias ;
+                        var nMsg = self.name + ' -> ' + alias;
+                        var contents = fs.readFileSync(iMap).toString();
+                        if (contents.match(oMsg)) {
+                            contents = contents.replace(oMsg, nMsg);
+                            fs.writeFileSync(iMap, contents);                        
+                        }else {
+                            var iMsg = global.utils.toDateTime(new Date()) + '\t' +  self.name + ' -> ' + alias + '\n';
+                            fs.appendFileSync(iMap, iMsg);                            
+                        }
                     } 
                 }catch (ex) {
                     console.log(ex.stack);
@@ -90,7 +99,7 @@ ClientHashRing.prototype.add = function(server) {
         });
 
         rpc.socket = net.connect(addr[1], addr[0]);
-        rpc.socket.on('error', function(err) { self.remove(rpc.key, 4, err); });
+        rpc.socket.on('error', function(err) { self.remove(rpc.key, alias, 4, err); });
         rpc.socket.pipe(rpc.node).pipe(rpc.socket);
     } catch (ex) {
         global.warn(ex.stack);
@@ -98,7 +107,7 @@ ClientHashRing.prototype.add = function(server) {
     }
 };
 
-ClientHashRing.prototype.remove = function(key, flag, error) {
+ClientHashRing.prototype.remove = function(key, alias, flag, error) {
     try {
         var self = this,
             rpc;
@@ -116,7 +125,24 @@ ClientHashRing.prototype.remove = function(key, flag, error) {
         self.server[key] = null;
         delete self.server[key];
 
-        global.warn('ClientHashRing.remove. key:%s, flag:%s, err:%s', key, flag, error.message);
+        // process.nextTick(function(){
+        //     try {
+        //         var iMap = './' + global.const.SERVICE_MAP_FILE;
+        //         if (fs.existsSync(iMap) && fs.statSync(iMap).isFile()) {
+        //             var contents = fs.readFileSync(iMap).toString();
+        //             var oMsg = self.name + ' -> ' + alias ;
+        //             var nMsg = self.name + ' x ' + alias;
+        //             if (contents.match(oMsg)) {
+        //                 contents = contents.replace(oMsg, nMsg);
+        //                 fs.writeFileSync(iMap, contents);                        
+        //             }
+        //         } 
+        //     }catch (ex) {
+        //         console.log(ex.stack);
+        //     }              
+        // });
+
+        // global.warn('ClientHashRing.remove. key:%s, flag:%s, err:%s', key, flag, error.message);
     } catch (ex) {
         global.warn('ClientHashRing.remove. key:%s, flag:%s, ex:%s', key, flag, ex.message);
     }
