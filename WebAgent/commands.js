@@ -10,6 +10,13 @@ module.exports = {
 		'ApiGetAsyncJobData',
 		'ApiGetServiceList',
 		'ApiActionServiceReq',
+		'ApiServerMachineListReq',
+		'ApiServerDeployListReq',
+		'ApiServerDeploySaveReq',
+		'ApiServerDeployFileReq',
+		'ApiServerDeployApplyReq',
+		'ApiServerDeployStopReq',
+		'ApiServerDeployDeleteReq',
 	],
 };
 

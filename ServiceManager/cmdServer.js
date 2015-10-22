@@ -27,10 +27,13 @@ var CmdServer = function(name, portNo, ipAddr) {
 		get : function(client, argv, cb) { self.get(argv, cb); },
 		start : function(client, argv, cb) { self.start(client, argv, cb); },
 		stop : function(client, argv, cb) { self.stop(argv, cb); },
+		rstop : function(client, argv, cb) { self.rstop(client, argv, cb); },
 		restart : function(client, argv, cb) { self.restart(client, argv, cb); },
 		deploy : function(client, argv, cb) { self.deploy(argv, cb); },
 		apply : function(client, argv, cb) { self.apply(client, argv, cb); },
 		rdate : function(client, argv, cb) { self.rdate(client, argv, cb); },
+		rapply : function(client, argv, cb) { self.rapply(client, argv, cb); },
+		rdel : function(client, argv, cb) { self.rdel(client, argv, cb); },
 	};
 };
 
@@ -152,7 +155,6 @@ CmdServer.prototype.register = function(client, argv, cb) {
         service[idx] = argv.id;
         client.session = true;
         client._tid && clearTimeout(client._tid);
-        console.log(self.services)
         global.debug('CmdServer.register. service:%s.%d', name, idx);
     } catch(ex) {
         ack.result = ex.message;
@@ -596,7 +598,268 @@ CmdServer.prototype.build = function(client, argv, cb) {
 		}
 
 	}
-}
+};
+
+CmdServer.prototype.deploy = function(argv, cb) {
+        var self = this;
+        deployProcess(argv, function(err) {
+            try {
+                err && global.warn('CmdServer.deploy. version:%s, error:%s', argv.subs[0], err.message);
+                var result = err ? err.message : 'success';
+                if (argv.out === 'json') {
+                    var iAck = {
+                        cmd : 'deploy',
+                        body : {
+                            tid : argv.tid,
+                            result : result
+                        }
+                    };
+                    cb(null, JSON.stringify(iAck));
+                } else {
+                    cb(null, result);
+                }
+            } catch (ex) {
+                cb(ex);
+            }
+        });
+
+        function deployProcess() {
+            try {
+                var version = parseInt(argv.subs[0]);
+                if (typeof(version) !== 'number')
+                    throw new Error('invalid_version');
+                // xw destination check
+                var iDestination = argv.subs[1].split(',') || [];
+                if (iDestination.length === 0) {
+                    iDestination.push('');
+                }
+
+                var where = {
+                    name : 'version',
+                    value : version
+                };
+                global.base.systemDB.finds([where], ['T_SERVICE_DEPLOYS'], function(err, results) {
+                    if (err || results.length === 0) {
+                        cb(new Error('invalid_version'));
+                        return;
+                    }
+                    var item = results[0];
+                    var data;
+
+                    var iBase = util.format('%s/%s', global.base.cfg.deploy.deployDir, version);
+                    var iPath = iBase + '.tgz';
+                    var iMsg = '';
+                    async.series([
+                        function(callback) {
+                            fs.exists(item.path, function(exists) {
+                                if (!exists) callback(new Error('file not exists'));
+                                else callback();
+                            });
+                        },
+                        function(callback) {
+                            fs.exists(iBase, function(exists){
+                                if (exists) callback();
+                                else fs.mkdir(iBase, callback);
+                            });
+                        },
+                        function(callback) {
+                            var tar = spawn('tar', ['xvfz', item.path, '-C', iBase]);
+                            tar.stdout.on('data', function (data) {
+                                iMsg += data.toString();
+                            });
+                            tar.on('error', function(err) {
+                                console.log(err.code, err.stack);
+                                callback(err);
+                            });
+                            tar.on('close', function() {
+                                console.log("!!!!! tar " + iPath + " complete!");
+                                iMsg += "!!!!! tar " + iPath + " complete!";
+                                callback(null);
+                            });
+                        },
+                        // xw rsync the deploy resource to target machines
+                        function(callback) {
+                            var count = 0;
+                            async.whilst(
+                                function() {return count < iDestination.length;},
+                                function(cbk) {
+                                    var iDest = iDestination[count++];
+                                    var rsync = spawn('rsync', ['-avz', '--delete', iBase, iDest]); //  + item.version 
+                                    rsync.stdout.on('data', function (data) {
+                                        iMsg += data.toString();
+                                    });
+                                    rsync.on('error', function(err) {
+                                        console.log(err.code, err.stack);
+                                        cbk(err);
+                                    });
+                                    rsync.on('close', function() {
+                                        console.log("!!!!! rsync " + iDest + " complete!");
+                                        iMsg += "!!!!! rsync " + iDest + " complete!";
+                                        cbk(null);
+                                    });
+
+                                },
+                                function(err){
+                                    callback(err, iMsg);
+                                }
+                            );
+                        }
+                    ], function(err, msg) {
+                        if (typeof (err) == 'number') {
+                            cb(new Error('already_deployed_patch'));
+                        } else {
+                            cb(err, {result:'success', msg: msg});
+                        }
+                    });  //end of find DB
+                });
+            } catch (ex) {
+                cb(ex);
+            }
+        }
+    };
+
+CmdServer.prototype.rapply = function(client, argv, cb) {
+    var self = this;
+    try {
+        var version = parseInt(argv.subs[0]);
+        if (typeof(version) !== 'number')
+            throw new Error('invalid_version');
+
+        var iDestination = argv.subs[1].split(',') || [];
+        if (iDestination.length === 0) {
+            iDestination.push('');
+        }
+        var iMsg = '';
+
+        var parallelFuncs = [];
+        iDestination.forEach(function(iDest){
+            var _parallel = function(callback){
+                var msg = '';
+                var client = new net.Socket();
+                client.connect(6001, iDest, function(){
+                    client.write('start process all\n');
+                    setTimeout(callback, 5000);
+                });
+
+                client.on('data', function(chunk){
+                    iMsg += chunk.toString();
+                });
+
+                client.on('end', function(){
+                    console.log(iDest + ' Connection closed!!!');
+                    //callback();
+                });
+            }
+            parallelFuncs.push(_parallel);
+        });
+
+        async.parallel(parallelFuncs, function(err){ cb(err, {result: 'success'}); });
+
+    } catch (ex) {
+        cb(ex);
+    }
+};
+
+CmdServer.prototype.rstop = function(client, argv, cb) {
+    var self = this;
+    try {
+        var version = parseInt(argv.subs[0]);
+        if (typeof(version) !== 'number')
+            throw new Error('invalid_version');
+
+        var iDestination = argv.subs[1].split(',') || [];
+        if (iDestination.length === 0) {
+            iDestination.push('');
+        }
+
+        var parallelFuncs = [];
+        iDestination.forEach(function(iDest){
+            var _parallel = function(callback){
+                if (iDest == 'localhost' || iDest == '127.0.0.1'){
+                    return callback();
+                }
+                var msg = '';
+                var client = new net.Socket();
+                client.connect(6001, iDest, function(){
+                    client.write('stop process all\n');
+                    setTimeout(callback, 5000);
+                });
+
+                client.on('data', function(chunk){
+                    msg += chunk.toString();
+                });
+
+                client.on('end', function(){
+                    console.log(iDest + ' Connection closed!!!');
+                    //callback();
+                });
+            }
+            parallelFuncs.push(_parallel);
+        });
+
+        async.parallel(parallelFuncs, function(err){ cb(err, {result: 'success'}); });
+
+    } catch (ex) {
+        cb(ex);
+    }
+};
+
+CmdServer.prototype.rdel = function(client, argv, cb) {
+    var self = this;
+    try {
+        var version = parseInt(argv.subs[0]);
+        if (typeof(version) !== 'number')
+            throw new Error('invalid_version');
+
+        var iDestination = argv.subs[1].split(',') || [];
+        if (iDestination.length === 0) {
+            iDestination.push('');
+        }
+        var iMsg = '';
+        async.waterfall([
+            function(callback) {
+                var iVersion = util.format('%s/%s*',global.base.cfg.deploy.deployDir, version);
+                var child;
+                child = exec('rm -rf ' + iVersion, function(err,out) {
+                    callback(err);
+                });    
+            },
+            function(callback) {
+                var count = 0;
+                var iBase = util.format('%s/%s', global.base.cfg.deploy.deployDir, version);
+                async.whilst(
+                    function() {return count < iDestination.length;},
+                    function(cbk) {
+                        var iDest = iDestination[count++];
+                        var rsync = spawn('rsync', ['-avz', '--delete', iBase, iDest]); //  + item.version
+                        rsync.stdout.on('data', function (data) {
+                            iMsg += data.toString();
+                        });
+                        rsync.on('error', function(err) {
+                            console.warn(err.stack);
+                            cbk(err);
+                        });
+                        rsync.on('close', function() {
+                            iMsg += "!!!!! rsync " + iDest + " complete!";
+                            cbk(null);
+                        });
+                    },
+                    function(err){
+                        callback(err, iMsg);
+                    }
+                );
+            }
+        ], function(err, msg){
+            if (typeof (err) == 'number') {
+                cb(new Error('already_deployed_patch'));
+            } else {
+                cb(err, {result:'success', msg: msg});
+            }
+        });
+    } catch (ex) {
+        cb(ex);
+    }
+};
 
 module.exports.CmdServer = CmdServer;
 	

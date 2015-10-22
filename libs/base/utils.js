@@ -31,7 +31,12 @@ module.exports = {
         typeof(t) === 'string' && (t = new Date(t));
         return t.getFullYear()+'-'+ self.pad2(t.getMonth()+1)+'-'+ self.pad2(t.getDate() + ' 00:00:00');
     },
-
+    
+    toMySQLDate : function(t) {
+        var self = this;
+        return t.getFullYear()+'-'+ self.pad2(t.getMonth()+1)+'-'+ self.pad2(t.getDate())+' '+
+        self.pad2(t.getHours())+':'+ self.pad2(t.getMinutes())+':'+self.pad2(t.getSeconds());
+    },
 
     toDateFmt : function(format, date) {
         var self = this;

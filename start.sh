@@ -8,6 +8,9 @@ tgzPath="$basePath/tgz"
 dbhost="localhost"
 apphost="localhost"
 configFile="config.ini"
+cmdScpPath="$basePath/bin/infra_lsc_tools/sh-bin"
+rworkPath="/home/works1"
+rtgzPath="$rworkPath/tgz"
 
 help_info(){
 	echo "NAME"
@@ -134,6 +137,20 @@ case "$1" in
 		node mysql_init_database.js
 		node mysql_init_schema.js
 		cd $basePath
+		;;
+	-ron )
+		echo "sm on all servers..."
+		cd $cmdScpPath
+		sh cmd_scp.sh -t cmd -f sm "sh /home/works/start.sh -on"
+		;;
+	-roff )
+		echo "sm off all servers..."
+		cd $cmdScpPath
+		sh cmd_scp.sh -t cmd -f sm "pkill node"
+		;;
+	-sync )
+		cd $cmdScpPath
+		sh cmd_scp.sh -t cmd -f app "rsync -L -avz --exclude="tgz" --exclude=".git*" root@$apphost:$rtgzPath/$2/* $rtgzPath/$2"
 		;;
 esac
 shift
