@@ -335,7 +335,7 @@ CmdServer.prototype.start = function(client, argv, cb) {
             			callback(ex);
             		}
             	}, setTime);
-            }, function(err){
+            }, function(err){ 
             	cb(err, '');
             });
 

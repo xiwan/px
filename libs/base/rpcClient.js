@@ -76,23 +76,7 @@ ClientHashRing.prototype.add = function(server) {
             self.ring.add(vnode);
             
             process.nextTick(function(){
-                try {
-                    var iMap = './' + global.const.SERVICE_MAP_FILE;
-                    if (fs.existsSync(iMap) && fs.statSync(iMap).isFile()) {
-                        var oMsg = self.name + ' x ' + alias ;
-                        var nMsg = self.name + ' -> ' + alias;
-                        var contents = fs.readFileSync(iMap).toString();
-                        if (contents.match(oMsg)) {
-                            contents = contents.replace(oMsg, nMsg);
-                            fs.writeFileSync(iMap, contents);                        
-                        }else {
-                            var iMsg = global.utils.toDateTime(new Date()) + '\t' +  self.name + ' -> ' + alias + '\n';
-                            fs.appendFileSync(iMap, iMsg);                            
-                        }
-                    } 
-                }catch (ex) {
-                    console.log(ex.stack);
-                }               
+              self.buildConnMap(alias);
             });
 
             global.debug('ClientHashRing.add. name:%s, node:%s', self.remote, server.key);
@@ -165,6 +149,29 @@ ClientHashRing.prototype.getByKey = function(key) {
 
     return rpc;
 };
+
+
+ClientHashRing.prototype.buildConnMap = function(alias) {
+    var self = this;
+    try {
+        var iMap = './' + global.const.SERVICE_MAP_FILE;
+        if (fs.existsSync(iMap) && fs.statSync(iMap).isFile()) {
+            var oMsg = self.name + ' x ' + alias ;
+            var nMsg = self.name + ' -> ' + alias;
+            var contents = fs.readFileSync(iMap).toString();
+            if (contents.match(oMsg)) {
+                contents = contents.replace(oMsg, nMsg);
+                fs.writeFileSync(iMap, contents);                        
+            }else {
+                var iMsg = global.utils.toDateTime(new Date()) + '\t' +  self.name + ' -> ' + alias + '\n';
+                fs.appendFileSync(iMap, iMsg);                            
+            }
+        } 
+    }catch (ex) {
+        console.log(ex.stack);
+    } 
+};
+
 
 exports.createObject = function(remote, options) {
     return new ClientHashRing(remote, options);
