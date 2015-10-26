@@ -289,6 +289,7 @@ CmdServer.prototype.start = function(client, argv, cb) {
     	processList.forEach(function(item) {
     		for (var i=1; i<=item.count; i++) {
     			if (item.service === 'SM') continue;
+
     			global.base.addProcessData(item.service, item.idx, 0, new Date(), 1);
                 iList.push({
                     idx : item.idx,
@@ -736,7 +737,7 @@ CmdServer.prototype.rapply = function(client, argv, cb) {
             var _parallel = function(callback){
                 var msg = '';
                 var client = new net.Socket();
-                client.connect(6001, iDest, function(){
+                client.connect(global.base.cfg.tcp.port, iDest, function(){
                     client.write('start process all\n');
                     setTimeout(callback, 5000);
                 });
@@ -780,7 +781,7 @@ CmdServer.prototype.rstop = function(client, argv, cb) {
                 }
                 var msg = '';
                 var client = new net.Socket();
-                client.connect(6001, iDest, function(){
+                client.connect(global.base.cfg.tcp.port, iDest, function(){
                     client.write('stop process all\n');
                     setTimeout(callback, 5000);
                 });

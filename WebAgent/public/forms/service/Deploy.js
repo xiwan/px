@@ -75,7 +75,7 @@ function uploadReq(obj, cb) {
     data.append('iFile', obj[0].files[0]);
 
     $.ajax({
-        url: get_server_url(3900) + '/ApiFileUploadReq',
+        url: get_server_url(global.base.cfg.services['WA'].bindPortNo) + '/ApiFileUploadReq',
         data: data,
         processData: false,
         contentType: false,
@@ -162,7 +162,7 @@ function clickPatchDeploy() {
     if (confirm("Do you want deploy?")) {
         var version = $(this).parent().find('input').val();
         setPatchServerDeploy(version, groupId, function (data) {
-            alert(data.version + ':' + data.result);
+            // alert(data.version + ':' + data.result);
             getpatchList();
         });
     } 
@@ -303,7 +303,8 @@ function setPatchListHtml(pageNum) {
             Html.push("<span>Please Select GroupId: "+selectedGList+"</span>");
             Html.push("<button class='patchDeploy fileBtn' group-name='groupId"+i+"' >Deploy</button>");
             Html.push("<button class='patchApply fileBtn' group-name='groupId"+i+"' >Apply</button>");
-            if (parseInt(patchList[i].version) == version) {
+
+            if (parseInt(patchList[i].version) == version && parseInt(patchList[i].state) == 3) {
                 Html.push("<button class='patchStop fileBtnRed' group-name='groupId"+i+"' >Stop</button>");
             }
             Html.push("<button class='patchDelete fileBtnRed' group-name='groupId"+i+"' >Delete</button>");
@@ -312,34 +313,34 @@ function setPatchListHtml(pageNum) {
         }
     }
 
-    if (patchList != undefined) {
-        Html.push("</table>");
-        Html.push("<div class='blockListPageDiv'>");
-        Html.push("<table id='paging' class='paging' align='center'>");
-        Html.push("<tr>");
+    // if (patchList != undefined) {
+    //     Html.push("</table>");
+    //     Html.push("<div class='blockListPageDiv'>");
+    //     Html.push("<table id='paging' class='paging' align='center'>");
+    //     Html.push("<tr>");
 
-        if (Math.floor((pageNum - 1) / 10) > 0) {
-            Html.push("<td>");
-            Html.push("<a>◀</a>");
-            Html.push("</td>");
-        }
+    //     if (Math.floor((pageNum - 1) / 10) > 0) {
+    //         Html.push("<td>");
+    //         Html.push("<a>◀</a>");
+    //         Html.push("</td>");
+    //     }
 
-        for (var i = Math.floor((pageNum - 1) / 10) * 10; i < Math.ceil(pageNum / 10) * 10 && i < Math.ceil(patchList.length / 10) ; i++) {
-            Html.push("<td>");
-            Html.push("<a id='" + (i + 1) + "'>" + (i + 1) + "</a>");
-            Html.push("</td>");
-        }
+    //     for (var i = Math.floor((pageNum - 1) / 10) * 10; i < Math.ceil(pageNum / 10) * 10 && i < Math.ceil(patchList.length / 10) ; i++) {
+    //         Html.push("<td>");
+    //         Html.push("<a id='" + (i + 1) + "'>" + (i + 1) + "</a>");
+    //         Html.push("</td>");
+    //     }
 
-        if (Math.ceil(pageNum / 10) * 100 < patchList.length) {
-            Html.push("<td>");
-            Html.push("<a>▶</a>");
-            Html.push("</td>");
-        }
-        Html.push("</tr>");
-        Html.push("</table>");
-        Html.push("</div>");
+    //     if (Math.ceil(pageNum / 10) * 100 < patchList.length) {
+    //         Html.push("<td>");
+    //         Html.push("<a>▶</a>");
+    //         Html.push("</td>");
+    //     }
+    //     Html.push("</tr>");
+    //     Html.push("</table>");
+    //     Html.push("</div>");
 
-    }
+    // }
     $('.mainTable').html(Html.join(''));
     // loadBar = new loader('.fileSaveDiv');
 }
