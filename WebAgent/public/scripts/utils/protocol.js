@@ -36,8 +36,91 @@ function getAsyncJobData(jobId, cb) {
         jobId: jobId
     };
 
-    SendHttpRequest(get_server_url(3900), 'ApiGetAsyncJobData', protocol, function (err, data) {
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiGetAsyncJobData', protocol, function (err, data) {
         err && getErrorCode(err);
         cb(err, data);
     });
-};
+}
+
+function getMachineListData(cb) {
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiServerMachineListReq', {}, function (err, data) {
+        if (err) return;
+        if (data.result == 'success') {
+            cb(data);
+        } else {
+            alert(data.result);
+        }
+    });
+}
+
+function getPatchListData(cb) {
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiServerDeployListReq', {}, function (err, data) {
+        if (err) return;
+        if (data.result == 'success') {
+            cb(data);
+        } else {
+            alert(data.result);
+        }
+    });
+}
+
+function setPatchDataSave(data, cb) { 
+    var msg = {
+        'name'      : data.name,
+        'note'      : data.note,
+        'writer'    : data.writer
+    };
+
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiServerDeploySaveReq', msg, function (err, data) {
+        if (err) { cb(err); return; }
+        cb(data);
+    });
+}
+
+function setPatchServerDeploy(version, groupId, cb) {
+    var protocol = {
+        'version' : version,
+        'groupId' : groupId,
+    };
+
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiServerDeployFileReq', protocol , function (err, data) {
+        if (err) { cb(err); return; }
+        cb(data);
+    });
+}
+
+function setPatchServerApply(version, groupId, cb) {
+    var protocol = {
+        'version': version,
+        'groupId': groupId
+    };
+
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiServerDeployApplyReq', protocol, function (err, data) {
+        if (err) { cb(err); return; }
+        cb(data);
+    });
+}
+
+function setPatchServerStop (version, groupId, cb) {
+    var protocol = {
+        'version': version,
+        'groupId': groupId
+    };
+
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiServerDeployStopReq', protocol, function (err, data) {
+        if (err) { cb(err); return; }
+        cb(data);
+    });
+}
+
+function setPatchServerDelete (version, groupId, cb) {
+    var protocol = {
+        'version': version,
+        'groupId': groupId
+    };
+
+    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiServerDeployDeleteReq', protocol, function (err, data) {
+        if (err) { cb(err); return; }
+        cb(data);
+    });
+}

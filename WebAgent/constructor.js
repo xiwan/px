@@ -142,4 +142,38 @@ Constructor.prototype.getCurrentVersion = function(cb){
     }
 };
 
+Constructor.prototype.getAppVersionData = function(service, cb) {
+    var apps = [];
+    var where = {
+        name : 'service',
+        value: service
+    };
+    try {
+        global.base.systemDB.finds([where], ['T_APP_BASE'], function(err, result) {
+            if (err) {
+                cb(null);
+            }
+            cb(result[0]);
+            // rows.forEach(function(row) {
+            //     apps.push(row.appId);
+            // });
+            // console.log('apps:'+JSON.stringify(apps));
+            // async.mapSeries(apps, function(key, callback) {global.base.systemDB.get(key, callback); }, function(err, results) {
+            //     console.log('getAppVersionData:'+JSON.stringify(results));
+            //     if (err) return null;
+            //     var iLen = results.length;
+            //     if (iLen == 0) return null;
+            //     for(var i=0; i<iLen; i++) {
+            //         var item = results[i];
+            //         if (service !== item.service)
+            //             continue;
+            //         return item;
+            //     }
+            // });
+        });
+    } catch (ex) {
+        global.error('Constructor.getAppVersionData. error:%s', ex.message);
+    }
+};
+
 module.exports.Constructor = Constructor;

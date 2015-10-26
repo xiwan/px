@@ -44,8 +44,35 @@ module.exports = {
         }
 	},
 
-    GetServiceList : function() {
-        return ['SELECT * FROM T_MON_SERVICE'];
+    ApiDeploy_getServiceMachineList : function() {
+        return ['SELECT * FROM T_MSG_HOST ORDER BY groupId'];
     },
-	
+
+    ApiDeploy_getServiceDeployItem : function() {
+        return ['select version, state, uploadDate, patchNote, writer, hosts, applyDate, groupId from T_SERVICE_DEPLOYS where state != 9 order by version desc'];
+    },
+
+    ApiDeploy_getServiceDeployItemMaxVer : function(date) {
+        return [util.format('select max(version) as version from T_SERVICE_DEPLOYS where state != 9 and uploadDate > "%s"', date)];
+    },
+
+    ApiDeploy_insertServiceDeployItem : function(cols, vals) {
+        return [util.format('insert into T_SERVICE_DEPLOYS (%s) values (%s)', cols.join(', '), vals.join(', '))];
+    },
+
+    ApiDeploy_updateServiceDeployItem : function(state, groupId, version) {
+        if (state == 3) {
+            return [util.format('update T_SERVICE_DEPLOYS set state = %s, groupId = %s, applyDate = "%s" where version = %s', state, groupId, global.utils.toMySQLDate(new Date()), version)];
+        } else {
+            return [util.format('update T_SERVICE_DEPLOYS set state = %s, groupId = %s where version = %s', state, groupId, version)];
+        }
+    },
+
+    ApiDeploy_updateAppData : function(version, service) {
+        return [util.format('update T_APP_BASE set deployVersion = %s where service = "%s"', version, service)];
+    },
+
+    ApiDeploy_delServiceDeployItem : function(version) {
+        return [util.format('delete from T_SERVICE_DEPLOYS where version = %s', version)];
+    },
 };

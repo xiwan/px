@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      
+		<title></title>
+		<meta name="description" content="">
+
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes">
+        <script type="text/javascript" src="/scripts/utils/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="/scripts/utils/protocol.js"></script>
+        <script type="text/javascript" src="Deploy.js"></script>
+    </head>
+
+<body>
+    <div> 
+        <div class="mainContent">	
+
+            <span class="mainTitle">Deployment</span>
+            <hr class="mainTitleHr" align="left" size="5" noshade/ >
+
+            <div>
+                <span class="subTitle">Machine Groups(物理机器列表)</span>
+                <hr class="subTitleHr" align="left" size="5" noshade/ >
+                <div class="mainTable2">
+
+                </div>
+            </div>
+
+            <div>
+                <span class="subTitle">List</span>
+                <hr class="subTitleHr" align="left" size="5" noshade/ >
+                <div class="mainTable">
+
+                </div>
+            </div>
+            
+            <div class="fileSaveDiv">
+                <span class="subTitle">Path</span>
+                <hr class="subTitleHr" align="left" size="5" noshade/ >
+                <table>
+                    <tr>
+                        <td>
+                            <span>Patch Note</span>:
+                        </td>
+                        <td>
+                            <textarea id="patchNote" class="patchTextArea"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>UploadFile</span>:
+                        </td>
+                        <td>
+                            <span id="txtFile"> </span>
+                            <button id="clickFileUpload" class="fileBtn">FILE</button>
+                            <button id="clickFileSave" class="fileBtn">SAVE</button>
+                            <input type="file" id='uploadReal'style="display:none">
+                        </td> 
+                    </tr>
+                </table>
+            </div>
+
+       </div>
+    </div>
+
+    <div id="dvWorking">
+        <span id="iWork" style="border:none; font-size:30px;">Loading file...can't save</span>
+    </div>
+</body>
+    <script type="text/javascript">
+        $(document).ready(onReady);
+    </script>
+</html>
