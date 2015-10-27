@@ -86,6 +86,36 @@ apis.EFCheckTableCrc = function(protocol, cb) {
 	}
 };
 
+apis.EFGetDevVersion = function(protocol, cb) {
+	var self = this;
+	try {
+		var service = global.base.getServiceList('WA')[0];
+		service.requestAction('getVersionList', function(err, results){
+			cb(null, {result : 'success', iList: results});
+		});
+	}catch(ex) {
+		global.warn('EFGetDevVersion message: %s', ex.message);
+		cb(ex);
+	}
+};
+
+apis.EFSetDevVersion = function(protocol, cb){
+	var self = this;
+	try {
+		if (!protocol.name||
+	        typeof(protocol.name) !== 'string')
+			throw new Error('__invalid_param');
+		var name = protocol.name;
+		var service = global.base.getServiceList('WA')[0];
+		service.requestAction('getRequireVersion', {name : name}, function(err, iList, iSum){
+			cb(err, {result : 'success', iList: iList, iSum: iSum});
+		});
+	}catch(ex) {
+		global.warn('EFSetDevVersion message: %s', ex.message);
+		cb(ex)
+	}
+}
+
 // user login: generate uid, add more info to session
 apis.UserLogin = function(protocol, cb) {
 

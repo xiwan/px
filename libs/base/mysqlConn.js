@@ -189,7 +189,8 @@ ConnectionMgr.prototype.finds = function() {
     			}
     			iWhere.push(_where);
     		});
-    		searchQry = util.format('where %s',  iWhere.join('  AND '));
+            if (iWhere.length > 0)
+    		  searchQry = util.format('where %s',  iWhere.join('  AND '));
     	}
 
         var columnQry = '*';

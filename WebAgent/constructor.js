@@ -1,7 +1,8 @@
 'use strict'
 
 var util = require('util');
-var __ = require('underscore');
+var fs = require('fs');
+var __ = require('lodash');
 var async = require('async');
 var base = require('../libs/app_base');
 var commands = require('./commands');
@@ -142,6 +143,37 @@ Constructor.prototype.getCurrentVersion = function(cb){
     }
 };
 
+Constructor.prototype.getVersionList = function(cb) {
+    var self = this;
+    try {
+        global.base.systemDB.finds([], ['T_APP_DATA_VERSION_LIST'], function(err, results) {
+            if (err) {
+               return cb(null);
+            }
+            cb(null, __.pluck(results, 'path'));        
+        });
+    }catch (ex) {
+        global.error('Constructor.getVersionList. error:%s', ex.message);
+        cb(ex);        
+    }
+};
+
+Constructor.prototype.getRequireVersion = function(protocol, cb) {
+    var self = this;
+    try {
+
+        var iDb = __dirname + '/public/db/' + protocol.name;
+        if (fs.existsSync(iDb) && fs.statSync(iDb).isFile()) {
+            var contents = fs.readFileSync(iDb).toString();
+            return cb(null, contents);
+        } 
+        throw new Error('file_not_exist');
+    }catch (ex) {
+        global.error('Constructor.getRequireVersion. error:%s', ex.message);
+        cb(ex);
+    }
+};
+
 Constructor.prototype.getAppVersionData = function(service, cb) {
     var apps = [];
     var where = {
@@ -151,7 +183,7 @@ Constructor.prototype.getAppVersionData = function(service, cb) {
     try {
         global.base.systemDB.finds([where], ['T_APP_BASE'], function(err, result) {
             if (err) {
-                cb(null);
+                return cb(null);
             }
             cb(result[0]);
             // rows.forEach(function(row) {

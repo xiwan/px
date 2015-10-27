@@ -44,6 +44,17 @@ module.exports = {
         }
 	},
 
+    ApiApplyTables_insertVersionList : function(path, uid, date) {
+        return {
+            sql : 'INSERT INTO T_APP_DATA_VERSION_LIST SET ?',
+            data : {
+                path : path,
+                uid : uid,
+                date : date,
+            }
+        };
+    },
+
     ApiDeploy_getServiceMachineList : function() {
         return ['SELECT * FROM T_MSG_HOST ORDER BY groupId'];
     },
