@@ -9,7 +9,6 @@ module.exports = {
 		'ApiApplyTables',
 		'ApiGetAsyncJobData',
 		'ApiGetServiceList',
-		'ApiGetVersionList',
 		'ApiActionServiceReq',
 		'ApiServerMachineListReq',
 		'ApiServerDeployListReq',

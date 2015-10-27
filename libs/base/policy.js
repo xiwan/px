@@ -112,7 +112,9 @@ Policy.prototype.requestAction = function(action, protocol, cb){
             throw new Error('__unregistered_api');
         }
         owner[action].call(owner, protocol, function(err, iAck){
-            if (err) throw err;
+            if (err) {
+                throw err;
+            }
             cb(null, iAck);
         });
     }catch (ex) {

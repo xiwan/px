@@ -91,7 +91,6 @@ apis.EFGetDevVersion = function(protocol, cb) {
 	try {
 		var service = global.base.getServiceList('WA')[0];
 		service.requestAction('getVersionList', function(err, results){
-			console.log(results);
 			cb(null, {result : 'success', iList: results});
 		});
 	}catch(ex) {
@@ -103,9 +102,17 @@ apis.EFGetDevVersion = function(protocol, cb) {
 apis.EFSetDevVersion = function(protocol, cb){
 	var self = this;
 	try {
-
+		if (!protocol.name||
+	        typeof(protocol.name) !== 'string')
+			throw new Error('__invalid_param');
+		var name = protocol.name;
+		var service = global.base.getServiceList('WA')[0];
+		service.requestAction('getRequireVersion', {name : name}, function(err, iList, iSum){
+			cb(null, {result : 'success', iList: iList, iSum: iSum});
+		});
 	}catch(ex) {
-		
+		global.warn('EFSetDevVersion message: %s', ex.message);
+		cb(ex)
 	}
 }
 
