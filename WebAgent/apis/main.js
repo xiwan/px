@@ -223,8 +223,7 @@ apis.ApiGetServiceList = function(req, cb) {
         var redisCli = global.base.redis.system.get(global.const.CHANNEL_USAGE);
         redisCli.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err,data) {
             if (err) {
-                cb(err);
-                return;
+                return cb(err);
             }
             for (var key in data) {
                 list.push(data[key]);
@@ -252,7 +251,9 @@ apis.ApiActionServiceReq = function(req, cb) {
         iCmd.push(service);
 
         var redisCli = global.base.redis.message.get('AppCmds');
-        if (!redisCli) return;
+        if (!redisCli) {
+            return cb(new Error('redis client not found'));
+        }
         redisCli.publish('AppCmds', JSON.stringify({action : body.action, body : iCmd.join(' ')}));
         redisCli.unsubscribe('AppCmds');
         global.debug('AppParser.ApiActionServiceReq Result. success.');

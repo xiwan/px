@@ -183,9 +183,9 @@ Constructor.prototype.getAppVersionData = function(service, cb) {
     try {
         global.base.systemDB.finds([where], ['T_APP_BASE'], function(err, result) {
             if (err) {
-                return cb(null);
+                return cb(err);
             }
-            cb(result[0]);
+            cb(null, result[0]);
             // rows.forEach(function(row) {
             //     apps.push(row.appId);
             // });

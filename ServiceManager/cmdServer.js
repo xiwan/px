@@ -654,12 +654,12 @@ CmdServer.prototype.deploy = function(argv, cb) {
                         function(callback) {
                             fs.exists(item.path, function(exists) {
                                 if (!exists) callback(new Error('file not exists'));
-                                else callback();
+                                else callback(null);
                             });
                         },
                         function(callback) {
                             fs.exists(iBase, function(exists){
-                                if (exists) callback();
+                                if (exists) callback(null);
                                 else fs.mkdir(iBase, callback);
                             });
                         },
@@ -743,11 +743,11 @@ CmdServer.prototype.rapply = function(client, argv, cb) {
                         });
                         sh.on('error', function(err) {
                             console.log(err.code, err.stack);
-                            next();
+                            next(null);
                         });
                         sh.on('close', function() {
                             console.log("!!!!! roff complete!");
-                            next();
+                            next(null);
                         });
         			},
         			function(next) {
@@ -806,7 +806,7 @@ CmdServer.prototype.rstop = function(client, argv, cb) {
         iDestination.forEach(function(iDest){
             var _parallel = function(callback){
                 if (iDest == 'localhost' || iDest == '127.0.0.1'){
-                    return callback();
+                    return callback(null);
                 }
                 var msg = '';
                 var client = new net.Socket();
