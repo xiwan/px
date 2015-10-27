@@ -30,8 +30,10 @@ apis.ApiServerDeployListReq = function(req, cb) {
     try {
         global.base.getAppVersionData('UD', function(appData) {
 	        global.base.systemDB.execute(global.base.sqls.ApiDeploy_getServiceDeployItem(), function(err, item) {
-	            err && cb(err) && global.warn('AppParser.ApiServerDeployListReq error:%s', err.message);
-	            if(err) return;
+	            if(err) {
+                    global.warn('AppParser.ApiServerDeployListReq error:%s', err.message);
+                    return cb(err);
+                }
 	            
 	            global.debug('AppParser.ApiServerDeployListReq Result. success');
 	            cb(null, {

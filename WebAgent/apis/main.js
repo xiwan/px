@@ -158,6 +158,12 @@ apis.ApiApplyTables = function(req, cb) {
                                 qryList.push(
                                     global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
                                 );
+                            } else {
+                                var idx = fileObj.path.lastIndexOf('/')+1;
+                                var path = fileObj.path.substring(idx);
+                                qryList.push(
+                                    global.base.sqls.ApiApplyTables_insertVersionList(path, 0, global.utils.toDateTime(new Date()))
+                                );
                             }
                             job.status[fileObj.sheet].message = 'success';
                             //try { fs.unlinkSync(fileObj.path); } catch (ex) {}
