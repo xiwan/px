@@ -16,7 +16,7 @@ function onReday() {
 		data.append('iFile', obj[0].files[0]);
 
 		$.ajax({
-			url : get_server_url(global.base.cfg.services['WA'].bindPortNo) + '/ApiFileUploadReq',
+			url : get_server_url(3900) + '/ApiFileUploadReq',
 			data : data,
 	        processData : false,
 	        contentType : false,
@@ -40,7 +40,7 @@ function onReday() {
 	}
 
 	function convertToJson(file, label) {
-		SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiConvertToJson', { file: file }, function  (err, data) {
+		SendHttpRequest(get_server_url(3900), 'ApiConvertToJson', { file: file }, function  (err, data) {
 	        if  (data.result === 'success') {
 	            var info = 'Please check table information.\n';
 	            for  (var item in data.tables) {
@@ -67,7 +67,7 @@ function onReday() {
 	        protocol[tableType] = result;
 	        console.log(protocol)
 	        var inc = document.getElementById('incomming');
-	        SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiApplyTables', protocol, function (err, data) {
+	        SendHttpRequest(get_server_url(3900), 'ApiApplyTables', protocol, function (err, data) {
 	            if (err) { alert(err); return; }
 
 	            if (!data.jobId) {
