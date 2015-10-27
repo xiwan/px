@@ -208,7 +208,9 @@ function cmd {
         for pid_idx in ${!THREAD_PID[*]}
         do
             pid_val=${THREAD_PID[$pid_idx]}
-            kill -s 0 $pid_val &>/dev/null || unset THREAD_PID[$pid_idx]
+            # kill -s 0 $pid_val &>/dev/null || unset THREAD_PID[$pid_idx]
+            kill -s 0 $pid_val &>/dev/null && unset THREAD_PID[$pid_idx]
+            # kill -9 $pid_val &>/dev/null || unset THREAD_PID[$pid_idx]
         done
     done
     echo -e "\033[32m-----------------------------------------------------------\033[0m"

@@ -10,7 +10,6 @@ apphost="localhost"
 configFile="config.ini"
 cmdScpPath="$basePath/bin/infra_lsc_tools/sh-bin"
 rworkPath="/home/works1"
-rtgzPath="$rworkPath/tgz"
 
 help_info(){
 	echo "NAME"
@@ -108,15 +107,15 @@ case "$1" in
 			fi
 			echo "pack number is : $packnumber"
 
-			if [ ! -e "$basePath/tgz/$packnumber" ] ; then
+			if [ ! -e "$rtgzPath/$packnumber" ] ; then
 				echo "not find packnumber : $packnumber"
 			  	exit 1
 			fi
 			echo "set sm on server: ".`hostname`." mod: $mod"
-			nohup node $basePath/tgz/$packnumber/ServiceManager/app.js --idx=901 --cfg=$basePath/tgz/$packnumber/cfg/config.ini &
+			nohup node $rtgzPath/$packnumber/ServiceManager/app.js --idx=901 --cfg=$rtgzPath/$packnumber/cfg/config.ini &
 		else 
 			echo "set sm on server: ".`hostname`." mod: $mod"
-			node ./ServiceManager/app.js --idx=901 --cfg=./cfg/config.ini
+			node $basePath/ServiceManager/app.js --idx=901 --cfg=$basePath/cfg/config.ini
 		fi
 		;;
 
@@ -126,7 +125,7 @@ case "$1" in
 		;;
 	-tar )
 		tarName=`date +"%Y%m%d%H%m"`
-		gnutar cvfz "$tgzPath/$tarName.tgz" --exclude=node_modules --exclude=tgz --exclude=logs * > "$logPath/$tarName.log"
+		gnutar cvfz "$basePath/tgz/$tarName.tgz" --exclude=node_modules --exclude=tgz --exclude=logs * > "$logPath/$tarName.log"
 		echo "tar output : $tarName"
 		;;
 	-redis )
@@ -141,16 +140,19 @@ case "$1" in
 	-ron )
 		echo "sm on all servers..."
 		cd $cmdScpPath
-		sh cmd_scp.sh -t cmd -f sm "sh /home/works/start.sh -on"
+		sh cmd_scp.sh -t cmd -f sm "cd $rworkPath;sh start.sh -on"
+		cd $basePath
 		;;
 	-roff )
 		echo "sm off all servers..."
 		cd $cmdScpPath
 		sh cmd_scp.sh -t cmd -f sm "pkill node"
+		cd $basePath
 		;;
 	-sync )
 		cd $cmdScpPath
-		sh cmd_scp.sh -t cmd -f app "rsync -L -avz --exclude="tgz" --exclude=".git*" root@$apphost:$rtgzPath/$2/* $rtgzPath/$2"
+		sh cmd_scp.sh -t cmd -f app "rsync -L -avz --exclude="tgz" --exclude=".git*" root@$apphost:$rtgzPath/$2/* $tgzPath/$2"
+		cd $basePath
 		;;
 esac
 shift
