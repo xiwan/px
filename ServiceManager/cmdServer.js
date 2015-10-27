@@ -338,7 +338,7 @@ CmdServer.prototype.start = function(client, argv, cb) {
             			callback(ex);
             		}
             	}, setTime);
-            }, function(err){ 
+            }, function(err){
             	cb(err, '');
             });
 
@@ -735,21 +735,50 @@ CmdServer.prototype.rapply = function(client, argv, cb) {
         var parallelFuncs = [];
         iDestination.forEach(function(iDest){
             var _parallel = function(callback){
-                var msg = '';
-                var client = new net.Socket();
-                client.connect(global.base.cfg.tcp.port, iDest, function(){
-                    client.write('start process all\n');
-                    setTimeout(callback, 5000);
-                });
+        		async.series([
+					function(next) {
+						var sh = exec("echo yes | sh start.sh -roff");
+                        sh.stdout.on('data', function (data) {
+							console.log(data.toString());
+                        });
+                        sh.on('error', function(err) {
+                            console.log(err.code, err.stack);
+                            next();
+                        });
+                        sh.on('close', function() {
+                            console.log("!!!!! roff complete!");
+                            next();
+                        });
+        			},
+        			function(next) {
+						var sh = exec("echo yes | sh start.sh -ron");
+                        sh.stdout.on('data', function (data) {
+                        	console.log(data.toString());
+                        });
+                        sh.on('error', function(err) {
+                            console.log(err.code, err.stack);
+                        });
+                        sh.on('close', function() {
+                            console.log("!!!!! ron complete!");
+                        });
+                        setTimeout(next, 3000);
+        			},
+        		],function(err){
+	                var client = new net.Socket();
+	                client.connect(global.base.cfg.tcp.port, iDest, function(){
+	                    client.write('start process all\n');
+	                    setTimeout(function(){ callback(err); }, 5000);
+	                });
 
-                client.on('data', function(chunk){
-                    iMsg += chunk.toString();
-                });
+	                client.on('data', function(chunk){
+	                    iMsg += chunk.toString();
+	                });
 
-                client.on('end', function(){
-                    console.log(iDest + ' Connection closed!!!');
-                    //callback();
-                });
+	                client.on('end', function(){
+	                	console.log(iMsg);
+	                    console.log(iDest + ' Connection closed!!!');
+	                });
+        		});
             }
             parallelFuncs.push(_parallel);
         });
