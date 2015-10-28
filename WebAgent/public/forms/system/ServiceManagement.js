@@ -17,7 +17,7 @@ function onReady() {
 }
 
 function getServiceList() {
-    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiGetServiceList', {}, function (err, data) {
+    SendHttpRequest(get_server_url(3900), 'ApiGetServiceList', {}, function (err, data) {
         if (err) {
             return;
         }
@@ -86,7 +86,7 @@ function onServiceAction(item) {
         return;
     }
 
-    SendHttpRequest(get_server_url(global.base.cfg.services['WA'].bindPortNo), 'ApiActionServiceReq', iMsg, function (err, data) {
+    SendHttpRequest(get_server_url(3900), 'ApiActionServiceReq', iMsg, function (err, data) {
         if (err) return;
 
         waitForWorking();

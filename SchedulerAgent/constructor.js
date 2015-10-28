@@ -12,6 +12,7 @@ var Constructor = function(name) {
 	this.timerFuncs = {};
 	this.commands = require('./commands');
 	this.clockINT = global.const.CLOCK_INT; // 50ms
+	this.sqls = require('./sqls');
 };
 util.inherits(Constructor, base.Constructor);
 

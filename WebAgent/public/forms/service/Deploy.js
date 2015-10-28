@@ -75,7 +75,7 @@ function uploadReq(obj, cb) {
     data.append('iFile', obj[0].files[0]);
 
     $.ajax({
-        url: get_server_url(global.base.cfg.services['WA'].bindPortNo) + '/ApiFileUploadReq',
+        url: get_server_url(3900) + '/ApiFileUploadReq',
         data: data,
         processData: false,
         contentType: false,

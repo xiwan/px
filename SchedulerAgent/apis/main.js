@@ -140,24 +140,10 @@ apis.getServices = function() {
 			    return;
 			}
 			var iQryList = [];
-			iQryList.push('DELETE FROM `T_MON_SERVICE`');
+			iQryList.push(global.base.sqls.clearServicesFromDB());
 	        for (var key in data) {
 	            var log = data[key];
-	            iQryList.push({
-	            	sql : 'INSERT INTO T_MON_SERVICE SET ?',
-		            data : {
-		                idx : log.idx,
-		                service : log.service,
-		                hosts : log.hosts,
-		                pid : log.pid,
-		                state : log.state,
-		                cpu : log.cpu,
-		                memory : log.memory,
-		                rss : log.rss,
-		                startDate : log.startDate,
-		                updateDate : log.updateDate
-		            }
-		        });
+	            iQryList.push(global.base.sqls.insertServicesToDB(log.idx, log.service, log.hosts, log.pid, log.state, log.cpu, log.memory, log.rss, log.startDate, log.updateDate));
 	        }
 
 	        // console.log(iQryList);

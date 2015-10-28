@@ -11,8 +11,11 @@ apis.ApiServerMachineListReq = function(req, cb) {
     global.debug('AppParser.ApiServerMachineListReq Call.');
     try{
         global.base.systemDB.execute(global.base.sqls.ApiDeploy_getServiceMachineList(), function(err, item) {
-            err && cb(err) && global.warn('AppParser.ApiServerMachineListReq error:%s', err.message);
-            if(err) return;
+            if (err) {
+                global.warn('AppParser.ApiServerMachineListReq error:%s', err.message);
+                return cb(err);
+            }
+
             global.debug('AppParser.ApiServerMachineListReq Result. success');
             cb(null, {
                 result : 'success',
@@ -28,13 +31,16 @@ apis.ApiServerMachineListReq = function(req, cb) {
 apis.ApiServerDeployListReq = function(req, cb) {
     global.debug('AppParser.ApiServerDeployListReq Call.');
     try {
-        global.base.getAppVersionData('UD', function(appData) {
+        global.base.getAppVersionData('UD', function(error, appData) {
+            if (error) {
+                return cb(error);
+            }
 	        global.base.systemDB.execute(global.base.sqls.ApiDeploy_getServiceDeployItem(), function(err, item) {
 	            if(err) {
                     global.warn('AppParser.ApiServerDeployListReq error:%s', err.message);
                     return cb(err);
                 }
-	            
+
 	            global.debug('AppParser.ApiServerDeployListReq Result. success');
 	            cb(null, {
 	                result : 'success',
@@ -54,7 +60,9 @@ apis.ApiServerDeploySaveReq = function(req, cb) {
     global.debug('AppParser.ApiServerDeploySaveReq Call.');
     try {
         var idx = global.utils.getArrayIndex(global.base.uploads, 'name', req.body.name);
-        if (idx < 0) throw new Error('not_existed_file');
+        if (idx < 0) {
+            throw new Error('not_existed_file');
+        }
 
         var upload = global.base.uploads[idx];
         var std = global.utils.toMySQLDate(new Date());
@@ -89,7 +97,9 @@ apis.ApiServerDeploySaveReq = function(req, cb) {
                 global.base.systemDB.execute(global.base.sqls.ApiDeploy_insertServiceDeployItem(cols, vals), next);
             },
         ], function(err, result) {
-            if (err) {cb(err); return;}
+            if (err) {
+                return cb(err);
+            }
             global.debug('AppParser.ApiServerDeploySaveReq Result. version:%s', item.version);
             cb(null, {
                 result : 'success',
@@ -106,12 +116,14 @@ apis.ApiServerDeployFileReq = function(req, cb) {
     global.debug('AppParser.ApiServerDeployFileReq Call. ');
         try {
             var version = parseInt(req.body.version);
-            if (typeof (version) !== 'number')
+            if (typeof (version) !== 'number') {
                 throw new Error('invalid_deploy_version');
+            }
 
             var groupId = parseInt(req.body.groupId);
-            if (typeof (version) !== 'number')
+            if (typeof (version) !== 'number') {
                 throw new Error('invalid_deploy_groupId');
+            }
             var before = 1;
             var state = 2;
 
@@ -123,8 +135,10 @@ apis.ApiServerDeployFileReq = function(req, cb) {
                     };
                     global.base.systemDB.finds([where], ['T_SERVICE_DEPLOYS'], function(err, results) {
                         // console.log('ApiServerDeployFileReq find T_SERVICE_DEPLOYS:'+JSON.stringify(results));
-                        if (err) { next(err); return; }
-                        if (results.length < 1) { 
+                        if (err) {
+                            return next(err);
+                        }
+                        if (results.length < 1) {
                             next(Error('not_found_version')); 
                             return; 
                         }
@@ -148,7 +162,9 @@ apis.ApiServerDeployFileReq = function(req, cb) {
 
                     global.base.systemDB.finds([where], ['T_MSG_HOST'], function(err, results) {
                         // console.log('ApiServerDeployFileReq find T_MSG_HOST:'+JSON.stringify(results));
-                        if (err) { next(err); return; }
+                        if (err) {
+                            return next(err);
+                        }
                         if (results.length < 1) {
                             next(new Error('not_found_host'));
                             return;
@@ -158,7 +174,9 @@ apis.ApiServerDeployFileReq = function(req, cb) {
                     });
                 }
             ], function(err, hosts){
-                if (err) { cb(err); return; }
+                if (err) {
+                    return cb(err);
+                }
 
                 var hostArr = [];
                 __.each(hosts, function(host){
@@ -169,7 +187,9 @@ apis.ApiServerDeployFileReq = function(req, cb) {
                 var cmds = ['deploy', version, hostArr.join(','), util.format('tid=%s', global.base.genGid())];
                 console.log('ApiServerDeployFileReq cmd:'+cmds);
                 var redisCli = global.base.redis.message.get('AppCmds');
-                if (!redisCli) return;
+                if (!redisCli) {
+                    return cb(new Error('redis client not found'));
+                }
                 redisCli.publish('AppCmds', JSON.stringify({action : 'deploy', body : cmds.join(' ')}));
                 redisCli.unsubscribe('AppCmds');
 
@@ -189,12 +209,14 @@ apis.ApiServerDeployApplyReq = function(req, cb) {
     global.debug('AppParser.ApiServerDeployApplyReq Call. ');
     try {
         var version = parseInt(req.body.version);
-        if (typeof (version) !== 'number')
+        if (typeof (version) !== 'number') {
             throw new Error('invalid_deploy_version');
+        }
 
         var groupId = parseInt(req.body.groupId);
-        if (typeof (version) !== 'number')
+        if (typeof (version) !== 'number') {
             throw new Error('invalid_deploy_groupId');
+        }
         var state = 3;
         var before = 2;
 
@@ -206,7 +228,9 @@ apis.ApiServerDeployApplyReq = function(req, cb) {
                 };
                 global.base.systemDB.finds([where], ['T_SERVICE_DEPLOYS'], function(err, results) {
                     // console.log('ApiServerDeployApplyReq find T_SERVICE_DEPLOYS:'+JSON.stringify(results));
-                    if (err) { next(err); return; }
+                    if (err) {
+                        return next(err);
+                    }
                     if (results.length < 1) { 
                         next(new Error('not_found_version')); 
                         return; 
@@ -224,19 +248,26 @@ apis.ApiServerDeployApplyReq = function(req, cb) {
                 global.base.systemDB.execute(global.base.sqls.ApiDeploy_updateServiceDeployItem(state, groupId, version), next);
             },
             function(result, next) {
+                if (result.length < 1) {
+                    return next(new Error('update deploy failed'));
+                }
                 var where = {
                     name : 'service',
                     value : global.base.cfg.deploy.domain
                 };
                 global.base.systemDB.finds([where], ['T_APP_BASE'], function(err, results) {
-                    if (err) { next(err); return; }
-                    if (results.length < 1 ) { next(new Error('not_found_service')); return; }
+                    if (err) {
+                        return next(err);
+                    }
+                    if (results.length < 1 ) {
+                        return next(new Error('not_found_service'));
+                    }
                     next(null, results[0].deployVersion);
                 });
             },
             function(itemVer, next) {
             	if (itemVer == version) {
-            		next(null, {});
+					next(null, []);
             		return;
             	}
                 global.base.systemDB.execute(global.base.sqls.ApiDeploy_updateAppData(version, global.base.cfg.deploy.domain), next);
@@ -249,7 +280,9 @@ apis.ApiServerDeployApplyReq = function(req, cb) {
 
                 global.base.systemDB.finds([where], ['T_MSG_HOST'], function(err, results) {
                     // console.log('ApiServerDeployApplyReq find T_MSG_HOST:'+JSON.stringify(results));
-                    if (err) { next(err); return; }
+                    if (err) {
+                        return next(err);
+                    }
                     if (results.length < 1) {
                         next(new Error('not_found_host'));
                         return;
@@ -259,7 +292,9 @@ apis.ApiServerDeployApplyReq = function(req, cb) {
                 });
             }
         ], function(err, hosts) {
-            if (err) { cb(err); return; }
+            if (err) {
+                return cb(err);
+            }
             var hostIps = [];
             __.each(hosts, function(host){
                 hostIps.push(host.ip);
@@ -268,7 +303,9 @@ apis.ApiServerDeployApplyReq = function(req, cb) {
             var cmds = ['rapply', version, hostIps.join(','), util.format('tid=%s', global.base.genGid())];
             console.log('ApiServerDeployApplyReq cmd:'+cmds);
             var redisCli = global.base.redis.message.get('AppCmds');
-            if (!redisCli) return;
+            if (!redisCli) {
+                return cb(new Error('redis client not found'));
+            }
             redisCli.publish('AppCmds', JSON.stringify({action : 'rapply', body : cmds.join(' ')}));
             redisCli.unsubscribe('AppCmds');
 
@@ -288,12 +325,14 @@ apis.ApiServerDeployStopReq = function(req, cb) {
     global.debug('AppParser.ApiServerDeployStopReq Call. ');  
     try {
         var version = parseInt(req.body.version);
-        if (typeof (version) !== 'number')
+        if (typeof (version) !== 'number') {
             throw new Error('invalid_deploy_version');
+        }
 
         var groupId = parseInt(req.body.groupId);
-        if (typeof (version) !== 'number')
+        if (typeof (version) !== 'number') {
             throw new Error('invalid_deploy_groupId');
+        }
         var before = 3;
         var state = 2;
 
@@ -305,7 +344,9 @@ apis.ApiServerDeployStopReq = function(req, cb) {
                 };
                 global.base.systemDB.finds([where], ['T_SERVICE_DEPLOYS'], function(err, results) {
                     // console.log('ApiServerDeployStopReq find T_SERVICE_DEPLOYS:'+JSON.stringify(results));
-                    if (err) { next(err); return; }
+                    if (err) {
+                        return next(err);
+                    }
                     if (results.length < 1) { 
                         next(Error('not_found_version')); 
                         return; 
@@ -330,7 +371,9 @@ apis.ApiServerDeployStopReq = function(req, cb) {
 
                 global.base.systemDB.finds([where], ['T_MSG_HOST'], function(err, results) {
                     // console.log('ApiServerDeployStopReq find T_MSG_HOST:'+JSON.stringify(results));
-                    if (err) { next(err); return; }
+                    if (err) {
+                        return next(err);
+                    }
                     if (results.length < 1) {
                         next(new Error('not_found_host'));
                         return;
@@ -340,14 +383,18 @@ apis.ApiServerDeployStopReq = function(req, cb) {
                 });
             }
         ], function(err, hosts){
-            if (err) { cb(err); return; }
+            if (err) {
+                return cb(err);
+            }
             var hostIps = [];
             __.each(hosts, function(host){
                 hostIps.push(host.ip);
             });
             var cmds = ['rstop', version, hostIps.join(','), util.format('tid=%s', global.base.genGid())];
             var redisCli = global.base.redis.message.get('AppCmds');
-            if (!redisCli) return;
+            if (!redisCli) {
+                return cb(new Error('redis client not found'));
+            }
             redisCli.publish('AppCmds', JSON.stringify({action : 'rstop', body : cmds.join(' ')}));
             redisCli.unsubscribe('AppCmds');
 
@@ -368,11 +415,13 @@ apis.ApiServerDeployDeleteReq = function(req, cb) {
 	global.debug('AppParser.ApiServerDeployDeleteReq Call. ');  
     try {
         var version = parseInt(req.body.version);
-        if (typeof (version) !== 'number')
+        if (typeof (version) !== 'number') {
             throw new Error('invalid_deploy_version');
+        }
         var groupId = parseInt(req.body.groupId);
-        if (typeof (version) !== 'number')
+        if (typeof (version) !== 'number') {
             throw new Error('invalid_deploy_groupId');
+        }
         async.waterfall([
             function(next) {
 		        var where = {
@@ -390,7 +439,9 @@ apis.ApiServerDeployDeleteReq = function(req, cb) {
 
                 global.base.systemDB.finds([where], ['T_MSG_HOST'], function(err, results) {
                     // console.log('ApiServerDeployDeleteReq find T_MSG_HOST:'+JSON.stringify(results));
-                    if (err) { next(err); return; }
+                    if (err) {
+                        return next(err);
+                    }
                     if (results.length < 1) {
                         next(new Error('not_found_host'));
                         return;
@@ -400,7 +451,9 @@ apis.ApiServerDeployDeleteReq = function(req, cb) {
                 });
             },
         ], function(err, hosts){
-            if (err) { cb(err); return; }
+            if (err) {
+                return cb(err);
+            }
             var hostArr = [];
             __.each(hosts, function(host){
                 var hostCmd = host.account + '@' + host.ip + ':' + host.basePath;
@@ -409,7 +462,9 @@ apis.ApiServerDeployDeleteReq = function(req, cb) {
 
             var cmds = ['rdel', version, hostArr.join(','), util.format('tid=%s', global.base.genGid())];
             var redisCli = global.base.redis.message.get('AppCmds');
-            if (!redisCli) return;
+            if (!redisCli) {
+                return cb(new Error('redis client not found'));
+            }
             redisCli.publish('AppCmds', JSON.stringify({action : 'rdel', body : cmds.join(' ')}));
             redisCli.unsubscribe('AppCmds');
 
