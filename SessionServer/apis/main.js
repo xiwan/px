@@ -108,7 +108,8 @@ apis.EFSetDevVersion = function(protocol, cb){
 		var name = protocol.name;
 		var service = global.base.getServiceList('WA')[0];
 		service.requestAction('getRequireVersion', {name : name}, function(err, iList, iSum){
-			cb(err, {result : 'success', iList: iList, iSum: iSum});
+			var iAck = {result : 'success', iList: iList, iSum: iSum};
+			cb(err, iAck);
 		});
 	}catch(ex) {
 		global.warn('EFSetDevVersion message: %s', ex.message);
