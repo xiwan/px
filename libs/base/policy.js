@@ -105,18 +105,18 @@ Policy.prototype.onRpc = function(uid, action, message, cb) {
 Policy.prototype.requestAction = function(action, protocol, cb){
     var self = this;
     try {
-        var owner = self.owner;
-        protocol.__action = action;
         var begin = new Date();
+        var owner = self.owner;
         if ('function' !== typeof(owner[action])) {
             throw new Error('__unregistered_api');
         }
-        owner[action].call(owner, protocol, function(err, iAck){
-            if (err) {
-                throw err;
-            }
-            cb(null, iAck);
-        });
+        if (cb && 'function' === typeof(cb)){
+            protocol.__action = action;
+            owner[action].call(owner, protocol, cb);
+        }else if ('function' === typeof(protocol) && cb == null) {
+            cb = protocol;
+            owner[action].call(owner, cb);
+        }
     }catch (ex) {
         global.error('Constructor.requestAction. action:%s, ex:%s', action, ex.toString());
         global.warn(ex.stack);

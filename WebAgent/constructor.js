@@ -161,11 +161,14 @@ Constructor.prototype.getVersionList = function(cb) {
 Constructor.prototype.getRequireVersion = function(protocol, cb) {
     var self = this;
     try {
-
+        var iSum = 0;
         var iDb = __dirname + '/public/db/' + protocol.name;
         if (fs.existsSync(iDb) && fs.statSync(iDb).isFile()) {
-            var contents = fs.readFileSync(iDb).toString();
-            return cb(null, contents);
+            var contents = JSON.parse(fs.readFileSync(iDb).toString());
+            contents.forEach(function(item) {
+                iSum += item.version;
+            });
+            return cb(null, contents, iSum);
         } 
         throw new Error('file_not_exist');
     }catch (ex) {
