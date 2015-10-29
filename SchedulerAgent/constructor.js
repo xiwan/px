@@ -13,6 +13,7 @@ var Constructor = function(name) {
 	this.commands = require('./commands');
 	this.clockINT = global.const.CLOCK_INT; // 50ms
 	this.sqls = require('./sqls');
+	this.logQry = null;
 };
 util.inherits(Constructor, base.Constructor);
 
@@ -22,6 +23,7 @@ Constructor.prototype.run = function(cb) {
 		// init policy instance & load commands
 		self.policy = base.Policy.createObject();
 		self.overloading(apis, {}, __dirname);
+		self.logQry = base.MysqlConn.createObject(global.base.cfg.mysql, 'logDB');
 
 		//init rpc server or client
 		self.initForRPC(self.cfg.services[self.name].rpc, self.policy);

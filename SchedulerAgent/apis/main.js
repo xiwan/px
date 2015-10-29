@@ -128,11 +128,9 @@ apis.getServices = function() {
 	var self = this;
 	try {
 		var redis = global.base.redis.system.get(global.const.CHANNEL_USAGE);
-		if (!redis) return;
-		var mConn = base.MysqlConn;
-		var logQry = mConn.createObject(global.base.cfg.mysql, 'logDB');
-		if (!logQry) return;
-	    logQry.use('master');
+		if (!redis) throw new Error('redis not found');
+		if (!self.logQry) throw new Error('mysqlConn not connect');
+		self.logQry.use('master');
 		var list = [];
 		redis.get(global.const.SERVICE_LIST_KEY, 60*1000, function(err, data) {
 			if (err){
@@ -147,7 +145,7 @@ apis.getServices = function() {
 	        }
 
 	        // console.log(iQryList);
-	        logQry.executeTrans(iQryList,function(err, results){
+	        self.logQry.executeTrans(iQryList,function(err, results){
 	            if (err) {
 	                global.warn(err);
 	            }
