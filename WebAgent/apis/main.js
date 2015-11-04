@@ -106,6 +106,8 @@ apis.ApiApplyTables = function(req, cb) {
         var iFile = miscUtils.getApplyFile(body);
         var keys = Object.keys(iFile.data);
         var qryList = [], changeLog = [];
+
+        var fileName = iFile.excel.replace('.xlsx', '');
         keys.forEach(function(key) {
             var sheet = iFile.data[key];
             var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', key);
@@ -125,14 +127,14 @@ apis.ApiApplyTables = function(req, cb) {
                 );
             } else {
                 var item = global.base.dataVersions[pos];
-                if (item.json !== base64) {
+                //if (item.json !== base64) {
                     item.version++;
                     item.json = base64;
                     version = item.version;
                     qryList.push(
                         global.base.sqls.ApiApplyTables_updateAppData(item.version, global.const.appId, key)
                     );
-                }
+                //}
             }
             if (version > 0) {
                 changeLog.push({
@@ -148,8 +150,12 @@ apis.ApiApplyTables = function(req, cb) {
 			var job = global.base.addAsyncJob('ApiApplyTables');
 			process.nextTick(function() {
 				async.waterfall([
-					function (callback) { appUtils.ftpUploadReq(iNum, changeLog, job, callback); },
+					function (callback) { 
+                        //appUtils.ftpUploadReq(iNum, changeLog, job, callback); 
+                        appUtils.ftpUploadCombineReq(iNum, changeLog, job, fileName, callback);
+                    },
                     function (iFiles, callback) {
+                        console.log(iFiles)
                         iFiles.forEach(function(fileObj){
                             if(fileObj.sheet !== 'VersionList'){
                                 var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);

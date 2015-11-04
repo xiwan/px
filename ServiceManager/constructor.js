@@ -44,7 +44,6 @@ util.inherits(Constructor, base.Constructor);
 
 Constructor.prototype.run = function(cb) {
 	var self = this;
-
 	self.usage = new base.Usage();
 	self.addProcessData(self.name, self.idx, process.pid, self.startDate, 0);
 

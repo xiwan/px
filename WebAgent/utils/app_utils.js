@@ -309,6 +309,207 @@ exports.rmAllFiles = function(dirPath) {
         }
 };
 
+exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
+    try {
+        job.state = 2;
+        job.status = {};
+
+        var iList = [], iSum = 0;
+        global.base.dataVersions.forEach(function(item){
+            var dbName = item.name.replace('.xlsx', '');
+            var idx = __.indexOf(__.pluck(iList, 'sheet'), dbName) ;
+            if ( idx > -1 ) {
+                iList[idx].version += item.version;
+            } else {
+                iList.push({
+                    category    : item.category,
+                    sheet       : dbName,
+                    version     : item.version
+                });
+            }
+            iSum += item.version;
+        });
+
+        var idx = __.indexOf(__.pluck(iList, 'sheet'), fileName);
+        var aName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', fileName, version, iList[idx].version);
+        fs.existsSync(aName) && fs.unlinkSync(aName);
+
+        var iMsg = {
+            version : version,
+            message : 'Create DB File',
+            total : 0,
+            progress : 0,
+            error : 0
+        };
+        job.status[fileName] = iMsg;
+        var aDB = sqlite(aName);
+
+        async.mapSeries(changeLog, function(iLog, cb){
+            var iName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', iLog.sheet, version, iLog.version);
+            fs.existsSync(iName) && fs.unlinkSync(iName);
+
+            var iMsg = {
+                version : iLog.version,
+                message : 'Create DB File',
+                total : 0,
+                progress : 0,
+                error : 0
+            };
+            job.status[iLog.sheet] = iMsg;
+            var iDB = sqlite(iName);
+
+            var iDef = {}, iNew = [], iDel = [];
+            var bEnable = false;
+
+            iLog.cols.forEach(function(col, idx) {
+                if (!(col.out === 0 || col.out === 2)) {
+                    iDel.push(col.name);
+                    return;
+                }
+                var name = col.name;
+                if (name.toLocaleLowerCase() === 'index') {
+                    name += '2';
+                    iNew.push({ old : col.name, now : name });
+                }
+                iDef[name] = {
+                    type : convetSQLiteDataType(col.def, iLog.sheet, col.name),
+                    unique : idx === 0 ? true : false
+                };
+                bEnable = true;
+            });
+
+            if (!bEnable) {
+                iMsg.message = 'No Enable Columns';
+                cb(null, null);
+                return;
+            } 
+
+            var iData = JSON.parse(iLog.json);
+            //console.log('iLog.sheet', iLog.sheet);
+            var iRows = [];
+            for(var key in iData.Tables) {
+                var item = iData.Tables[key];
+                iNew.forEach(function(iVal) {
+                    item[iVal.now] = item[iVal.old];
+                    delete item[iVal.old];
+                });
+                iDel.forEach(function(iVal) { delete item[iVal]; } );
+                delete item['undefined'];
+                if ( iLog.sheet == 'CHS' && !item['Text']) item['Text'] = ' ';
+                iRows.push(item);
+            }
+            // console.log(iRows);
+            iMsg.total = iRows.length;
+            iMsg.message = 'insert rows';
+
+            var chunckSize = 10;
+            var len = Math.ceil(iRows.length / chunckSize);
+            var bigRows = [];
+            for (var i = 0; i < len; i ++) {
+                var subRow = iRows.slice(chunckSize * i, chunckSize * (i+1));
+                bigRows.push(subRow);
+            }
+
+            async.parallel([
+                function(callback) {
+                    iDB.createTable(iLog.sheet, iDef, function(err){
+                        if (err) {
+                            iDB.close();
+                            cb(err);
+                            iMsg.message = err.message;
+                            return;
+                        }
+
+                        async.eachSeries(bigRows, function(rows, callback){
+                            iDB.insertAll(iLog.sheet, rows, function(err){
+                                if (err){
+                                    iDB.close();
+                                    iDB = sqlite(iName);
+                                    global.warn('iDB.createTable. sheet:%s, rows:%s, error:%s', iLog.sheet, rows.length, err.message);
+                                    iMsg.error += rows.length;                                      
+                                }else {
+                                    iMsg.progress += rows.length;
+                                }
+                                callback(null);
+                            });
+                        }, callback);
+
+                    });
+                },
+                function(callback) {
+                    aDB.createTable(iLog.sheet, iDef, function(err){
+                        if (err) {
+                            aDB.close();
+                            cb(err);
+                            iMsg.message = err.message;
+                            return;
+                        } 
+                        async.eachSeries(bigRows, function(rows, callback){
+                            aDB.insertAll(iLog.sheet, rows, function(err){
+                                // iMsg.progress += rows.length;
+                                if (err){
+                                    aDB.close();
+                                    aDB = sqlite(aName);
+                                    global.warn('aDB.createTable. sheet:%s, rows:%s, error:%s', iLog.sheet, rows.length, err.message);
+                                    iMsg.error += rows.length;                                      
+                                }else {
+                                    iMsg.progress += rows.length;
+                                }
+                                callback(null);
+                            });
+                        }, callback);
+                    });
+                }
+            ], function(err, results){
+                err && global.warn('zipAndWritFile. sheet:%s, error:%s', iLog.sheet, err.message);
+                // iDB.close();
+                // aDB.close();
+                iMsg.message = 'Finish DB';
+                cb(err, {sheet: iLog.sheet, path: iName });
+            });
+
+
+        }, function(err, iFiles){
+            if (err) {
+                cb(err);
+                return;
+            }
+
+            iFiles = __.without(iFiles, null);
+            var aFiles = [];
+            aFiles.push({sheet: fileName, path: aName });
+
+            var iName = util.format(global.base.rootPath + '/public/db/DH_VersionList_%d_%d', version, iSum);
+            job.status['VersionList'] = {
+                version : iSum,
+                message : 'Make Version File',
+                total : 0,
+                progress : 0,
+                error : 0
+            };
+
+            process.nextTick(function() {
+                fs.writeFile(iName, JSON.stringify(iList), function(err) {
+                    if (err) {
+                        job.status['VersionList'].message = err.message;
+                        cb(err);
+                        return;
+                    }
+                    aFiles.push({ sheet : 'VersionList', path : iName });
+                    console.log('xxxxxxx', aFiles);
+
+                    cb && cb(null, iFiles);
+                });
+            });
+
+
+        });
+
+    } catch (ex) {
+        cb(ex);
+    }
+}
+
 /** generate sqlLiteDB and upload to ftp server. */
 exports.ftpUploadReq = function(version, changeLog, job, cb) {
     try {
