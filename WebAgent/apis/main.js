@@ -120,6 +120,7 @@ apis.ApiApplyTables = function(req, cb) {
                     version : 1,
                     json : base64,
                     crc : 0,
+                    name : iFile.excel,
                 });
                 version = 1;
                 qryList.push(
