@@ -406,9 +406,6 @@ exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
                 var subRow = iRows.slice(chunckSize * i, chunckSize * (i+1));
                 bigRows.push(subRow);
             }
-            // console.log('bigRows: ', bigRows)
-            // console.log('iLog: ', iLog)
-            // console.log('iDef: ', iDef)
 
             var iName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', iLog.sheet, version, iLog.version);
             fs.existsSync(iName) && fs.unlinkSync(iName);
@@ -425,8 +422,8 @@ exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
 
                         async.eachSeries(bigRows, function(rows, cbk){
                             iDB.insertAll(iLog.sheet, rows, function(err){
-                                iDB.close();
                                 if (err){
+                                    iDB.close();
                                     iDB = sqlite(iName);
                                     global.warn('iDB.createTable. name: %s, sheet:%s, rows:%s, error:%s', iName, iLog.sheet, rows.length, err.message);
                                     iMsg.error += rows.length;                                      
