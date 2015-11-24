@@ -329,9 +329,13 @@ exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
             }
             iSum += item.version;
         });
-
+        var aName = "";
         var idx = __.indexOf(__.pluck(iList, 'sheet'), fileName);
-        var aName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', fileName, version, iList[idx].version);
+        if (idx > -1) {
+            aName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', fileName, version, iList[idx].version);
+        }else {
+            throw new Error('cant_find_db');
+        }
         fs.existsSync(aName) && fs.unlinkSync(aName);
 
         var iMsg = {

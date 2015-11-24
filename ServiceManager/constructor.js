@@ -242,22 +242,12 @@ Constructor.prototype.startProcess = function(item) {
             return 'already_started_process';
         }	
         var service = util.format(__dirname + '/../%s/app.js', item.name);
-        if (item.idx == 861) {
-            child.process = new (forever.Monitor)(service, {
-                'command': 'node',
-                'max' : 1,
-                'slient' : true,
-                'args' : ["--idx=" + item.idx]          
-            });             
-        }else {
-            child.process = new (forever.Monitor)(service, {
-                'command': 'node',
-                'max' : 1,
-                'slient' : true,
-                'args' : ["--idx=" + item.idx]          
-            });            
-        }
-
+        child.process = new (forever.Monitor)(service, {
+            'command': 'node',
+            'max' : 1,
+            'slient' : true,
+            'args' : ["--idx=" + item.idx]          
+        });
         
         child.process.on('exit', function() {
             var location = util.format('%s.%d', item.service, item.idx);
