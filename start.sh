@@ -15,7 +15,7 @@ help_info(){
 	echo "NAME"
 	echo "\t$0" 
 	echo "SYNOPSIS"
-	echo "\t$0 is a shell program for centralization H.O.D control"
+	echo "\t$0 is a shell program for centralization projectX control"
 	echo "DESCRIPTION"
 	echo "\t -db: prepare local db..."
 	echo "\t -rdb: prepare remote db..."
@@ -27,6 +27,7 @@ help_info(){
 	echo "\t -off: stop local sm process..."
 	echo "\t -ron: start remote sm processes..."
 	echo "\t -roff: stop remote sm processes..."
+	echo "\t -debug pid: start debug a process by pid"
 }
 
 contains() {
@@ -153,6 +154,10 @@ case "$1" in
 		cd $cmdScpPath
 		sh cmd_scp.sh -t cmd -f app "rsync -L -avz --exclude="tgz" --exclude=".git*" root@$apphost:$rtgzPath/$2/* $tgzPath/$2"
 		cd $basePath
+		;;
+	-debug )
+		nohup node-inspector -p 8080 -d 5858 > debug.out &
+		kill -s USR1 $2
 		;;
 esac
 shift
