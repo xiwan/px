@@ -6,6 +6,7 @@ test/
 libs/schema/
 WebAgent/public/db/*
 build/
+.idea/
 *~$*
 *.DS_St
 *.tgz
