@@ -243,10 +243,11 @@ Constructor.prototype.startProcess = function(item) {
         }	
         var service = util.format(__dirname + '/../%s/app.js', item.name);
         child.process = new (forever.Monitor)(service, {
-            max : 1,
-            slient : true,
-            args : ["--idx=" + item.idx]        	
-        });	
+            'command': 'node',
+            'max' : 1,
+            'slient' : true,
+            'args' : ["--idx=" + item.idx]          
+        });
         
         child.process.on('exit', function() {
             var location = util.format('%s.%d', item.service, item.idx);
