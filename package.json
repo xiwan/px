@@ -47,6 +47,6 @@
     "xml2js" : "~0.4.2",
   },
   "scripts": {
-    "preinstall": "npm i -g node-inspector"
+    "preinstall": "npm i -g node-inspector" 
   }
 }
