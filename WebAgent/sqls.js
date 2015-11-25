@@ -5,7 +5,7 @@ module.exports = {
         var iQry = [];
         iQry.push('select x.sheet, x.category, y.version, y.json, y.crc, x.excel as name, y.date from T_APP_DATA x');
         iQry.push('join (select * from T_APP_DATA_VERSION) y');
-        iQry.push('on (x.appId = y.appId and x.sheet = y.sheet and x.maxVersion = y.version)');
+        iQry.push('on (x.appId = y.appId and x.sheet = y.sheet and x.maxVersion = y.version and x.excel = y.excel)');
         iQry.push(util.format('where x.appId = "%s"', appId));
         return iQry.join(' ');
 	},
@@ -23,19 +23,20 @@ module.exports = {
         }
 	},
 
-	ApiApplyTables_updateAppData : function(version, appId, key) {
+	ApiApplyTables_updateAppData : function(version, appId, sheetKey, excelKey) {
 		return {
-            sql : 'UPDATE T_APP_DATA SET maxVersion = ? where appId = ? and sheet = ?',
-            data : [version, appId, key]
+            sql : 'UPDATE T_APP_DATA SET maxVersion = ? where appId = ? and sheet = ? and excel = ?',
+            data : [version, appId, sheetKey, excelKey]
         }
 	},
 
-	ApiApplyTables_insertAppDataVersion : function(appId, sheet, version, date, json, crc) {
+	ApiApplyTables_insertAppDataVersion : function(appId, sheet, excel, version, date, json, crc) {
 		return	{
             sql : 'INSERT INTO T_APP_DATA_VERSION SET ?',
             data : {
                 appId : appId,
                 sheet : sheet,
+                excel : excel,
                 version : version,
                 date : date,
                 json : json,
