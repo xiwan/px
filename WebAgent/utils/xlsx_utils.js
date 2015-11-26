@@ -14,7 +14,7 @@ function encode_range(range) { return encode_cell(range.s) + ":" + encode_cell(r
  * Convert a sheet into an array of objects where the column headers are keys.
  **/
 function sheet_to_row_object_array(sheet){
-    var val, rowObject, range, columnHeaders, emptyRow, C;
+    var val, rowObject, range, columnHeaders, emptyRow, endOfFile, C;
     var outSheet = [];
     if (sheet["!ref"]) {
         range = decode_range(sheet["!ref"]);
@@ -33,6 +33,7 @@ function sheet_to_row_object_array(sheet){
             }
         }
 
+        endOfFile = false;
         for (var R = range.s.r + 1; R <= range.e.r; ++R) {
             emptyRow = true;
             //Row number is recorded in the prototype
@@ -46,14 +47,19 @@ function sheet_to_row_object_array(sheet){
                 if(val !== undefined) switch(val.t){
                     case 's': case 'str': case 'b': case 'n':
                         if(val.v !== undefined) {
-                            rowObject[columnHeaders[C]] = val.v;
-                            emptyRow = false;
+                            if (val.v.toString().indexOf('EOF') == -1) {
+                                rowObject[columnHeaders[C]] = val.v;
+                                emptyRow = false;
+                            }else {
+                                endOfFile = true;
+                            }
                         }
                         break;
                     case 'e': break; /* throw */
                     default: throw 'unrecognized type ' + val.t;
                 }
             }
+            if (endOfFile) break;
             if(!emptyRow) {
                 outSheet.push(rowObject);
             }
@@ -81,9 +87,10 @@ function sheet_to_csv(sheet) {
             var row = [];
             for(var C = r.s.c; C <= r.e.c; ++C) {
                 var val = sheet[utils.encode_cell({c:C,r:R})];
-                row.push(val ? stringify(val).replace(/\\r\\n/g,"\t").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace("\\\"","\"\"").replace(/\"/gi, '') : "");
+                row.push(val ? stringify(val).replace(/\\r\\n/g,"\t").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace("\\\"","\"\"").replace(/\"/gi, '').replace(/^\s+|\s+$/g,'') : "");
             }
-            out += row.join(",") + "\n";
+            if (row.join(",").indexOf('EOF') == -1)
+                out += row.join(",") + "\n";
         }
     }
     return out;
