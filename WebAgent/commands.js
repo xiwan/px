@@ -17,6 +17,7 @@ module.exports = {
 		'ApiServerDeployApplyReq',
 		'ApiServerDeployStopReq',
 		'ApiServerDeployDeleteReq',
+		'ApiCheckExcelSheets',
 	],
 };
 

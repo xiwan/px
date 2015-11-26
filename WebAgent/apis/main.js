@@ -97,6 +97,49 @@ apis.ApiConvertToJson = function(req, cb) {
     }
 };
 
+apis.ApiCheckExcelSheets = function(req, cb) {
+    var self = apis;
+    global.debug('AppParser.ApiCheckExcelSheets Call.');
+    try {
+        var body = req.body;
+        var iNum = parseInt(body.num);
+        var iFile = miscUtils.getApplyFile(body);
+        var iExcel = iFile.excel;
+        var sameSheets = [];
+        var keys = Object.keys(iFile.data);
+        keys.forEach(function(key) {
+            var iSheet = key;
+            var pos = -1;
+            for (var i = 0; i < global.base.dataVersions.length; ++i) {
+                var item = global.base.dataVersions[i];
+                if (!item) continue;
+                if (item.sheet == iSheet && item.name == iExcel) {
+                    pos = i;
+                    break;
+                }
+            }
+
+            if (pos > 0) {
+                sameSheets.push({
+                    excel : iExcel,
+                    sheet : iSheet
+                });
+            }
+        });
+        if (sameSheets.length > 0) {
+            global.debug('AppParser.ApiCheckExcelSheets Result. already have');
+            cb(null, { result : 'same', same : sameSheets });
+        } else {
+            global.debug('AppParser.ApiCheckExcelSheets Result. success');
+            cb(null, { result : 'success' });
+        }
+    } catch (ex) {
+        global.warn('AppParser.ApiCheckExcelSheets. error:%s', ex.message);
+        global.warn(ex.stack);
+        cb(ex);  
+    }
+}
+
 apis.ApiApplyTables = function(req, cb) {
 	var self = apis;
 	global.debug('AppParser.ApiApplyTables Call.');
@@ -104,13 +147,24 @@ apis.ApiApplyTables = function(req, cb) {
         var body = req.body;
         var iNum = parseInt(body.num);
         var iFile = miscUtils.getApplyFile(body);
+        var iExcel = iFile.excel;
         var keys = Object.keys(iFile.data);
         var qryList = [], changeLog = [];
 
         var fileName = iFile.excel.replace('.xlsx', '');
         keys.forEach(function(key) {
+            var iSheet = key;
             var sheet = iFile.data[key];
-            var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', key);
+            //var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', key);
+            var pos = -1;
+            for (var i = 0; i < global.base.dataVersions.length; ++i) {
+                var item = global.base.dataVersions[i];
+                if (!item) continue;
+                if (item.sheet == iSheet && item.name == iExcel) {
+                    pos = i;
+                    break;
+                }
+            }
             var base64 = new Buffer(JSON.stringify(sheet)).toString('base64');
             var version = 0;
             if (pos < 0) {
@@ -133,7 +187,7 @@ apis.ApiApplyTables = function(req, cb) {
                     item.json = base64;
                     version = item.version;
                     qryList.push(
-                        global.base.sqls.ApiApplyTables_updateAppData(item.version, global.const.appId, key)
+                        global.base.sqls.ApiApplyTables_updateAppData(item.version, global.const.appId, key, iFile.excel)
                     );
                 //}
             }
@@ -159,12 +213,23 @@ apis.ApiApplyTables = function(req, cb) {
                         console.log(iFiles)
                         iFiles.forEach(function(fileObj){
                             if(fileObj.sheet !== 'VersionList'){
-                                var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
-                                var item = global.base.dataVersions[pos];
-                                item.crc = miscUtils.getCrc32(fileObj.path);
-                                qryList.push(
-                                    global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
-                                );
+                                //var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
+                                var pos = -1;
+                                for (var i = 0; i < global.base.dataVersions.length; ++i) {
+                                    var it = global.base.dataVersions[i];
+                                    if (!it) continue;
+                                    if (it.sheet == fileObj.sheet && it.name == iExcel) {
+                                        pos = i;
+                                        break;
+                                    }
+                                }
+                                if (-1 != pos) {
+                                    var item = global.base.dataVersions[pos];
+                                    item.crc = miscUtils.getCrc32(fileObj.path);
+                                    qryList.push(
+                                        global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, iFile.excel, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
+                                    );
+                                }
                             } else {
                                 var idx = fileObj.path.lastIndexOf('/')+1;
                                 var path = fileObj.path.substring(idx);
@@ -193,6 +258,7 @@ apis.ApiApplyTables = function(req, cb) {
 				});
 			});
 
+            global.debug('AppParser.ApiApplyTables Result. change');
 			cb(null, { result : 'success', jobId : job.id });
 		}else {
 	        global.debug('AppParser.ApiApplyTables Result. success');
