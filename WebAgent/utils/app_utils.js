@@ -4,6 +4,7 @@ var __ = require('underscore');
 var async = require('async');
 var sqlite= require('sqlite-wrapper');
 var ftp = require('ftp');
+var miscUtils = require('./misc_utils');
 
 function splitData(data, toLower) {
     var list = data.split(',');
@@ -332,7 +333,7 @@ exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
         var aName = "";
         var idx = __.indexOf(__.pluck(iList, 'sheet'), fileName);
         if (idx > -1) {
-            aName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', fileName, version, iList[idx].version);
+            aName = util.format(global.base.rootPath + '/public/db/XL_%s_%d_%d_db', fileName, version, iList[idx].version);
         }else {
             throw new Error('cant_find_db');
         }
@@ -485,11 +486,12 @@ exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
                 return;
             }
             global.test(aName + " done!");
-            iFiles = __.without(iFiles, null);
-            var aFiles = [];
-            aFiles.push({sheet: fileName, path: aName });
 
-            var iName = util.format(global.base.rootPath + '/public/db/DH_VersionList_%d_%d', version, iSum);
+            iFiles = __.without(iFiles, null);
+            var vName = util.format(global.base.rootPath + '/public/db/DH_VersionList_%d_%d', version, iSum);
+            //var aFiles = [];
+            iFiles.push({ sheet: fileName, path: aName, version: iList[idx].version });
+
             job.status['VersionList'] = {
                 version : iSum,
                 message : 'Make Version File',
@@ -499,13 +501,15 @@ exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
             };
 
             process.nextTick(function() {
-                fs.writeFile(iName, JSON.stringify(iList), function(err) {
+                fs.writeFile(vName, JSON.stringify(iList), function(err) {
                     if (err) {
                         job.status['VersionList'].message = err.message;
                         cb(err);
                         return;
                     }
-                    aFiles.push({ sheet : 'VersionList', path : iName });
+                    iFiles.push({ sheet : 'VersionList', path : vName });
+                    global.debug("iFiles: ",  iFiles);
+                    global.debug("iList: ", iList);
                     cb && cb(null, iFiles);
                 });
             });

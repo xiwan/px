@@ -19,7 +19,7 @@ exports.getApplyFile = function(body) {
     var iList = [getJSON(body.excel), getJSON(body.language), getJSON(body.event)];
     var excelFile = [body.excel, body.language, body.event];
     var nameList = ['excel', 'language', 'event'];
-    for(var i= 0, iLen=3; i<iLen; i++) {
+    for(var i= 0, iLen=iList.length; i<iLen; i++) {
         if (iList[i])
             return {
                 data : iList[i],

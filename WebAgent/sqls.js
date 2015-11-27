@@ -10,7 +10,11 @@ module.exports = {
         return iQry.join(' ');
 	},
 
-	ApiApplyTables_instertAppData : function(appId, key, excel, category, version) {
+    getFileVersionFromDB : function(appId) {
+        return 'SELECT sheet, version, crc FROM (select * FROM T_APP_DATA_FILE_VERSION ORDER BY version desc) AS temp GROUP BY sheet;';
+    },
+
+	ApiApplyTables_insertAppData : function(appId, key, excel, category, version) {
 		return {
             sql : 'INSERT INTO T_APP_DATA SET ?',
             data : {
@@ -44,6 +48,19 @@ module.exports = {
             }
         }
 	},
+
+    ApiApplyTables_insertAppDataFileVersion : function(appId, sheet, version, date, crc) {
+        return	{
+            sql : 'INSERT INTO T_APP_DATA_FILE_VERSION SET ?',
+            data : {
+                appId : appId,
+                sheet : sheet,
+                version : version,
+                date : date,
+                crc : crc
+            }
+        }
+    },
 
     ApiApplyTables_insertVersionList : function(path, uid, date) {
         return {
