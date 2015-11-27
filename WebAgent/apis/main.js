@@ -155,19 +155,23 @@ apis.ApiApplyTables = function(req, cb) {
         keys.forEach(function(key) {
             var iSheet = key;
             var sheet = iFile.data[key];
-            //var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', key);
-            var pos = -1;
-            for (var i = 0; i < global.base.dataVersions.length; ++i) {
-                var item = global.base.dataVersions[i];
-                if (!item) continue;
-                if (item.sheet == iSheet && item.name == iExcel) {
-                    pos = i;
-                    break;
-                }
-            }
+            // var pos = -1;
+
+            var item = __.find(global.base.dataVersions, function(it) {
+                return it.sheet == iSheet && it.name == iExcel;
+            });
+
+            //for (var i = 0; i < global.base.dataVersions.length; ++i) {
+            //    var item = global.base.dataVersions[i];
+            //    if (!item) continue;
+            //    if (item.sheet == iSheet && item.name == iExcel) {
+            //        pos = i;
+            //        break;
+            //    }
+            //}
             var base64 = new Buffer(JSON.stringify(sheet)).toString('base64');
             var version = 0;
-            if (pos < 0) {
+            if (typeof item === "undefined") {
                 global.base.dataVersions.push({
                     sheet : key,
                     category : iFile.category,
@@ -178,10 +182,10 @@ apis.ApiApplyTables = function(req, cb) {
                 });
                 version = 1;
                 qryList.push(
-                    global.base.sqls.ApiApplyTables_instertAppData(global.const.appId, key, iFile.excel, iFile.category, version)
+                    global.base.sqls.ApiApplyTables_insertAppData(global.const.appId, key, iFile.excel, iFile.category, version)
                 );
             } else {
-                var item = global.base.dataVersions[pos];
+                // var item = global.base.dataVersions[pos];
                 //if (item.json !== base64) {
                     item.version++;
                     item.json = base64;
@@ -210,26 +214,51 @@ apis.ApiApplyTables = function(req, cb) {
                         appUtils.ftpUploadCombineReq(iNum, changeLog, job, fileName, callback);
                     },
                     function (iFiles, callback) {
-                        console.log(iFiles)
+                        // iFiles
                         iFiles.forEach(function(fileObj){
                             if(fileObj.sheet !== 'VersionList'){
-                                //var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
-                                var pos = -1;
-                                for (var i = 0; i < global.base.dataVersions.length; ++i) {
-                                    var it = global.base.dataVersions[i];
-                                    if (!it) continue;
-                                    if (it.sheet == fileObj.sheet && it.name == iExcel) {
-                                        pos = i;
-                                        break;
+
+                                if (typeof fileObj.version === "undefined" || !fileObj.version) {
+                                    var item = __.find(global.base.dataVersions, function(it) {
+                                        return it.sheet == fileObj.sheet && it.name == iExcel;
+                                    });
+
+                                    if (typeof item !== "undefined") {
+                                        item.crc = miscUtils.getCrc32(fileObj.path);
+                                        qryList.push(
+                                            global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, iFile.excel, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
+                                        );
                                     }
-                                }
-                                if (-1 != pos) {
-                                    var item = global.base.dataVersions[pos];
-                                    item.crc = miscUtils.getCrc32(fileObj.path);
+
+                                }else {
+                                    var itemName = fileObj.sheet;
+                                    var itemCrc = miscUtils.getCrc32(fileObj.path);
+                                    var itemVersion = fileObj.version || 0;
+
+                                    // insert into new table;
                                     qryList.push(
-                                        global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, iFile.excel, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
+                                        global.base.sqls.ApiApplyTables_insertAppDataFileVersion(global.const.appId, itemName, itemVersion, global.utils.toDateTime(new Date()), itemCrc)
                                     );
+
                                 }
+
+                                //var pos = global.utils.getArrayIndex(global.base.dataVersions, 'sheet', fileObj.sheet);
+                                //var pos = -1;
+                                //for (var i = 0; i < global.base.dataVersions.length; ++i) {
+                                //    var it = global.base.dataVersions[i];
+                                //    if (!it) continue;
+                                //    if (it.sheet == fileObj.sheet && it.name == iExcel) {
+                                //        pos = i;
+                                //        break;
+                                //    }
+                                //}
+                                //if (-1 != pos) {
+                                //    var item = global.base.dataVersions[pos];
+                                //    item.crc = miscUtils.getCrc32(fileObj.path);
+                                //    qryList.push(
+                                //        global.base.sqls.ApiApplyTables_insertAppDataVersion(global.const.appId, item.sheet, iFile.excel, item.version, global.utils.toDateTime(new Date()), item.json, item.crc)
+                                //    );
+                                //}
                             } else {
                                 var idx = fileObj.path.lastIndexOf('/')+1;
                                 var path = fileObj.path.substring(idx);
@@ -238,13 +267,18 @@ apis.ApiApplyTables = function(req, cb) {
                                 );
                             }
                             job.status[fileObj.sheet].message = 'success';
+                            // after ftp, need to remove the file
                             //try { fs.unlinkSync(fileObj.path); } catch (ex) {}
                         });
+
                         callback(null);
                         job.status['DataGrp'] = { message : 'begin', total : 1, progress : 1 };
                     },
-                    function (callback) { 
+                    function (callback) {
                         global.base.systemDB.executeAdvTrans(qryList, callback);
+                    },
+                    function (callback) {
+                        global.base.getVersionsFromDB(callback);
                     },
 				], function(err){
                     if (err) {

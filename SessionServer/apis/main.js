@@ -42,8 +42,8 @@ apis.EFGetVersionList = function(protocol, cb) {
 			throw new Error('__invalid_param');
 		var dataVersion = parseInt(protocol.dataVersion);
 		var service = global.base.getServiceList('WA')[0];
-		service.requestAction('getCurrentVersion', function(err, iList, iSum){
-			if (dataVersion < iSum) {
+		service.requestAction('getCurrentFileVersion', function(err, iList, iSum){
+			if (dataVersion <= iSum) {
 				cb(null, {result : 'success', iList: iList, iSum: iSum});
 			}else {
 				cb(null, {result : 'success', iSum: iSum});
@@ -67,11 +67,12 @@ apis.EFCheckTableCrc = function(protocol, cb) {
             throw new Error('__invalid_param');
         
         var service = global.base.getServiceList('WA')[0];
-		service.requestAction('getCurrentVersion', function(err, iList, iSum){
+		service.requestAction('getCurrentFileVersion', function(err, iList, iSum){
 			var flag = true;
 	        protocol.items.forEach(function(item) {
 	        	iList.forEach(function(list){
 		        	if (item.name == list.sheet) {
+						//console.log(item.name, item.crc, list.crc);
 		        		if (item.crc != list.crc) {
 		        			flag = false;
 		        		}

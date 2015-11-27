@@ -19,6 +19,7 @@ var Constructor = function(name) {
     this.uploads = [];
 	this.jobList = {};
     this.dataVersions = [];
+    this.fileVersions = [];
     this.rootPath = '';
     this.sqls = require('./sqls');
 };
@@ -110,15 +111,39 @@ Constructor.prototype.addAsyncJob = function(action) {
 Constructor.prototype.getVersionsFromDB = function(cb) {
     var self = this;
     try {
-        self.systemDB.execute(self.sqls.getVersionsFromDB(global.const.appId), function(err, results) {
-            try {
-                if (err) throw err;
-                self.dataVersions = results;
-                cb(null);
-            } catch (ex) {
-                cb(ex);
+        async.waterfall([
+            function(callback) {
+                self.systemDB.execute(
+                    self.sqls.getVersionsFromDB(global.const.appId),
+                    function(err, results) {
+                        if (err) return callback(err);
+                        self.dataVersions = results;
+                        callback(null);
+                    }
+                );
+            },
+            function(callback) {
+                self.systemDB.execute(
+                    self.sqls.getFileVersionFromDB(global.const.appId),
+                    function(err, results) {
+                        if (err) return callback(err);
+                        self.fileVersions = results;
+                        callback(null);
+                    }
+                );
             }
-        });
+
+        ], cb);
+
+        //self.systemDB.execute(self.sqls.getVersionsFromDB(global.const.appId), function(err, results) {
+        //    try {
+        //        if (err) throw err;
+        //        self.dataVersions = results;
+        //        cb(null);
+        //    } catch (ex) {
+        //        cb(ex);
+        //    }
+        //});
     } catch (ex) {
         cb(ex);
     }
@@ -131,6 +156,25 @@ Constructor.prototype.getCurrentVersion = function(cb){
         global.base.dataVersions.forEach(function(item) {
             iList.push({
                 category : item.category,
+                sheet : item.sheet,
+                version : item.version,
+                crc : item.crc
+            });
+            iSum += item.version;
+        });
+        cb(null, iList, iSum);
+    }catch(ex) {
+        cb(ex);
+    }
+};
+
+Constructor.prototype.getCurrentFileVersion = function(cb){
+    var self = this;
+    try {
+        var iList = [], iSum = 0;
+        global.base.fileVersions.forEach(function(item) {
+            iList.push({
+                category : 'excel',
                 sheet : item.sheet,
                 version : item.version,
                 crc : item.crc
