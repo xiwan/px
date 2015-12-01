@@ -110,16 +110,20 @@ apis.ApiCheckExcelSheets = function(req, cb) {
         keys.forEach(function(key) {
             var iSheet = key;
             var pos = -1;
-            for (var i = 0; i < global.base.dataVersions.length; ++i) {
-                var item = global.base.dataVersions[i];
-                if (!item) continue;
-                if (item.sheet == iSheet && item.name == iExcel) {
-                    pos = i;
-                    break;
-                }
-            }
+            var item = __.find(global.base.dataVersions, function(it) {
+                return it.sheet == iSheet && it.name == iExcel;
+            });
+            // for (var i = 0; i < global.base.dataVersions.length; ++i) {
+            //     var item = global.base.dataVersions[i];
+            //     if (!item) continue;
+            //     if (item.sheet == iSheet && item.name == iExcel) {
+            //         pos = i;
+            //         break;
+            //     }
+            // }
 
-            if (pos > 0) {
+            // if (pos > -1) {
+            if(typeof(item) != 'undefined') {
                 sameSheets.push({
                     excel : iExcel,
                     sheet : iSheet
@@ -138,7 +142,7 @@ apis.ApiCheckExcelSheets = function(req, cb) {
         global.warn(ex.stack);
         cb(ex);  
     }
-}
+};
 
 apis.ApiApplyTables = function(req, cb) {
 	var self = apis;
@@ -207,6 +211,7 @@ apis.ApiApplyTables = function(req, cb) {
 
 		if(changeLog.length > 0){
 			var job = global.base.addAsyncJob('ApiApplyTables');
+            job.file = iExcel;
 			process.nextTick(function() {
 				async.waterfall([
 					function (callback) { 
@@ -293,10 +298,10 @@ apis.ApiApplyTables = function(req, cb) {
 			});
 
             global.debug('AppParser.ApiApplyTables Result. change');
-			cb(null, { result : 'success', jobId : job.id });
+			cb(null, { result : 'success', jobId : job.id});
 		}else {
 	        global.debug('AppParser.ApiApplyTables Result. success');
-	        cb(null, { result : 'success' });			
+	        cb(null, { result : 'success', file : iExcel });			
 		}
 	}catch (ex) {
         global.warn('AppParser.ApiApplyTables. error:%s', ex.message);
@@ -317,7 +322,7 @@ apis.ApiGetAsyncJobData = function(req, cb) {
         }
     } catch (ex) {
         global.warn('AppParser.ApiGetAsyncJobData. error:%s', ex.message);
-        cb(ex);
+        cb(ex, {id : protocol.jobId});
     }
 };
 
@@ -341,7 +346,7 @@ apis.ApiGetServiceList = function(req, cb) {
         global.warn('AppParser.ApiGetServiceList. error:%s', ex.message);
         cb(ex); 
     }
-}
+};
 
 apis.ApiActionServiceReq = function(req, cb) {
     var self = apis;
@@ -369,4 +374,4 @@ apis.ApiActionServiceReq = function(req, cb) {
         global.warn('AppParser.ApiActionServiceReq. error:%s', ex.message);
         cb(ex);
     }
-}
+};

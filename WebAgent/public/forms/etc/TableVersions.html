@@ -13,6 +13,8 @@
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes">
 		<script type="text/javascript" src="/scripts/utils/jquery-2.1.4.min.js"></script>
 		<script type="text/javascript" src="/scripts/utils/protocol.js"></script>
+		<script type="text/javascript" src="/scripts/utils/async.js"></script>
+		<!-- // <script type="text/javascript" src="/scripts/utils/underscore-min.js"></script> -->
 		<script type="text/javascript" src="TableVersions.js"></script>
     </head>	
     <style>
@@ -26,22 +28,31 @@
 		<div id="viewTable"></div>
 		<br />    
 		<div id="fileDiv"></div>
-		<select id='selectExcelType'>
-			<option value='excel'>Excel</option>
-			<option value='language'>Language</option>
-			<option value='event'>Event</option>
-		</select>
-<!-- 
-		<select id='selectVersionType'>
-			<option value='excel'>Excel</option>
-			<option value='language'>Language</option>
-			<option value='event'>Event</option>
-		</select> -->
+		<div class="fileTable">
+			<!-- <button id="btnDel">删除本行</button> -->
+			<!-- <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> -->
+			<!-- <select id='selectExcelType'> -->
+				<!-- <option value='excel'>Excel</option> -->
+				<!-- <option value='language'>Language</option> -->
+				<!-- <option value='event'>Event</option> -->
+			<!-- </select> -->
+	<!-- 
+			<select id='selectVersionType'>
+				<option value='excel'>Excel</option>
+				<option value='language'>Language</option>
+				<option value='event'>Event</option>
+			</select> -->
 
-		<input id='uploadExcel' type='file' name='iFile' >
-<!-- 		<input id='uploadFileTable' type='file' name='iFile' >
-		<input id='uploadFileLang' type='file' name='iFile'>
-		<input id='uploadFileEvt' type='file' name='iFile'> -->
+			<!-- <input id='uploadExcel' type='file' name='iFile' style="display:none"> -->
+			<!-- <button id="btnSelect">选择文件</button> -->
+			<!-- <span id="textFile">未选择文件</span> -->
+	<!-- 		<input id='uploadFileTable' type='file' name='iFile' >
+			<input id='uploadFileLang' type='file' name='iFile'>
+			<input id='uploadFileEvt' type='file' name='iFile'> -->
+
+			<!-- <br /> -->
+			<!-- <button id="btnAdd">追加一行</button> -->
+		</div>
 		<pre id="incomming"></pre>
 
 		<button id="fileSave">file save</button>
