@@ -11,6 +11,7 @@ var index = 0;
 var jobIndex = 0;
 var MsgsObj = {};
 var updateFilesSize = 0;
+var fileStatus = 0;
 
 function onReday() {
 	var Html = new Array;
@@ -48,6 +49,7 @@ $(document).on('change', '#uploadExcel', function(){
 			return alert(err);
 		}
 		if (data) {
+			fileStatus = 0;
 			$('#textFile'+nowSelectIndex).html(data);
 		}
 	});
@@ -68,7 +70,7 @@ function uploadReq(obj, cb) {
 	}
 	var data = new FormData();
 	data.append('iFile', obj[0].files[0]);
-
+	fileStatus = 1;
 	$.ajax({
 		url : get_server_url(3900) + '/ApiFileUploadReq',
 		data : data,
@@ -109,7 +111,7 @@ function convertToJson(file, label, cb) {
 }
 
 function clickFileSelect(obj) {
-	if (0 != timeId) {
+	if (0 != timeId || 0 != fileStatus) {
 		alert('正在操作中');
 		return;
 	}
@@ -118,7 +120,7 @@ function clickFileSelect(obj) {
 }
 
 function clickFileAdd() {
-	if (0 != timeId) {
+	if (0 != timeId || 0 != fileStatus) {
 		alert('正在操作中');
 		return;
 	}
@@ -127,7 +129,7 @@ function clickFileAdd() {
 }
 
 function clickFileDel(obj) {
-	if (0 != timeId) {
+	if (0 != timeId || 0 != fileStatus)) {
 		alert('正在操作中');
 		return;
 	}
@@ -147,7 +149,7 @@ function clickFileSave() {
 	MsgsObj = {};
 	updateFilesSize = 0;
 
-	if (0 != timeId) {
+	if (0 != timeId || 0 != fileStatus)) {
 		alert('正在操作中');
 		return;
 	}
