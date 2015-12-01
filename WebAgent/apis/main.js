@@ -173,6 +173,7 @@ apis.ApiApplyTables = function(req, cb) {
             //        break;
             //    }
             //}
+            console.log('!!! ' + JSON.stringify(item));
             var base64 = new Buffer(JSON.stringify(sheet)).toString('base64');
             var version = 0;
             if (typeof item === "undefined") {
@@ -294,11 +295,12 @@ apis.ApiApplyTables = function(req, cb) {
                         job.status['DataGrp'].message = 'complete';
                     }
                     setTimeout(function() {job.state = 3}, 5000);
+                    global.debug('AppParser.ApiApplyTables Result. change');
+                    cb(null, { result : 'success', jobId : job.id});
 				});
 			});
 
-            global.debug('AppParser.ApiApplyTables Result. change');
-			cb(null, { result : 'success', jobId : job.id});
+            
 		}else {
 	        global.debug('AppParser.ApiApplyTables Result. success');
 	        cb(null, { result : 'success', file : iExcel });			
@@ -313,16 +315,32 @@ apis.ApiApplyTables = function(req, cb) {
 apis.ApiGetAsyncJobData = function(req, cb) {
     var protocol = req.body;
     try {
-        var job = global.base.jobList[protocol.jobId];
-        if (!job) throw new Error('invalid_job_id');
-        job.result = 'success';
-        cb(null, job);
-        if (job.state === 3) {
-            delete global.base.jobList[protocol.jobId];
+        var jobList = protocol.jobId.split(',');
+        var jobs = [];
+        for (var i = 0; i < jobList.length; ++i) {
+            var job = global.base.jobList[jobList[i]];
+            if (!job) {
+                jobs.push({id: jobList[i], result: 'invalid'});
+            } else {
+                job.result = 'success';
+                jobs.push(job);
+            }
         }
+
+        for (var i = 0; i < jobList.length; ++i) {
+            var job = global.base.jobList[jobList[i]];
+            if (job && job.state === 3) {
+                delete global.base.jobList[jobList[i]];
+            }
+        }
+        cb(null, jobs);
     } catch (ex) {
         global.warn('AppParser.ApiGetAsyncJobData. error:%s', ex.message);
-        cb(ex, {id : protocol.jobId});
+        var jobs = [];
+        for(var i =0; i < jobList.length; ++i) {
+            jobs.push({id:jobList[i]});
+        }
+        cb(ex, jobs);
     }
 };
 

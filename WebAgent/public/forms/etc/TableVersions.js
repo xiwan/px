@@ -31,6 +31,7 @@ function onReday() {
 	}
 	Html.push('<button id="btnAdd">追加一行</button>');
 	$('.fileTable').html(Html.join(''));
+
 }
 
 // $('#fileSave').click(clickFileSave);
@@ -107,16 +108,28 @@ function convertToJson(file, label, cb) {
 }
 
 function clickFileSelect(obj) {
+	if (0 != timeId) {
+		alert('正在操作中');
+		return;
+	}
 	nowSelectIndex = obj.value;
 	$('#uploadExcel').click();
 }
 
 function clickFileAdd() {
+	if (0 != timeId) {
+		alert('正在操作中');
+		return;
+	}
 	nameList.push("");
 	onReday();
 }
 
 function clickFileDel(obj) {
+	if (0 != timeId) {
+		alert('正在操作中');
+		return;
+	}
 	nowSelectIndex = obj.value;
 	nameList.splice(nowSelectIndex, 1);
 	onReday();
@@ -131,16 +144,18 @@ function clickFileSave() {
 	index = 0;
 	LastMsg = [];
 	MsgsObj = {};
-    if (timeId != 0) {
-    	clearInterval(timeId);
-    }
+
+	if (0 != timeId) {
+		alert('正在操作中');
+		return;
+	}
+	getJobData();
+	timeId = setInterval(function() {
+		getJobData();
+	}, 1000);
 
 	if (confirm('Do you want to apply data at version ?')) {
 		var funcArray = [];
-
-		timeId = setInterval(function() {
-			getJobData();
-		}, 1500);
 
 		for (var i = 0; i < nameList.length; ++i) {
 			funcArray.push(function(callback) {
@@ -176,6 +191,7 @@ function clickFileSave() {
 			});
 
 			funcArray.push(function(data, time, callback) {
+				
 				if (!data) {
 					return callback(null);
 				}
@@ -216,54 +232,51 @@ function getProtocol(protocol) {
 
 function getJobData() {
 	// alert('getJobData  timeId:'+timeId+", jobs:"+JSON.stringify(jobs));
-	if (timeId != 0 && jobs.length == 0) {
-		clearInterval(timeId);
-		timeId = 0;
-		return;
-	}
+	// if (timeId != 0 && jobs.length == 0) {
+	// 	clearInterval(timeId);
+	// 	timeId = 0;
+	// 	return;
+	// }
 	var syncArr = [];
 	jobIndex = 0;
 
-	for (var i = 0; i < jobs.length; ++i) {
-		syncArr.push(function(callback) {
-			var jobId = jobs[jobIndex];
-			getAsyncJobData(jobId, callback);
-		});
-
-		syncArr.push(function(data, callback) {
-			if (data.result != 'success') {
-				rmList[data.id] = 1;
-				jobIndex++;
-				callback(null);
-				return;
-			}
-			
-			var m = "";
-			m += '\n----------------------['+data.file+']------------------------';
-
-            // iMsg.push('\n----------------------'+data.file+'------------------------');
-
-            for (var key in data.status) {
-                var item = data.status[key];
-                // iMsg.push(key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')');
-                m += '\n' + key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')';
-            }
-
-            MsgsObj[data.id] = m;
-            if (data.state === 3) {
-            	rmList[data.id] = 1;
-            }
-            jobIndex++;
-            callback(null);
-		});
+	if (0 == jobs.length) {
+		return;
 	}
 
-	async.waterfall(syncArr, function(err) {
+	var jobList = jobs.join(',');
+	getAsyncJobData(jobList, function(err, datas){
 		if (err) {
 			alert(err);
+			clearInterval(timeId);
+			timeId = 0;
 			return;
 		}
-		// if (iMsg.length != 0 && iMsg.length > LastMsg.length) {
+		for (var i = 0; i < datas.length; ++i) {
+			var data = datas[i];
+			if(data.result != 'success') {
+				rmList[data.id] = 1;
+				jobIndex++;
+			} else {
+				var m = "";
+				m += '\n----------------------['+data.file+']------------------------';
+
+	            // iMsg.push('\n----------------------'+data.file+'------------------------');
+
+	            for (var key in data.status) {
+	                var item = data.status[key];
+	                // iMsg.push(key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')');
+	                m += '\n' + key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')';
+	            }
+
+	            MsgsObj[data.id] = m;
+	            if (data.state === 3) {
+	            	rmList[data.id] = 1;
+	            }
+	            jobIndex++;
+			}
+		}
+
 		var n = 0;
 		iMsg = [];
 
@@ -277,7 +290,7 @@ function getJobData() {
 
 		var inc = document.getElementById('incomming');
 		inc.innerHTML = iMsg.join('<br \>');
-		LastMsg = iMsg;
+		// LastMsg = iMsg;
 		for (key in rmList) {
 			if (rmList[key]) {
 				++n;
@@ -285,12 +298,80 @@ function getJobData() {
 		}
 		if (jobs.length == n) {
 			jobs = [];
+			clearInterval(timeId);
+			alert('all finish');
+			timeId = 0;
 		}
+
+	});
+
+	// 	syncArr.push(function(callback) {
+	// 		var jobId = jobs[jobIndex];
+	// 		getAsyncJobData(jobId, callback);
+	// 	});
+
+	// 	syncArr.push(function(data, callback) {
+	// 		if (data.result != 'success') {
+	// 			rmList[data.id] = 1;
+	// 			jobIndex++;
+	// 			callback(null);
+	// 			return;
+	// 		}
+			
+	// 		var m = "";
+	// 		m += '\n----------------------['+data.file+']------------------------';
+
+ //            // iMsg.push('\n----------------------'+data.file+'------------------------');
+
+ //            for (var key in data.status) {
+ //                var item = data.status[key];
+ //                // iMsg.push(key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')');
+ //                m += '\n' + key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')';
+ //            }
+
+ //            MsgsObj[data.id] = m;
+ //            if (data.state === 3) {
+ //            	rmList[data.id] = 1;
+ //            }
+ //            jobIndex++;
+ //            callback(null);
+	// 	});
+	// }
+
+	// async.waterfall(syncArr, function(err) {
+	// 	if (err) {
+	// 		alert(err);
+	// 		return;
+	// 	}
+	// 	// if (iMsg.length != 0 && iMsg.length > LastMsg.length) {
+	// 	var n = 0;
+	// 	iMsg = [];
+
+	// 	for (key in MsgsObj) {
+	// 		var m = MsgsObj[key];
+	// 		if (m) {
+	// 			iMsg.push(m);
+	// 		}
+	// 	}
+	// 	iMsg.push(msg);
+
+	// 	var inc = document.getElementById('incomming');
+	// 	inc.innerHTML = iMsg.join('<br \>');
+	// 	// LastMsg = iMsg;
+	// 	for (key in rmList) {
+	// 		if (rmList[key]) {
+	// 			++n;
+	// 		}
+	// 	}
+	// 	if (jobs.length == n) {
+	// 		jobs = [];
+	// 		clearInterval(timeId);
+	// 	}
 		// }
 		// for (var idx = 0; idx < rmList.length; ++idx) {
 			// jobs.splice(idx, 1);
 		// }
-	});
+	// });
 
 }
 

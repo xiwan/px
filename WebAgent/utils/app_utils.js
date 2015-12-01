@@ -412,7 +412,7 @@ exports.ftpUploadCombineReq = function(version, changeLog, job, fileName, cb) {
                 bigRows.push(subRow);
             }
 
-            var iName = util.format(global.base.rootPath + '/public/db/DH_%s_%d_%d_db', iLog.sheet, version, iLog.version);
+            var iName = util.format(global.base.rootPath + '/public/db/DH_%s_%s_%d_%d_db', fileName, iLog.sheet, version, iLog.version);
             fs.existsSync(iName) && fs.unlinkSync(iName);
             var iDB = sqlite(iName);
             async.parallel([
