@@ -173,7 +173,6 @@ apis.ApiApplyTables = function(req, cb) {
             //        break;
             //    }
             //}
-            console.log('!!! ' + JSON.stringify(item));
             var base64 = new Buffer(JSON.stringify(sheet)).toString('base64');
             var version = 0;
             if (typeof item === "undefined") {
@@ -317,6 +316,7 @@ apis.ApiGetAsyncJobData = function(req, cb) {
     try {
         var jobList = protocol.jobId.split(',');
         var jobs = [];
+
         for (var i = 0; i < jobList.length; ++i) {
             var job = global.base.jobList[jobList[i]];
             if (!job) {

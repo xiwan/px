@@ -10,6 +10,7 @@ var LastMsg = [];
 var index = 0;
 var jobIndex = 0;
 var MsgsObj = {};
+var updateFilesSize = 0;
 
 function onReday() {
 	var Html = new Array;
@@ -144,6 +145,7 @@ function clickFileSave() {
 	index = 0;
 	LastMsg = [];
 	MsgsObj = {};
+	updateFilesSize = 0;
 
 	if (0 != timeId) {
 		alert('正在操作中');
@@ -155,6 +157,13 @@ function clickFileSave() {
 	}, 1000);
 
 	if (confirm('Do you want to apply data at version ?')) {
+		for (var i in nameList) {
+			var name = nameList[i];
+			if (name) {
+				updateFilesSize++;
+			}
+		}
+
 		var funcArray = [];
 
 		for (var i = 0; i < nameList.length; ++i) {
@@ -296,82 +305,14 @@ function getJobData() {
 				++n;
 			}
 		}
-		if (jobs.length == n) {
+		if (updateFilesSize == n) {
 			jobs = [];
 			clearInterval(timeId);
-			alert('all finish');
+			alert('finish.');
 			timeId = 0;
 		}
 
 	});
-
-	// 	syncArr.push(function(callback) {
-	// 		var jobId = jobs[jobIndex];
-	// 		getAsyncJobData(jobId, callback);
-	// 	});
-
-	// 	syncArr.push(function(data, callback) {
-	// 		if (data.result != 'success') {
-	// 			rmList[data.id] = 1;
-	// 			jobIndex++;
-	// 			callback(null);
-	// 			return;
-	// 		}
-			
-	// 		var m = "";
-	// 		m += '\n----------------------['+data.file+']------------------------';
-
- //            // iMsg.push('\n----------------------'+data.file+'------------------------');
-
- //            for (var key in data.status) {
- //                var item = data.status[key];
- //                // iMsg.push(key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')');
- //                m += '\n' + key + ' version(' + item.version + ') : ' + item.message + '(' + item.progress + '/' + item.total + ')';
- //            }
-
- //            MsgsObj[data.id] = m;
- //            if (data.state === 3) {
- //            	rmList[data.id] = 1;
- //            }
- //            jobIndex++;
- //            callback(null);
-	// 	});
-	// }
-
-	// async.waterfall(syncArr, function(err) {
-	// 	if (err) {
-	// 		alert(err);
-	// 		return;
-	// 	}
-	// 	// if (iMsg.length != 0 && iMsg.length > LastMsg.length) {
-	// 	var n = 0;
-	// 	iMsg = [];
-
-	// 	for (key in MsgsObj) {
-	// 		var m = MsgsObj[key];
-	// 		if (m) {
-	// 			iMsg.push(m);
-	// 		}
-	// 	}
-	// 	iMsg.push(msg);
-
-	// 	var inc = document.getElementById('incomming');
-	// 	inc.innerHTML = iMsg.join('<br \>');
-	// 	// LastMsg = iMsg;
-	// 	for (key in rmList) {
-	// 		if (rmList[key]) {
-	// 			++n;
-	// 		}
-	// 	}
-	// 	if (jobs.length == n) {
-	// 		jobs = [];
-	// 		clearInterval(timeId);
-	// 	}
-		// }
-		// for (var idx = 0; idx < rmList.length; ++idx) {
-			// jobs.splice(idx, 1);
-		// }
-	// });
 
 }
 
@@ -388,7 +329,10 @@ function checkExcelSheets(protocol, cb) {
 					sameSheet = sameSheet + ('table:['+item.excel + "] 的 sheet:[" + item.sheet + ']\n');
 				}
 				sameSheet = sameSheet+ '以上sheet已存在， 是否覆盖';
-				if (!confirm(sameSheet)) return cb(null, {msg : 'cancel'});
+				if (!confirm(sameSheet)) {
+					updateFilesSize--;
+					return cb(null, {msg : 'cancel'});
+				}
 			}
 		}
 		if (data.result == 'same' || data.result == 'success') {
