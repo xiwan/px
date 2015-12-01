@@ -129,7 +129,7 @@ function clickFileAdd() {
 }
 
 function clickFileDel(obj) {
-	if (0 != timeId || 0 != fileStatus)) {
+	if (0 != timeId || 0 != fileStatus) {
 		alert('正在操作中');
 		return;
 	}
@@ -149,7 +149,7 @@ function clickFileSave() {
 	MsgsObj = {};
 	updateFilesSize = 0;
 
-	if (0 != timeId || 0 != fileStatus)) {
+	if (0 != timeId || 0 != fileStatus) {
 		alert('正在操作中');
 		return;
 	}
