@@ -12,6 +12,9 @@ var jobIndex = 0;
 var MsgsObj = {};
 var updateFilesSize = 0;
 var fileStatus = 0;
+var tid = 0;
+var iText = '正在操作中';
+var workCount = 0;
 
 function onReday() {
 	var Html = new Array;
@@ -34,6 +37,7 @@ function onReday() {
 	Html.push('<button id="btnAdd">追加一行</button>');
 	$('.fileTable').html(Html.join(''));
 
+	// $('#dvWorking').show();
 }
 
 // $('#fileSave').click(clickFileSave);
@@ -51,6 +55,8 @@ $(document).on('change', '#uploadExcel', function(){
 		if (data) {
 			fileStatus = 0;
 			$('#textFile'+nowSelectIndex).html(data);
+			clearInterval(tid);
+			$('#dvWorking').hide();
 		}
 	});
 });
@@ -71,6 +77,14 @@ function uploadReq(obj, cb) {
 	var data = new FormData();
 	data.append('iFile', obj[0].files[0]);
 	fileStatus = 1;
+
+	waitWorking();    
+    // $('#dvWorking').show();
+    // tid = setInterval(function () {
+    //     iText += '.';
+    //     $('#iWork').text(iText);
+    // }, 500);
+
 	$.ajax({
 		url : get_server_url(3900) + '/ApiFileUploadReq',
 		data : data,
@@ -167,6 +181,12 @@ function clickFileSave() {
 		}
 
 		var funcArray = [];
+	    // $('#dvWorking').show();
+    	// tid = setInterval(function () {
+     //    	iText += '.';
+     //    	$('#iWork').text(iText);
+    	// }, 500);
+	waitWorking();
 
 		for (var i = 0; i < nameList.length; ++i) {
 			funcArray.push(function(callback) {
@@ -232,13 +252,6 @@ function clickFileSave() {
 		});
 	}
 
-}
-
-function getProtocol(protocol) {
-	return function() {
-		var proto = protocol;
-		return proto;
-	}
 }
 
 function getJobData() {
@@ -310,7 +323,9 @@ function getJobData() {
 		if (updateFilesSize == n) {
 			jobs = [];
 			clearInterval(timeId);
-			alert('finish.');
+			clearInterval(tid);
+			// $('#dvWorking').hide();
+			$('#iWork').text('finish~~');
 			timeId = 0;
 		}
 
@@ -345,3 +360,15 @@ function checkExcelSheets(protocol, cb) {
 	});
 }
 
+function waitWorking() {
+    $('#dvWorking').show();
+    iText = '正在操作中';
+	tid = setInterval(function () {
+		if ((workCount % 20) == 0) {
+			iText = '正在操作中';
+		}
+		workCount++;
+    	iText += '.';
+    	$('#iWork').text(iText);
+	}, 500);
+}
