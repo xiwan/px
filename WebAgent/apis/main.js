@@ -222,12 +222,10 @@ apis.ApiApplyTables = function(req, cb) {
                         // iFiles
                         iFiles.forEach(function(fileObj){
                             if(fileObj.sheet !== 'VersionList'){
-
                                 if (typeof fileObj.version === "undefined" || !fileObj.version) {
                                     var item = __.find(global.base.dataVersions, function(it) {
                                         return it.sheet == fileObj.sheet && it.name == iExcel;
                                     });
-
                                     if (typeof item !== "undefined") {
                                         item.crc = miscUtils.getCrc32(fileObj.path);
                                         qryList.push(
@@ -282,9 +280,6 @@ apis.ApiApplyTables = function(req, cb) {
                     function (callback) {
                         global.base.systemDB.executeAdvTrans(qryList, callback);
                     },
-                    function (callback) {
-                        global.base.getVersionsFromDB(callback);
-                    },
 				], function(err){
                     if (err) {
                         if (job.status['DataGrp'])
@@ -295,10 +290,9 @@ apis.ApiApplyTables = function(req, cb) {
                     }
                     setTimeout(function() {job.state = 3}, 5000);
                     global.debug('AppParser.ApiApplyTables Result. change');
-                    cb(null, { result : 'success', jobId : job.id, file : iExcel});
 				});
 			});
-
+            cb(null, { result : 'success', jobId : job.id, file : iExcel});
             
 		}else {
 	        global.debug('AppParser.ApiApplyTables Result. success');
@@ -390,6 +384,20 @@ apis.ApiActionServiceReq = function(req, cb) {
         cb(null, iAck);
     } catch (ex) {
         global.warn('AppParser.ApiActionServiceReq. error:%s', ex.message);
+        cb(ex);
+    }
+};
+
+apis.ApiRefreshVersionsReq = function(req, cb) {
+    var self = apis;
+    var body = req.body;
+    try {
+        global.base.getVersionsFromDB(function(err) {
+            global.debug('AppParser.ApiRefreshVersionsReq Result. success.');
+            cb(err, {});
+        });
+    } catch (ex) {
+        global.warn('AppParser.ApiRefreshVersionsReq. error:%s', ex.message);
         cb(ex);
     }
 };

@@ -18,6 +18,7 @@ module.exports = {
 		'ApiServerDeployStopReq',
 		'ApiServerDeployDeleteReq',
 		'ApiCheckExcelSheets',
+		'ApiRefreshVersionsReq',
 	],
 };
 

@@ -329,12 +329,15 @@ function getJobData() {
 			}
 		}
 		if (updateFilesSize == n) {
-			jobs = [];
-			clearInterval(timeId);
-			clearInterval(tid);
-			// $('#dvWorking').hide();
-			$('#iWork').text('finish~~');
-			timeId = 0;
+			SendHttpRequest(get_server_url(3900), 'ApiRefreshVersionsReq', {}, function (err, data) {
+				if (err) alert(err);
+				jobs = [];
+				clearInterval(timeId);
+				clearInterval(tid);
+				// $('#dvWorking').hide();
+				$('#iWork').text('finish~~');
+				timeId = 0;
+			});
 		}
 
 	});
