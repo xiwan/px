@@ -248,7 +248,13 @@ function clickFileSave() {
 		}
 
 		async.waterfall(funcArray, function(err) {
-			if (err) alert(err);
+			if (err) {
+				alert(err);
+				clearInterval(timeId);
+				clearInterval(tid);
+				$('#iWork').text('finish~~');
+				timeId = 0;
+			}
 		});
 	}
 
@@ -273,6 +279,8 @@ function getJobData() {
 		if (err) {
 			alert(err);
 			clearInterval(timeId);
+			clearInterval(tid);
+			$('#iWork').text('finish~~');
 			timeId = 0;
 			return;
 		}

@@ -295,7 +295,7 @@ apis.ApiApplyTables = function(req, cb) {
                     }
                     setTimeout(function() {job.state = 3}, 5000);
                     global.debug('AppParser.ApiApplyTables Result. change');
-                    cb(null, { result : 'success', jobId : job.id});
+                    cb(null, { result : 'success', jobId : job.id, file : iExcel});
 				});
 			});
 
