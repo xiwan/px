@@ -16,5 +16,6 @@ build/
 *.pid
 *.rdb
 *.zip
+.DS_Store
 stdout
 
